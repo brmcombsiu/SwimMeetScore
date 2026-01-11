@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Swim Meet Tracker</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2322d3ee' stroke-width='2'><circle cx='19' cy='6' r='2.5'/><path stroke-linecap='round' stroke-linejoin='round' d='M3 18c1.2 0 2-.8 3-1.5s1.8-1.5 3-1.5 2 .8 3 1.5 1.8 1.5 3 1.5 2-.8 3-1.5 1.8-1.5 3-1.5'/><path stroke-linecap='round' stroke-linejoin='round' d='M3 22c1.2 0 2-.8 3-1.5s1.8-1.5 3-1.5 2 .8 3 1.5 1.8 1.5 3 1.5 2-.8 3-1.5 1.8-1.5 3-1.5'/><path stroke-linecap='round' stroke-linejoin='round' d='M16.5 7.5L12 10l-4.5 2.5'/><path stroke-linecap='round' stroke-linejoin='round' d='M7 14.5l2-1.5'/></svg>">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { margin: 0; font-family: system-ui, -apple-system, sans-serif; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // Icon components
+    const Plus = ({ className }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+      </svg>
+    );
+
+    const X = ({ className }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    );
+
+    const Settings = ({ className }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+      </svg>
+    );
+
+    const Swimmer = ({ className }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <circle cx="19" cy="6" r="2.5" strokeWidth={2} />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 18c1.2 0 2-.8 3-1.5s1.8-1.5 3-1.5 2 .8 3 1.5 1.8 1.5 3 1.5 2-.8 3-1.5 1.8-1.5 3-1.5" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 22c1.2 0 2-.8 3-1.5s1.8-1.5 3-1.5 2 .8 3 1.5 1.8 1.5 3 1.5 2-.8 3-1.5 1.8-1.5 3-1.5" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16.5 7.5L12 10l-4.5 2.5" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 14.5l2-1.5" />
+      </svg>
+    );
+
+    const Trophy = ({ className }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+      </svg>
+    );
+
+    const Edit2 = ({ className }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+      </svg>
+    );
+
+    const ChevronUp = ({ className }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+      </svg>
+    );
+
+    const ChevronDown = ({ className }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+      </svg>
+    );
+
+    function SwimMeetTracker() {
+      // Helper function to load from localStorage
+      const loadFromStorage = (key, defaultValue) => {
+        try {
+          const saved = localStorage.getItem('swimMeetTracker_' + key);
+          return saved ? JSON.parse(saved) : defaultValue;
+        } catch (e) {
+          return defaultValue;
+        }
+      };
+
+      // Default values
+      const defaultTeams = [
+        { id: 1, name: 'Team A', score: 0, girlsScore: 0, boysScore: 0 },
+        { id: 2, name: 'Team B', score: 0, girlsScore: 0, boysScore: 0 }
+      ];
+
+      const defaultEvents = [
+        { id: 0.5, name: 'Diving', results: [], gender: 'girls' },
+        { id: 0.6, name: 'Diving', results: [], gender: 'boys' },
+        { id: 1, name: '200 Medley Relay', results: [], gender: 'girls' },
+        { id: 2, name: '200 Medley Relay', results: [], gender: 'boys' },
+        { id: 3, name: '200 Freestyle', results: [], gender: 'girls' },
+        { id: 4, name: '200 Freestyle', results: [], gender: 'boys' },
+        { id: 5, name: '200 IM', results: [], gender: 'girls' },
+        { id: 6, name: '200 IM', results: [], gender: 'boys' },
+        { id: 7, name: '50 Freestyle', results: [], gender: 'girls' },
+        { id: 8, name: '50 Freestyle', results: [], gender: 'boys' },
+        { id: 9, name: '100 Butterfly', results: [], gender: 'girls' },
+        { id: 10, name: '100 Butterfly', results: [], gender: 'boys' },
+        { id: 11, name: '100 Freestyle', results: [], gender: 'girls' },
+        { id: 12, name: '100 Freestyle', results: [], gender: 'boys' },
+        { id: 13, name: '500 Freestyle', results: [], gender: 'girls' },
+        { id: 14, name: '500 Freestyle', results: [], gender: 'boys' },
+        { id: 15, name: '200 Freestyle Relay', results: [], gender: 'girls' },
+        { id: 16, name: '200 Freestyle Relay', results: [], gender: 'boys' },
+        { id: 17, name: '100 Backstroke', results: [], gender: 'girls' },
+        { id: 18, name: '100 Backstroke', results: [], gender: 'boys' },
+        { id: 19, name: '100 Breaststroke', results: [], gender: 'girls' },
+        { id: 20, name: '100 Breaststroke', results: [], gender: 'boys' },
+        { id: 21, name: '400 Freestyle Relay', results: [], gender: 'girls' },
+        { id: 22, name: '400 Freestyle Relay', results: [], gender: 'boys' }
+      ];
+
+      const defaultIndividualPoints = {
+        1: 6, 2: 4, 3: 3, 4: 2, 5: 1, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0, 15: 0, 16: 0, 17: 0, 18: 0, 19: 0, 20: 0
+      };
+
+      const defaultRelayPoints = {
+        1: 8, 2: 4, 3: 2, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0, 15: 0, 16: 0, 17: 0, 18: 0, 19: 0, 20: 0
+      };
+
+      const defaultDivingPoints = {
+        1: 5, 2: 3, 3: 1, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0, 15: 0, 16: 0, 17: 0, 18: 0, 19: 0, 20: 0
+      };
+
+      // State with localStorage initialization
+      const [teams, setTeams] = useState(() => loadFromStorage('teams', defaultTeams));
+      const [events, setEvents] = useState(() => loadFromStorage('events', defaultEvents));
+      const [showSettings, setShowSettings] = useState(false);
+      const [newTeamName, setNewTeamName] = useState('');
+      const [darkMode, setDarkMode] = useState(() => loadFromStorage('darkMode', true));
+      const [scoringMode, setScoringMode] = useState(() => loadFromStorage('scoringMode', 'combined'));
+      const [numIndividualPlaces, setNumIndividualPlaces] = useState(() => loadFromStorage('numIndividualPlaces', 5));
+      const [numRelayPlaces, setNumRelayPlaces] = useState(() => loadFromStorage('numRelayPlaces', 3));
+      const [numDivingPlaces, setNumDivingPlaces] = useState(() => loadFromStorage('numDivingPlaces', 3));
+      const [editingTeamId, setEditingTeamId] = useState(null);
+      const [editingTeamName, setEditingTeamName] = useState('');
+      const [newEventName, setNewEventName] = useState('');
+      const [newEventGender, setNewEventGender] = useState('girls');
+      const [newEventType, setNewEventType] = useState('individual');
+      const [savedTemplates, setSavedTemplates] = useState(() => loadFromStorage('savedTemplates', []));
+      const [newTemplateName, setNewTemplateName] = useState('');
+      const [showSaveTemplate, setShowSaveTemplate] = useState(false);
+      
+      const [individualPointSystem, setIndividualPointSystem] = useState(() => loadFromStorage('individualPointSystem', defaultIndividualPoints));
+      const [relayPointSystem, setRelayPointSystem] = useState(() => loadFromStorage('relayPointSystem', defaultRelayPoints));
+      const [divingPointSystem, setDivingPointSystem] = useState(() => loadFromStorage('divingPointSystem', defaultDivingPoints));
+      
+      const [editingIndividualPoints, setEditingIndividualPoints] = useState(false);
+      const [editingRelayPoints, setEditingRelayPoints] = useState(false);
+      const [editingDivingPoints, setEditingDivingPoints] = useState(false);
+      const [tempIndividualPoints, setTempIndividualPoints] = useState({ ...individualPointSystem });
+      const [tempRelayPoints, setTempRelayPoints] = useState({ ...relayPointSystem });
+      const [tempDivingPoints, setTempDivingPoints] = useState({ ...divingPointSystem });
+
+      // Auto-save to localStorage whenever state changes
+      useEffect(() => {
+        localStorage.setItem('swimMeetTracker_teams', JSON.stringify(teams));
+      }, [teams]);
+
+      useEffect(() => {
+        localStorage.setItem('swimMeetTracker_events', JSON.stringify(events));
+      }, [events]);
+
+      useEffect(() => {
+        localStorage.setItem('swimMeetTracker_darkMode', JSON.stringify(darkMode));
+      }, [darkMode]);
+
+      useEffect(() => {
+        localStorage.setItem('swimMeetTracker_scoringMode', JSON.stringify(scoringMode));
+      }, [scoringMode]);
+
+      useEffect(() => {
+        localStorage.setItem('swimMeetTracker_numIndividualPlaces', JSON.stringify(numIndividualPlaces));
+      }, [numIndividualPlaces]);
+
+      useEffect(() => {
+        localStorage.setItem('swimMeetTracker_numRelayPlaces', JSON.stringify(numRelayPlaces));
+      }, [numRelayPlaces]);
+
+      useEffect(() => {
+        localStorage.setItem('swimMeetTracker_numDivingPlaces', JSON.stringify(numDivingPlaces));
+      }, [numDivingPlaces]);
+
+      useEffect(() => {
+        localStorage.setItem('swimMeetTracker_savedTemplates', JSON.stringify(savedTemplates));
+      }, [savedTemplates]);
+
+      useEffect(() => {
+        localStorage.setItem('swimMeetTracker_individualPointSystem', JSON.stringify(individualPointSystem));
+      }, [individualPointSystem]);
+
+      useEffect(() => {
+        localStorage.setItem('swimMeetTracker_relayPointSystem', JSON.stringify(relayPointSystem));
+      }, [relayPointSystem]);
+
+      useEffect(() => {
+        localStorage.setItem('swimMeetTracker_divingPointSystem', JSON.stringify(divingPointSystem));
+      }, [divingPointSystem]);
+
+      const recalculateAllScores = (teamsList, eventsList) => {
+        const scores = {};
+        const girlsScores = {};
+        const boysScores = {};
+        
+        teamsList.forEach(team => {
+          scores[team.id] = 0;
+          girlsScores[team.id] = 0;
+          boysScores[team.id] = 0;
+        });
+
+        eventsList.forEach(event => {
+          const isDiving = event.name === 'Diving';
+          const isRelay = event.name.includes('Relay');
+          const pointSystem = isDiving ? divingPointSystem : isRelay ? relayPointSystem : individualPointSystem;
+          
+          event.results.forEach(result => {
+            const points = pointSystem[result.place] || 0;
+            
+            scores[result.teamId] = (scores[result.teamId] || 0) + points;
+            
+            if (event.gender === 'girls') {
+              girlsScores[result.teamId] = (girlsScores[result.teamId] || 0) + points;
+            } else if (event.gender === 'boys') {
+              boysScores[result.teamId] = (boysScores[result.teamId] || 0) + points;
+            }
+          });
+        });
+
+        setTeams(teamsList.map(team => ({
+          ...team,
+          score: scores[team.id] || 0,
+          girlsScore: girlsScores[team.id] || 0,
+          boysScore: boysScores[team.id] || 0
+        })));
+      };
+
+      const addTeam = () => {
+        if (newTeamName.trim()) {
+          setTeams([...teams, { 
+            id: Date.now(), 
+            name: newTeamName.trim(), 
+            score: 0,
+            girlsScore: 0,
+            boysScore: 0
+          }]);
+          setNewTeamName('');
+        }
+      };
+
+      const removeTeam = (id) => {
+        const newTeams = teams.filter(t => t.id !== id);
+        setTeams(newTeams);
+        recalculateAllScores(newTeams, events);
+      };
+
+      const startEditingTeam = (team) => {
+        setEditingTeamId(team.id);
+        setEditingTeamName(team.name);
+      };
+
+      const saveTeamName = (teamId) => {
+        if (editingTeamName.trim()) {
+          const newTeams = teams.map(team => 
+            team.id === teamId ? { ...team, name: editingTeamName.trim() } : team
+          );
+          setTeams(newTeams);
+        }
+        setEditingTeamId(null);
+        setEditingTeamName('');
+      };
+
+      const cancelEditingTeam = () => {
+        setEditingTeamId(null);
+        setEditingTeamName('');
+      };
+
+      const addEvent = () => {
+        if (newEventName.trim() || newEventType === 'diving') {
+          const eventName = newEventType === 'diving' ? 'Diving' : 
+                           newEventType === 'relay' ? `${newEventName.trim()} Relay` : 
+                           newEventName.trim();
+          
+          setEvents([...events, {
+            id: Date.now(),
+            name: eventName,
+            results: [],
+            gender: newEventGender
+          }]);
+          setNewEventName('');
+        }
+      };
+
+      const removeEvent = (id) => {
+        const newEvents = events.filter(e => e.id !== id);
+        setEvents(newEvents);
+        recalculateAllScores(teams, newEvents);
+      };
+
+      const moveEventUp = (index) => {
+        if (index === 0) return;
+        const newEvents = [...events];
+        [newEvents[index - 1], newEvents[index]] = [newEvents[index], newEvents[index - 1]];
+        setEvents(newEvents);
+      };
+
+      const moveEventDown = (index) => {
+        if (index === events.length - 1) return;
+        const newEvents = [...events];
+        [newEvents[index], newEvents[index + 1]] = [newEvents[index + 1], newEvents[index]];
+        setEvents(newEvents);
+      };
+
+      const saveTemplate = () => {
+        if (newTemplateName.trim()) {
+          const template = {
+            id: Date.now(),
+            name: newTemplateName.trim(),
+            numIndividualPlaces,
+            numRelayPlaces,
+            numDivingPlaces,
+            individualPointSystem: { ...individualPointSystem },
+            relayPointSystem: { ...relayPointSystem },
+            divingPointSystem: { ...divingPointSystem },
+            events: events.map(e => ({ name: e.name, gender: e.gender }))
+          };
+          setSavedTemplates([...savedTemplates, template]);
+          setNewTemplateName('');
+          setShowSaveTemplate(false);
+        }
+      };
+
+      const loadTemplate = (template) => {
+        setNumIndividualPlaces(template.numIndividualPlaces);
+        setNumRelayPlaces(template.numRelayPlaces);
+        setNumDivingPlaces(template.numDivingPlaces);
+        setIndividualPointSystem({ ...template.individualPointSystem });
+        setRelayPointSystem({ ...template.relayPointSystem });
+        setDivingPointSystem({ ...template.divingPointSystem });
+        
+        if (template.events) {
+          const newEvents = template.events.map((e, index) => ({
+            id: Date.now() + index,
+            name: e.name,
+            gender: e.gender,
+            results: []
+          }));
+          setEvents(newEvents);
+          recalculateAllScores(teams, newEvents);
+        } else {
+          recalculateAllScores(teams, events);
+        }
+      };
+
+      const deleteTemplate = (id) => {
+        setSavedTemplates(savedTemplates.filter(t => t.id !== id));
+      };
+
+      const updateEventResult = (eventId, place, teamId) => {
+        const newEvents = events.map(event => {
+          if (event.id === eventId) {
+            const newResults = [...event.results];
+            const existingIndex = newResults.findIndex(r => r.place === place);
+            
+            if (existingIndex >= 0) {
+              if (teamId === '') {
+                newResults.splice(existingIndex, 1);
+              } else {
+                newResults[existingIndex] = { place, teamId };
+              }
+            } else if (teamId !== '') {
+              newResults.push({ place, teamId });
+            }
+            
+            return { ...event, results: newResults };
+          }
+          return event;
+        });
+        
+        setEvents(newEvents);
+        recalculateAllScores(teams, newEvents);
+      };
+
+      const saveIndividualPointSystem = () => {
+        setIndividualPointSystem({ ...tempIndividualPoints });
+        setEditingIndividualPoints(false);
+        recalculateAllScores(teams, events);
+      };
+
+      const saveRelayPointSystem = () => {
+        setRelayPointSystem({ ...tempRelayPoints });
+        setEditingRelayPoints(false);
+        recalculateAllScores(teams, events);
+      };
+
+      const saveDivingPointSystem = () => {
+        setDivingPointSystem({ ...tempDivingPoints });
+        setEditingDivingPoints(false);
+        recalculateAllScores(teams, events);
+      };
+
+      useEffect(() => {
+        recalculateAllScores(teams, events);
+      }, [scoringMode]);
+
+      const sortedTeams = [...teams].sort((a, b) => {
+        if (scoringMode === 'girls') {
+          return b.girlsScore - a.girlsScore;
+        } else if (scoringMode === 'boys') {
+          return b.boysScore - a.boysScore;
+        }
+        return b.score - a.score;
+      });
+
+      const getPlacesArray = (event) => {
+        if (!event || !event.name) return [];
+        const isDiving = event.name === 'Diving';
+        const isRelay = event.name.includes('Relay');
+        const numPlaces = isDiving ? numDivingPlaces : isRelay ? numRelayPlaces : numIndividualPlaces;
+        return Array.from({ length: numPlaces }, (_, i) => i + 1);
+      };
+
+      const highSchoolEvents = [
+        { name: 'Diving', gender: 'girls' },
+        { name: 'Diving', gender: 'boys' },
+        { name: '200 Medley Relay', gender: 'girls' },
+        { name: '200 Medley Relay', gender: 'boys' },
+        { name: '200 Freestyle', gender: 'girls' },
+        { name: '200 Freestyle', gender: 'boys' },
+        { name: '200 IM', gender: 'girls' },
+        { name: '200 IM', gender: 'boys' },
+        { name: '50 Freestyle', gender: 'girls' },
+        { name: '50 Freestyle', gender: 'boys' },
+        { name: '100 Butterfly', gender: 'girls' },
+        { name: '100 Butterfly', gender: 'boys' },
+        { name: '100 Freestyle', gender: 'girls' },
+        { name: '100 Freestyle', gender: 'boys' },
+        { name: '500 Freestyle', gender: 'girls' },
+        { name: '500 Freestyle', gender: 'boys' },
+        { name: '200 Freestyle Relay', gender: 'girls' },
+        { name: '200 Freestyle Relay', gender: 'boys' },
+        { name: '100 Backstroke', gender: 'girls' },
+        { name: '100 Backstroke', gender: 'boys' },
+        { name: '100 Breaststroke', gender: 'girls' },
+        { name: '100 Breaststroke', gender: 'boys' },
+        { name: '400 Freestyle Relay', gender: 'girls' },
+        { name: '400 Freestyle Relay', gender: 'boys' }
+      ];
+
+      const loadHighSchoolMeet = () => {
+        setNumIndividualPlaces(5);
+        setNumRelayPlaces(3);
+        setNumDivingPlaces(3);
+        setIndividualPointSystem({
+          1: 6, 2: 4, 3: 3, 4: 2, 5: 1, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0, 15: 0, 16: 0, 17: 0, 18: 0, 19: 0, 20: 0
+        });
+        setRelayPointSystem({
+          1: 8, 2: 4, 3: 2, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0, 15: 0, 16: 0, 17: 0, 18: 0, 19: 0, 20: 0
+        });
+        setDivingPointSystem({
+          1: 5, 2: 3, 3: 1, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0, 15: 0, 16: 0, 17: 0, 18: 0, 19: 0, 20: 0
+        });
+        const newEvents = highSchoolEvents.map((e, index) => ({
+          id: Date.now() + index,
+          name: e.name,
+          gender: e.gender,
+          results: []
+        }));
+        setEvents(newEvents);
+        recalculateAllScores(teams, newEvents);
+      };
+
+      const loadCompetitionMode = () => {
+        setNumIndividualPlaces(16);
+        setNumRelayPlaces(16);
+        setNumDivingPlaces(16);
+        setIndividualPointSystem({
+          1: 20, 2: 17, 3: 16, 4: 15, 5: 14, 6: 13, 7: 12, 8: 11, 9: 9, 10: 7, 11: 6, 12: 5, 13: 4, 14: 3, 15: 2, 16: 1, 17: 0, 18: 0, 19: 0, 20: 0
+        });
+        setRelayPointSystem({
+          1: 40, 2: 34, 3: 32, 4: 30, 5: 28, 6: 26, 7: 24, 8: 22, 9: 18, 10: 14, 11: 12, 12: 10, 13: 8, 14: 6, 15: 4, 16: 2, 17: 0, 18: 0, 19: 0, 20: 0
+        });
+        setDivingPointSystem({
+          1: 20, 2: 17, 3: 16, 4: 15, 5: 14, 6: 13, 7: 12, 8: 11, 9: 9, 10: 7, 11: 6, 12: 5, 13: 4, 14: 3, 15: 2, 16: 1, 17: 0, 18: 0, 19: 0, 20: 0
+        });
+        const newEvents = highSchoolEvents.map((e, index) => ({
+          id: Date.now() + index,
+          name: e.name,
+          gender: e.gender,
+          results: []
+        }));
+        setEvents(newEvents);
+        recalculateAllScores(teams, newEvents);
+      };
+
+      return (
+        <div className={`min-h-screen p-4 ${darkMode ? 'bg-gradient-to-br from-gray-900 to-gray-800' : 'bg-gradient-to-br from-blue-50 to-cyan-50'}`}>
+          <div className="max-w-6xl mx-auto">
+            <div className={`rounded-lg shadow-lg p-4 sm:p-6 mb-6 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3">
+                <div className="flex items-center gap-3">
+                  <Swimmer className={`w-8 h-8 ${darkMode ? 'text-cyan-400' : 'text-blue-600'}`} />
+                  <h1 className={`text-2xl sm:text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Swim Meet Tracker</h1>
+                </div>
+                <button
+                  onClick={() => setShowSettings(!showSettings)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition w-fit ${darkMode ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}
+                >
+                  <Settings className="w-5 h-5" />
+                  Settings
+                </button>
+              </div>
+
+              <div className={`rounded-lg p-6 mb-6 ${darkMode ? 'bg-gradient-to-r from-gray-700 to-gray-600' : 'bg-gradient-to-r from-blue-500 to-cyan-500'}`}>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
+                  <h2 className="text-2xl font-bold text-white">Scoreboard</h2>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => setScoringMode('combined')}
+                      className={`px-3 py-1 rounded-lg text-sm font-medium transition ${
+                        scoringMode === 'combined'
+                          ? 'bg-white text-blue-600'
+                          : 'bg-white/20 text-white hover:bg-white/30'
+                      }`}
+                    >
+                      Combined
+                    </button>
+                    <button
+                      onClick={() => setScoringMode('girls')}
+                      className={`px-3 py-1 rounded-lg text-sm font-medium transition ${
+                        scoringMode === 'girls'
+                          ? 'bg-pink-500 text-white'
+                          : 'bg-pink-400/40 text-white hover:bg-pink-400/60'
+                      }`}
+                    >
+                      Girls Only
+                    </button>
+                    <button
+                      onClick={() => setScoringMode('boys')}
+                      className={`px-3 py-1 rounded-lg text-sm font-medium transition ${
+                        scoringMode === 'boys'
+                          ? 'bg-indigo-500 text-white'
+                          : 'bg-indigo-400/40 text-white hover:bg-indigo-400/60'
+                      }`}
+                    >
+                      Boys Only
+                    </button>
+                  </div>
+                </div>
+                <div className="grid gap-3">
+                  {sortedTeams.map((team, index) => (
+                    <div key={team.id} className={`rounded-lg p-3 sm:p-4 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <div className="flex items-center gap-3 sm:gap-4">
+                          <span className={`text-xl sm:text-2xl font-bold ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>#{index + 1}</span>
+                          {editingTeamId === team.id ? (
+                            <input
+                              type="text"
+                              value={editingTeamName}
+                              onChange={(e) => setEditingTeamName(e.target.value)}
+                              onBlur={() => saveTeamName(team.id)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') saveTeamName(team.id);
+                                if (e.key === 'Escape') cancelEditingTeam();
+                              }}
+                              autoFocus
+                              className={`text-lg sm:text-xl font-semibold px-2 py-1 border rounded ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}`}
+                            />
+                          ) : (
+                            <span 
+                              onClick={() => startEditingTeam(team)}
+                              className={`text-lg sm:text-xl font-semibold cursor-pointer hover:underline ${darkMode ? 'text-white' : 'text-gray-800'}`}
+                            >
+                              {team.name}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center justify-between sm:justify-end gap-4 sm:gap-6 ml-8 sm:ml-0">
+                          {scoringMode === 'combined' && (
+                            <div className="flex gap-4 text-sm">
+                              <div className="text-center">
+                                <div className={`font-medium ${darkMode ? 'text-pink-400' : 'text-pink-600'}`}>Girls</div>
+                                <div className={`text-lg font-bold ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>{team.girlsScore}</div>
+                              </div>
+                              <div className="text-center">
+                                <div className={`font-medium ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>Boys</div>
+                                <div className={`text-lg font-bold ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>{team.boysScore}</div>
+                              </div>
+                            </div>
+                          )}
+                          <span className={`text-2xl sm:text-3xl font-bold ${darkMode ? 'text-cyan-400' : 'text-blue-600'}`}>
+                            {scoringMode === 'girls' ? team.girlsScore : scoringMode === 'boys' ? team.boysScore : team.score}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {showSettings && (
+                <div className={`rounded-lg p-4 sm:p-6 mb-6 relative ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
+                    <h3 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Settings</h3>
+                    <button
+                      onClick={() => setShowSettings(false)}
+                      className={`p-2 rounded-lg transition ${darkMode ? 'hover:bg-gray-600' : 'hover:bg-gray-200'}`}
+                    >
+                      <X className={`w-5 h-5 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`} />
+                    </button>
+                  </div>
+                  
+                  <div className="mb-6">
+                    <h4 className={`font-semibold mb-2 ${darkMode ? 'text-white' : 'text-gray-800'}`}>Appearance</h4>
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={darkMode}
+                        onChange={(e) => setDarkMode(e.target.checked)}
+                        className="w-5 h-5"
+                      />
+                      <span className={darkMode ? 'text-gray-200' : 'text-gray-700'}>Dark Mode</span>
+                    </label>
+                  </div>
+
+                  <div className="mb-6">
+                    <h4 className={`font-semibold mb-2 ${darkMode ? 'text-white' : 'text-gray-800'}`}>Data Management</h4>
+                    <p className={`text-sm mb-3 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                      Your data is automatically saved and will persist when you refresh the page.
+                    </p>
+                    <button
+                      onClick={() => {
+                        if (confirm('Are you sure you want to clear all data? This will reset teams, events, scores, and all settings to defaults.')) {
+                          localStorage.clear();
+                          window.location.reload();
+                        }
+                      }}
+                      className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium"
+                    >
+                      Clear All Data & Reset
+                    </button>
+                  </div>
+
+                  <div className="mb-6">
+                    <h4 className={`font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>Scoring Templates</h4>
+                    
+                    <div className="flex flex-wrap gap-3 mb-4">
+                      <button
+                        onClick={loadHighSchoolMeet}
+                        className={`px-4 py-2 rounded-lg ${darkMode ? 'bg-pink-600 hover:bg-pink-700' : 'bg-pink-500 hover:bg-pink-600'} text-white font-medium`}
+                      >
+                        High School Meet
+                      </button>
+                      <button
+                        onClick={loadCompetitionMode}
+                        className={`px-4 py-2 rounded-lg ${darkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'} text-white font-medium`}
+                      >
+                        Competition Mode (Top 16)
+                      </button>
+                    </div>
+
+                    {savedTemplates.length > 0 && (
+                      <div className="mb-4">
+                        <p className={`text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Your Custom Templates:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {savedTemplates.map(template => (
+                            <div key={template.id} className={`flex items-center gap-2 px-3 py-2 rounded-lg ${darkMode ? 'bg-gray-600' : 'bg-white border border-gray-300'}`}>
+                              <button
+                                onClick={() => loadTemplate(template)}
+                                className={`font-medium ${darkMode ? 'text-cyan-400 hover:text-cyan-300' : 'text-blue-600 hover:text-blue-700'}`}
+                              >
+                                {template.name}
+                              </button>
+                              <button
+                                onClick={() => deleteTemplate(template.id)}
+                                className="text-red-500 hover:text-red-700"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {showSaveTemplate ? (
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <input
+                          type="text"
+                          value={newTemplateName}
+                          onChange={(e) => setNewTemplateName(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && saveTemplate()}
+                          placeholder="Template name"
+                          autoFocus
+                          className={`flex-1 px-3 py-2 border rounded-lg ${darkMode ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400' : 'bg-white border-gray-300'}`}
+                        />
+                        <button
+                          onClick={saveTemplate}
+                          className={`px-4 py-2 rounded-lg ${darkMode ? 'bg-green-600 hover:bg-green-700' : 'bg-green-500 hover:bg-green-600'} text-white font-medium`}
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowSaveTemplate(false);
+                            setNewTemplateName('');
+                          }}
+                          className={`px-4 py-2 rounded-lg ${darkMode ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-300 hover:bg-gray-400'} text-gray-800 font-medium`}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setShowSaveTemplate(true)}
+                        className={`px-4 py-2 rounded-lg ${darkMode ? 'bg-gray-600 hover:bg-gray-500 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-800'} font-medium`}
+                      >
+                        + Save Current Settings as Template
+                      </button>
+                    )}
+
+                    <p className={`text-xs mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                      Templates save all point systems, number of places, and event lineup
+                    </p>
+                  </div>
+
+                  <div className="mb-6">
+                    <h4 className={`font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>Number of Scoring Places</h4>
+                    
+                    <div className="mb-3">
+                      <label className={`text-sm mb-1 block ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Diving Events</label>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="number"
+                          min="1"
+                          max="20"
+                          value={numDivingPlaces}
+                          onChange={(e) => setNumDivingPlaces(Math.max(1, Math.min(20, parseInt(e.target.value) || 1)))}
+                          className={`w-20 px-3 py-2 border rounded-lg text-center ${darkMode ? 'bg-gray-600 border-gray-500 text-white' : 'bg-white border-gray-300'}`}
+                        />
+                        <span className={darkMode ? 'text-gray-200' : 'text-gray-700'}>places (1-20)</span>
+                      </div>
+                    </div>
+
+                    <div className="mb-3">
+                      <label className={`text-sm mb-1 block ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Individual Events</label>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="number"
+                          min="1"
+                          max="20"
+                          value={numIndividualPlaces}
+                          onChange={(e) => setNumIndividualPlaces(Math.max(1, Math.min(20, parseInt(e.target.value) || 1)))}
+                          className={`w-20 px-3 py-2 border rounded-lg text-center ${darkMode ? 'bg-gray-600 border-gray-500 text-white' : 'bg-white border-gray-300'}`}
+                        />
+                        <span className={darkMode ? 'text-gray-200' : 'text-gray-700'}>places (1-20)</span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className={`text-sm mb-1 block ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Relay Events</label>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="number"
+                          min="1"
+                          max="20"
+                          value={numRelayPlaces}
+                          onChange={(e) => setNumRelayPlaces(Math.max(1, Math.min(20, parseInt(e.target.value) || 1)))}
+                          className={`w-20 px-3 py-2 border rounded-lg text-center ${darkMode ? 'bg-gray-600 border-gray-500 text-white' : 'bg-white border-gray-300'}`}
+                        />
+                        <span className={darkMode ? 'text-gray-200' : 'text-gray-700'}>places (1-20)</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="mb-6">
+                    <h4 className={`font-semibold mb-2 ${darkMode ? 'text-white' : 'text-gray-800'}`}>Manage Teams</h4>
+                    <div className="flex flex-col sm:flex-row gap-2 mb-3">
+                      <input
+                        type="text"
+                        value={newTeamName}
+                        onChange={(e) => setNewTeamName(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && addTeam()}
+                        placeholder="Team name"
+                        className={`flex-1 px-3 py-2 border rounded-lg ${darkMode ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400' : 'bg-white border-gray-300'}`}
+                      />
+                      <button
+                        onClick={addTeam}
+                        className={`px-4 py-2 rounded-lg flex items-center gap-2 ${darkMode ? 'bg-cyan-600 hover:bg-cyan-700' : 'bg-blue-600 hover:bg-blue-700'} text-white`}
+                      >
+                        <Plus className="w-4 h-4" /> Add Team
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {teams.map(team => (
+                        <div key={team.id} className={`flex items-center gap-2 px-3 py-2 rounded-lg ${darkMode ? 'bg-gray-600 text-white' : 'bg-white'}`}>
+                          <span>{team.name}</span>
+                          <button
+                            onClick={() => removeTeam(team.id)}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="mb-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-2">
+                      <h4 className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Diving Point System</h4>
+                      <button
+                        onClick={() => {
+                          if (editingDivingPoints) {
+                            saveDivingPointSystem();
+                          } else {
+                            setTempDivingPoints({ ...divingPointSystem });
+                            setEditingDivingPoints(true);
+                          }
+                        }}
+                        className={`px-3 py-1 rounded-lg flex items-center gap-2 w-fit ${darkMode ? 'bg-cyan-600 hover:bg-cyan-700' : 'bg-blue-600 hover:bg-blue-700'} text-white`}
+                      >
+                        {editingDivingPoints ? 'Save' : <><Edit2 className="w-4 h-4" /> Edit</>}
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-3 mb-6">
+                      {getPlacesArray({ name: 'Diving' }).map(place => (
+                        <div key={place} className={`p-2 sm:p-3 rounded-lg ${darkMode ? 'bg-gray-600' : 'bg-white'}`}>
+                          <label className={`text-xs sm:text-sm font-medium block mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                            {place === 1 ? '1st' : place === 2 ? '2nd' : place === 3 ? '3rd' : `${place}th`}
+                          </label>
+                          <input
+                            type="number"
+                            value={editingDivingPoints ? (tempDivingPoints[place] ?? 0) : (divingPointSystem[place] ?? 0)}
+                            onChange={(e) => setTempDivingPoints({
+                              ...tempDivingPoints,
+                              [place]: parseInt(e.target.value) || 0
+                            })}
+                            disabled={!editingDivingPoints}
+                            className={`w-full px-1 sm:px-2 py-1 border rounded text-center text-sm ${darkMode ? 'bg-gray-700 border-gray-500 text-white disabled:bg-gray-600' : 'disabled:bg-gray-50'}`}
+                          />
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-2">
+                      <h4 className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Individual Events Point System</h4>
+                      <button
+                        onClick={() => {
+                          if (editingIndividualPoints) {
+                            saveIndividualPointSystem();
+                          } else {
+                            setTempIndividualPoints({ ...individualPointSystem });
+                            setEditingIndividualPoints(true);
+                          }
+                        }}
+                        className={`px-3 py-1 rounded-lg flex items-center gap-2 w-fit ${darkMode ? 'bg-cyan-600 hover:bg-cyan-700' : 'bg-blue-600 hover:bg-blue-700'} text-white`}
+                      >
+                        {editingIndividualPoints ? 'Save' : <><Edit2 className="w-4 h-4" /> Edit</>}
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-3 mb-6">
+                      {getPlacesArray({ name: 'Swimming' }).map(place => (
+                        <div key={place} className={`p-2 sm:p-3 rounded-lg ${darkMode ? 'bg-gray-600' : 'bg-white'}`}>
+                          <label className={`text-xs sm:text-sm font-medium block mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                            {place === 1 ? '1st' : place === 2 ? '2nd' : place === 3 ? '3rd' : `${place}th`}
+                          </label>
+                          <input
+                            type="number"
+                            value={editingIndividualPoints ? (tempIndividualPoints[place] ?? 0) : (individualPointSystem[place] ?? 0)}
+                            onChange={(e) => setTempIndividualPoints({
+                              ...tempIndividualPoints,
+                              [place]: parseInt(e.target.value) || 0
+                            })}
+                            disabled={!editingIndividualPoints}
+                            className={`w-full px-1 sm:px-2 py-1 border rounded text-center text-sm ${darkMode ? 'bg-gray-700 border-gray-500 text-white disabled:bg-gray-600' : 'disabled:bg-gray-50'}`}
+                          />
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-2">
+                      <h4 className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Relay Events Point System</h4>
+                      <button
+                        onClick={() => {
+                          if (editingRelayPoints) {
+                            saveRelayPointSystem();
+                          } else {
+                            setTempRelayPoints({ ...relayPointSystem });
+                            setEditingRelayPoints(true);
+                          }
+                        }}
+                        className={`px-3 py-1 rounded-lg flex items-center gap-2 w-fit ${darkMode ? 'bg-cyan-600 hover:bg-cyan-700' : 'bg-blue-600 hover:bg-blue-700'} text-white`}
+                      >
+                        {editingRelayPoints ? 'Save' : <><Edit2 className="w-4 h-4" /> Edit</>}
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-3">
+                      {getPlacesArray({ name: 'Relay' }).map(place => (
+                        <div key={place} className={`p-2 sm:p-3 rounded-lg ${darkMode ? 'bg-gray-600' : 'bg-white'}`}>
+                          <label className={`text-xs sm:text-sm font-medium block mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                            {place === 1 ? '1st' : place === 2 ? '2nd' : place === 3 ? '3rd' : `${place}th`}
+                          </label>
+                          <input
+                            type="number"
+                            value={editingRelayPoints ? (tempRelayPoints[place] ?? 0) : (relayPointSystem[place] ?? 0)}
+                            onChange={(e) => setTempRelayPoints({
+                              ...tempRelayPoints,
+                              [place]: parseInt(e.target.value) || 0
+                            })}
+                            disabled={!editingRelayPoints}
+                            className={`w-full px-1 sm:px-2 py-1 border rounded text-center text-sm ${darkMode ? 'bg-gray-700 border-gray-500 text-white disabled:bg-gray-600' : 'disabled:bg-gray-50'}`}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <h3 className={`text-xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>Events</h3>
+
+                <div className={`rounded-lg p-4 mb-6 ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                  <h4 className={`font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>Add New Event</h4>
+                  <div className="flex flex-col sm:flex-row gap-2 mb-2">
+                    <input
+                      type="text"
+                      value={newEventName}
+                      onChange={(e) => setNewEventName(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && addEvent()}
+                      placeholder={newEventType === 'diving' ? 'Diving (name auto-filled)' : newEventType === 'relay' ? 'e.g., 200 Medley' : 'e.g., 100 Backstroke'}
+                      disabled={newEventType === 'diving'}
+                      className={`flex-1 px-3 py-2 border rounded-lg ${darkMode ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400' : 'bg-white border-gray-300'} ${newEventType === 'diving' ? 'opacity-50' : ''}`}
+                    />
+                    <div className="flex gap-2 flex-wrap">
+                      <select
+                        value={newEventType}
+                        onChange={(e) => {
+                          setNewEventType(e.target.value);
+                          if (e.target.value === 'diving') setNewEventName('Diving');
+                          else if (newEventName === 'Diving') setNewEventName('');
+                        }}
+                        className={`flex-1 sm:flex-none px-3 py-2 border rounded-lg ${darkMode ? 'bg-gray-600 border-gray-500 text-white' : 'bg-white border-gray-300'}`}
+                      >
+                        <option value="individual">Individual</option>
+                        <option value="relay">Relay</option>
+                        <option value="diving">Diving</option>
+                      </select>
+                      <select
+                        value={newEventGender}
+                        onChange={(e) => setNewEventGender(e.target.value)}
+                        className={`flex-1 sm:flex-none px-3 py-2 border rounded-lg ${darkMode ? 'bg-gray-600 border-gray-500 text-white' : 'bg-white border-gray-300'}`}
+                      >
+                        <option value="girls">Girls</option>
+                        <option value="boys">Boys</option>
+                      </select>
+                      <button
+                        onClick={addEvent}
+                        className={`flex-1 sm:flex-none px-4 py-2 rounded-lg flex items-center justify-center gap-2 text-white ${darkMode ? 'bg-cyan-600 hover:bg-cyan-700' : 'bg-blue-600 hover:bg-blue-700'}`}
+                      >
+                        <Plus className="w-4 h-4" /> Add
+                      </button>
+                    </div>
+                  </div>
+                  <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    {newEventType === 'diving' && 'Diving events use their own point system'}
+                    {newEventType === 'relay' && '"Relay" will be automatically added to the event name'}
+                    {newEventType === 'individual' && 'Individual swimming events'}
+                  </p>
+                </div>
+
+                {scoringMode === 'combined' ? (
+                  <div className="space-y-4">
+                    {events.map((event, index) => {
+                      const isDiving = event.name === 'Diving';
+                      const isRelay = event.name.includes('Relay');
+                      return (
+                        <div key={event.id} className={`rounded-lg p-4 ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                          <div className="flex items-center justify-between mb-3">
+                            <h5 className={`font-semibold text-lg ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+                              <span className={event.gender === 'girls' ? (darkMode ? 'text-pink-400' : 'text-pink-600') : (darkMode ? 'text-blue-400' : 'text-blue-600')}>
+                                {event.gender === 'girls' ? 'Girls' : 'Boys'}
+                              </span>
+                              {' '}{event.name}
+                            </h5>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => moveEventUp(index)}
+                                disabled={index === 0}
+                                className={`p-1 rounded ${index === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-gray-600'} ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}
+                              >
+                                <ChevronUp className="w-5 h-5" />
+                              </button>
+                              <button
+                                onClick={() => moveEventDown(index)}
+                                disabled={index === events.length - 1}
+                                className={`p-1 rounded ${index === events.length - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-gray-600'} ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}
+                              >
+                                <ChevronDown className="w-5 h-5" />
+                              </button>
+                              <button
+                                onClick={() => removeEvent(event.id)}
+                                className="p-1 rounded hover:bg-red-500 text-red-500 hover:text-white"
+                              >
+                                <X className="w-5 h-5" />
+                              </button>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                            {getPlacesArray(event).map(place => {
+                              const result = event.results.find(r => r.place === place);
+                              const pointSystem = isDiving ? divingPointSystem : isRelay ? relayPointSystem : individualPointSystem;
+                              return (
+                                <div key={place} className={`p-2 rounded ${darkMode ? 'bg-gray-600' : 'bg-white'}`}>
+                                  <label className={`text-xs font-medium block mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                                    {place === 1 ? '1st' : place === 2 ? '2nd' : place === 3 ? '3rd' : `${place}th`} ({pointSystem[place] ?? 0} pts)
+                                  </label>
+                                  <select
+                                    value={result?.teamId || ''}
+                                    onChange={(e) => updateEventResult(event.id, place, e.target.value)}
+                                    className={`w-full px-2 py-1 border rounded text-sm ${darkMode ? 'bg-gray-700 border-gray-500 text-white' : 'bg-white'}`}
+                                  >
+                                    <option value="">-</option>
+                                    {teams.map(team => (
+                                      <option key={team.id} value={team.id}>
+                                        {team.name}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div>
+                    <h4 className={`text-lg font-semibold mb-4 ${scoringMode === 'girls' ? (darkMode ? 'text-pink-400' : 'text-pink-600') : (darkMode ? 'text-blue-400' : 'text-blue-600')}`}>
+                      {scoringMode === 'girls' ? 'Girls Events' : 'Boys Events'}
+                    </h4>
+                    <div className="space-y-4">
+                      {events.filter(e => e.gender === scoringMode).map((event, index) => {
+                        const isDiving = event.name === 'Diving';
+                        const isRelay = event.name.includes('Relay');
+                        return (
+                          <div key={event.id} className={`rounded-lg p-4 ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                            <div className="flex items-center justify-between mb-3">
+                              <h5 className={`font-semibold text-lg ${darkMode ? 'text-white' : 'text-gray-800'}`}>{event.name}</h5>
+                            </div>
+                            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                              {getPlacesArray(event).map(place => {
+                                const result = event.results.find(r => r.place === place);
+                                const pointSystem = isDiving ? divingPointSystem : isRelay ? relayPointSystem : individualPointSystem;
+                                return (
+                                  <div key={place} className={`p-2 rounded ${darkMode ? 'bg-gray-600' : 'bg-white'}`}>
+                                    <label className={`text-xs font-medium block mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                                      {place === 1 ? '1st' : place === 2 ? '2nd' : place === 3 ? '3rd' : `${place}th`} ({pointSystem[place] ?? 0} pts)
+                                    </label>
+                                    <select
+                                      value={result?.teamId || ''}
+                                      onChange={(e) => updateEventResult(event.id, place, e.target.value)}
+                                      className={`w-full px-2 py-1 border rounded text-sm ${darkMode ? 'bg-gray-700 border-gray-500 text-white' : 'bg-white'}`}
+                                    >
+                                      <option value="">-</option>
+                                      {teams.map(team => (
+                                        <option key={team.id} value={team.id}>
+                                          {team.name}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<SwimMeetTracker />);
+  </script>
+</body>
+</html>
