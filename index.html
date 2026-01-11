@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Swim Meet Tracker</title>
+  <title>Swim Meet Score</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2322d3ee' stroke-width='2'><circle cx='19' cy='6' r='2.5'/><path stroke-linecap='round' stroke-linejoin='round' d='M3 18c1.2 0 2-.8 3-1.5s1.8-1.5 3-1.5 2 .8 3 1.5 1.8 1.5 3 1.5 2-.8 3-1.5 1.8-1.5 3-1.5'/><path stroke-linecap='round' stroke-linejoin='round' d='M3 22c1.2 0 2-.8 3-1.5s1.8-1.5 3-1.5 2 .8 3 1.5 1.8 1.5 3 1.5 2-.8 3-1.5 1.8-1.5 3-1.5'/><path stroke-linecap='round' stroke-linejoin='round' d='M16.5 7.5L12 10l-4.5 2.5'/><path stroke-linecap='round' stroke-linejoin='round' d='M7 14.5l2-1.5'/></svg>">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
@@ -505,7 +505,7 @@
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3">
                 <div className="flex items-center gap-3">
                   <Swimmer className={`w-8 h-8 ${darkMode ? 'text-cyan-400' : 'text-blue-600'}`} />
-                  <h1 className={`text-2xl sm:text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Swim Meet Tracker</h1>
+                  <h1 className={`text-2xl sm:text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Swim Meet Score</h1>
                 </div>
                 <button
                   onClick={() => setShowSettings(!showSettings)}
