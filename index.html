@@ -470,8 +470,33 @@
       };
 
       const highSchoolEvents = [
+        { name: '200 Medley Relay', gender: 'girls' },
+        { name: '200 Medley Relay', gender: 'boys' },
+        { name: '200 Freestyle', gender: 'girls' },
+        { name: '200 Freestyle', gender: 'boys' },
+        { name: '200 IM', gender: 'girls' },
+        { name: '200 IM', gender: 'boys' },
+        { name: '50 Freestyle', gender: 'girls' },
+        { name: '50 Freestyle', gender: 'boys' },
+        { name: '100 Butterfly', gender: 'girls' },
+        { name: '100 Butterfly', gender: 'boys' },
+        { name: '100 Freestyle', gender: 'girls' },
+        { name: '100 Freestyle', gender: 'boys' },
         { name: 'Diving', gender: 'girls' },
         { name: 'Diving', gender: 'boys' },
+        { name: '500 Freestyle', gender: 'girls' },
+        { name: '500 Freestyle', gender: 'boys' },
+        { name: '200 Freestyle Relay', gender: 'girls' },
+        { name: '200 Freestyle Relay', gender: 'boys' },
+        { name: '100 Backstroke', gender: 'girls' },
+        { name: '100 Backstroke', gender: 'boys' },
+        { name: '100 Breaststroke', gender: 'girls' },
+        { name: '100 Breaststroke', gender: 'boys' },
+        { name: '400 Freestyle Relay', gender: 'girls' },
+        { name: '400 Freestyle Relay', gender: 'boys' }
+      ];
+
+      const competitionEvents = [
         { name: '200 Medley Relay', gender: 'girls' },
         { name: '200 Medley Relay', gender: 'boys' },
         { name: '200 Freestyle', gender: 'girls' },
@@ -532,7 +557,7 @@
         setDivingPointSystem({
           1: 20, 2: 17, 3: 16, 4: 15, 5: 14, 6: 13, 7: 12, 8: 11, 9: 9, 10: 7, 11: 6, 12: 5, 13: 4, 14: 3, 15: 2, 16: 1, 17: 0, 18: 0, 19: 0, 20: 0
         });
-        const newEvents = highSchoolEvents.map((e, index) => ({
+        const newEvents = competitionEvents.map((e, index) => ({
           id: Date.now() + index,
           name: e.name,
           gender: e.gender,
