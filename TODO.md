@@ -2,7 +2,6 @@
 
 ## UI Improvements
 - [ ] Put diving where it should go in the event order instead of at the top of the list
-- [ ] Remove "Individual swimming event" from "settings-> Add new events" footer
 - [ ] Instead of having to click an edit and a save button in settings, allow clicking on the numbers directly to edit and hit enter to save
 - [ ] Make the area where users enter the scores (dropdowns) less wide so they fit better on one row on a cellphone screen
 - [ ] Make the X, to close the settings menu, always in the top right and make it red
