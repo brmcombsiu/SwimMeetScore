@@ -1,6 +1,6 @@
 {
   "name": "SwimMeetScore",
-  "short_name": "SMS",
+  "short_name": "SwimMeetScore",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
