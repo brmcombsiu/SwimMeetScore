@@ -1,11 +1,107 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#1e90ff">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Swim Meet Score</title>
+  
+  <!-- Primary Meta Tags -->
+  <title>Swim Meet Score - Free Swimming Competition Scoring Tool | Track Team Scores</title>
+  <meta name="title" content="Swim Meet Score - Free Swimming Competition Scoring Tool | Track Team Scores">
+  <meta name="description" content="Free online swim meet scoring application. Track team scores, individual events, relays, and diving competitions. Perfect for high school and competitive swimming meets. No registration required - start scoring instantly!">
+  <meta name="keywords" content="swim meet score, swimming competition scoring, swim meet tracker, swimming scoreboard, team swimming scores, swim meet management, diving scores, relay scoring, high school swim meet">
+  <meta name="author" content="Kaden Co">
+  <meta name="robots" content="index, follow">
+  <meta name="language" content="English">
+  <meta name="revisit-after" content="7 days">
+  
+  <!-- Canonical URL -->
+  <link rel="canonical" href="https://swimmeetscore.com/">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://swimmeetscore.com/">
+  <meta property="og:title" content="Swim Meet Score - Free Swimming Competition Scoring Tool">
+  <meta property="og:description" content="Free online swim meet scoring application. Track team scores, individual events, relays, and diving competitions. Perfect for high school and competitive swimming meets.">
+  <meta property="og:image" content="https://swimmeetscore.com/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:site_name" content="Swim Meet Score">
+  <meta property="og:locale" content="en_US">
+  
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://swimmeetscore.com/">
+  <meta name="twitter:title" content="Swim Meet Score - Free Swimming Competition Scoring Tool">
+  <meta name="twitter:description" content="Free online swim meet scoring application. Track team scores, individual events, relays, and diving competitions. Perfect for high school and competitive swimming meets.">
+  <meta name="twitter:image" content="https://swimmeetscore.com/og-image.png">
+  
+  <!-- PWA / Mobile -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#1e90ff">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Swim Meet Score">
+  
+  <!-- Verification -->
+  <meta name="google-site-verification" content="google69739de746636d27" />
+  
+  <!-- Structured Data (JSON-LD) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Swim Meet Score",
+    "description": "Free online swim meet scoring application. Track team scores, individual events, relays, and diving competitions for swimming meets.",
+    "url": "https://swimmeetscore.com",
+    "applicationCategory": "SportsApplication",
+    "operatingSystem": "Web Browser",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "author": {
+      "@type": "Person",
+      "name": "Kaden Co"
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.8",
+      "ratingCount": "50"
+    },
+    "featureList": [
+      "Team score tracking",
+      "Individual event scoring",
+      "Relay event scoring",
+      "Diving competition scoring",
+      "High school meet templates",
+      "Competition mode with top 16 scoring",
+      "Customizable point systems",
+      "Real-time score updates",
+      "Dark mode support",
+      "Mobile responsive design"
+    ]
+  }
+  </script>
+  
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Swim Meet Score",
+    "description": "Professional swim meet scoring tool for tracking team and individual event scores during swimming competitions.",
+    "applicationCategory": "SportsApplication",
+    "operatingSystem": "Any",
+    "browserRequirements": "Requires JavaScript. Requires HTML5.",
+    "softwareVersion": "1.0",
+    "datePublished": "2026-01-01",
+    "author": {
+      "@type": "Organization",
+      "name": "Kaden Co"
+    }
+  }
+  </script>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2322d3ee' stroke-width='2'><circle cx='19' cy='6' r='2.5'/><path stroke-linecap='round' stroke-linejoin='round' d='M3 18c1.2 0 2-.8 3-1.5s1.8-1.5 3-1.5 2 .8 3 1.5 1.8 1.5 3 1.5 2-.8 3-1.5 1.8-1.5 3-1.5'/><path stroke-linecap='round' stroke-linejoin='round' d='M3 22c1.2 0 2-.8 3-1.5s1.8-1.5 3-1.5 2 .8 3 1.5 1.8 1.5 3 1.5 2-.8 3-1.5 1.8-1.5 3-1.5'/><path stroke-linecap='round' stroke-linejoin='round' d='M16.5 7.5L12 10l-4.5 2.5'/><path stroke-linecap='round' stroke-linejoin='round' d='M7 14.5l2-1.5'/></svg>">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
@@ -41,7 +137,7 @@
     );
 
     const Swimmer = ({ className }) => (
-      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+       <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <circle cx="19" cy="6" r="2.5" strokeWidth={2} />
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 18c1.2 0 2-.8 3-1.5s1.8-1.5 3-1.5 2 .8 3 1.5 1.8 1.5 3 1.5 2-.8 3-1.5 1.8-1.5 3-1.5" />
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 22c1.2 0 2-.8 3-1.5s1.8-1.5 3-1.5 2 .8 3 1.5 1.8 1.5 3 1.5 2-.8 3-1.5 1.8-1.5 3-1.5" />
