@@ -46,6 +46,87 @@
   <!-- Verification -->
   <meta name="google-site-verification" content="E6jMP8Bm02-2gUIhCyzFM6nRLixGSuCHrVdv4qh13ks" />
   
+  <!-- Google Analytics 4 with Offline Support -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-0G72MC7J4M"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-0G72MC7J4M');
+    
+    // Offline analytics queue
+    const ANALYTICS_QUEUE_KEY = 'swimmeetscore_analytics_queue';
+    
+    // Get queued events from localStorage
+    function getAnalyticsQueue() {
+      try {
+        const queue = localStorage.getItem(ANALYTICS_QUEUE_KEY);
+        return queue ? JSON.parse(queue) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+    
+    // Save event to queue
+    function queueAnalyticsEvent(eventName, eventParams) {
+      try {
+        const queue = getAnalyticsQueue();
+        queue.push({
+          name: eventName,
+          params: eventParams,
+          timestamp: new Date().toISOString()
+        });
+        localStorage.setItem(ANALYTICS_QUEUE_KEY, JSON.stringify(queue));
+      } catch (e) {
+        console.log('Failed to queue analytics event');
+      }
+    }
+    
+    // Send all queued events
+    function flushAnalyticsQueue() {
+      const queue = getAnalyticsQueue();
+      if (queue.length === 0) return;
+      
+      console.log('SwimMeetScore: Sending ' + queue.length + ' queued analytics events');
+      
+      queue.forEach((event) => {
+        if (typeof gtag !== 'undefined') {
+          // Add queued flag and original timestamp
+          const params = { ...event.params, queued: true, queued_at: event.timestamp };
+          gtag('event', event.name, params);
+        }
+      });
+      
+      // Clear the queue
+      localStorage.removeItem(ANALYTICS_QUEUE_KEY);
+    }
+    
+    // Custom event tracking function with offline support
+    function trackEvent(eventName, eventParams = {}) {
+      if (navigator.onLine && typeof gtag !== 'undefined') {
+        // Online - send immediately
+        gtag('event', eventName, eventParams);
+      } else {
+        // Offline - queue for later
+        queueAnalyticsEvent(eventName, eventParams);
+      }
+    }
+    
+    // Send queued events when coming back online
+    window.addEventListener('online', () => {
+      console.log('SwimMeetScore: Back online, flushing analytics queue');
+      // Small delay to ensure connection is stable
+      setTimeout(flushAnalyticsQueue, 2000);
+    });
+    
+    // Also try to flush queue on page load (in case they went offline then closed app)
+    window.addEventListener('load', () => {
+      if (navigator.onLine) {
+        setTimeout(flushAnalyticsQueue, 3000);
+      }
+    });
+  </script>
+  
   <!-- Structured Data (JSON-LD) -->
   <script type="application/ld+json">
   {
@@ -265,6 +346,12 @@
         <circle cx="12" cy="12" r="10" strokeWidth={2} />
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" />
         <circle cx="12" cy="17" r="0.5" fill="currentColor" stroke="none" />
+      </svg>
+    );
+
+    const Share = ({ className }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
       </svg>
     );
 
@@ -552,9 +639,9 @@
             
             {/* Dropdown menu */}
             {isOpen && (
-              <div className={`absolute z-50 mt-1 w-full min-w-[120px] rounded-lg shadow-lg border ${
+              <div className={`absolute z-50 mt-1 w-full min-w-[140px] rounded-lg shadow-lg border ${
                 darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-200'
-              }`} style={{ maxHeight: '200px', overflowY: 'auto' }}>
+              }`} style={{ maxHeight: '240px', overflowY: 'auto' }}>
                 {teams.map(team => {
                   const isChecked = selectedTeamIds.includes(String(team.id));
                   return (
@@ -585,7 +672,7 @@
           {/* Tie indicator */}
           {numTied > 1 && (
             <div className={`text-xs font-medium ${darkMode ? 'text-yellow-400' : 'text-yellow-600'}`}>
-              TIE: {numTied} teams
+              🤝 TIE: {numTied} teams
             </div>
           )}
         </div>
@@ -626,10 +713,14 @@
         if (!deferredPrompt) {
           return;
         }
+        // Track install attempt
+        trackEvent('pwa_install_prompt');
         // Show the install prompt
         deferredPrompt.prompt();
         // Wait for the user to respond to the prompt
         const { outcome } = await deferredPrompt.userChoice;
+        // Track the outcome
+        trackEvent('pwa_install_outcome', { outcome: outcome });
         // Clear the deferred prompt variable
         setDeferredPrompt(null);
       };
@@ -959,6 +1050,8 @@
           }]);
           setNewTeamName('');
           setError(null);
+          // Track event
+          trackEvent('add_team', { team_count: teams.length + 1 });
         } catch (e) {
           console.error('Error adding team:', e);
           setError('Failed to add team. Please try again.');
@@ -1052,6 +1145,8 @@
           }]);
           setNewEventName('');
           setError(null);
+          // Track event
+          trackEvent('add_event', { event_type: newEventType, event_count: events.length + 1 });
         } catch (e) {
           console.error('Error adding event:', e);
           setError('Failed to add event. Please try again.');
@@ -1225,6 +1320,10 @@
           
           setEvents(newEvents);
           recalculateAllScores(teams, newEvents);
+          // Track result recording (only when adding, not removing)
+          if (isChecked && teamId) {
+            trackEvent('record_result', { place: place });
+          }
         } catch (e) {
           console.error('Error updating event result:', e);
           setError('Failed to update result. Please try again.');
@@ -1426,6 +1525,8 @@
         }));
         setEvents(newEvents);
         recalculateAllScores(teams, newEvents);
+        // Track event
+        trackEvent('load_template', { template_name: 'high_school_meet' });
       };
 
       const loadCompetitionMode = () => {
@@ -1449,7 +1550,68 @@
         }));
         setEvents(newEvents);
         recalculateAllScores(teams, newEvents);
+        // Track event
+        trackEvent('load_template', { template_name: 'competition_mode' });
       };
+
+      // Generate shareable score text
+      const generateShareText = () => {
+        const modeLabel = scoringMode === 'combined' ? '' : scoringMode === 'girls' ? ' (Girls)' : ' (Boys)';
+        const sortedTeams = [...teams].sort((a, b) => {
+          const scoreA = scoringMode === 'girls' ? a.girlsScore : scoringMode === 'boys' ? a.boysScore : a.score;
+          const scoreB = scoringMode === 'girls' ? b.girlsScore : scoringMode === 'boys' ? b.boysScore : b.score;
+          return scoreB - scoreA;
+        });
+        
+        let text = `🏊 Swim Meet Scores${modeLabel}\n\n`;
+        
+        sortedTeams.forEach((team, index) => {
+          const score = scoringMode === 'girls' ? team.girlsScore : scoringMode === 'boys' ? team.boysScore : team.score;
+          const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '  ';
+          text += `${medal} #${index + 1} ${team.name}: ${score} pts\n`;
+        });
+        
+        text += `\n📊 Scored with SwimMeetScore\n`;
+        text += `https://swimmeetscore.com`;
+        
+        return text;
+      };
+
+      // Share scores via native share or clipboard
+      const shareScores = async () => {
+        const text = generateShareText();
+        
+        // Track the share attempt
+        trackEvent('share_scores', { method: navigator.share ? 'native' : 'clipboard', scoring_mode: scoringMode });
+        
+        // Try native share first (mobile)
+        if (navigator.share) {
+          try {
+            await navigator.share({
+              title: 'Swim Meet Scores',
+              text: text
+            });
+            return;
+          } catch (err) {
+            // User cancelled or share failed, fall back to clipboard
+            if (err.name === 'AbortError') return;
+          }
+        }
+        
+        // Fall back to clipboard
+        try {
+          await navigator.clipboard.writeText(text);
+          setError(null);
+          // Show success message briefly using error state (we'll style it differently)
+          const originalError = error;
+          setShareSuccess(true);
+          setTimeout(() => setShareSuccess(false), 3000);
+        } catch (err) {
+          setError('Failed to copy to clipboard');
+        }
+      };
+
+      const [shareSuccess, setShareSuccess] = useState(false);
 
       return (
         <div className={`min-h-screen p-4 ${darkMode ? 'bg-gradient-to-br from-gray-900 to-gray-800' : 'bg-gradient-to-br from-blue-50 to-cyan-50'}`}>
@@ -1464,6 +1626,13 @@
                 >
                   <X className="w-5 h-5" />
                 </button>
+              </div>
+            )}
+
+            {/* Share Success Message */}
+            {shareSuccess && (
+              <div className={`mb-4 p-4 rounded-lg flex items-center gap-3 ${darkMode ? 'bg-green-900 text-green-100' : 'bg-green-100 text-green-800'}`}>
+                <span>✅ Scores copied to clipboard!</span>
               </div>
             )}
 
@@ -1593,16 +1762,56 @@
                         Swim Meet Score follows official tie-breaking rules used in competitive swimming:
                       </p>
                       
+                      {/* How to Record a Tie */}
+                      <div className={`p-4 rounded-lg mb-4 ${darkMode ? 'bg-cyan-900/50 border border-cyan-700' : 'bg-cyan-50 border border-cyan-200'}`}>
+                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-cyan-400' : 'text-cyan-700'}`}>📝 How to Record a Tie</h5>
+                        <ol className="text-sm space-y-1 list-decimal list-inside">
+                          <li>Click on the place dropdown (1st, 2nd, etc.)</li>
+                          <li>Check the boxes for ALL teams that tied for that place</li>
+                          <li>The app will automatically calculate split points and skip places</li>
+                        </ol>
+                        <p className={`text-xs mt-2 ${darkMode ? 'text-cyan-300' : 'text-cyan-600'}`}>
+                          💡 You'll see a yellow highlight and "TIE" indicator when multiple teams are selected
+                        </p>
+                      </div>
+                      
                       <div className={`p-4 rounded-lg mb-4 ${darkMode ? 'bg-gray-700' : 'bg-yellow-50'}`}>
-                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-yellow-400' : 'text-yellow-700'}`}>Point Splitting</h5>
+                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-yellow-400' : 'text-yellow-700'}`}>⚖️ Point Splitting</h5>
                         <p className="text-sm mb-2">When swimmers tie, the points for the tied places are added together and split evenly.</p>
-                        <p className="text-sm"><strong>Example:</strong> Two swimmers tie for 1st place (6 + 4 = 10 points) → Each swimmer gets 5 points</p>
+                        <div className={`text-sm p-3 rounded ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                          <p className="font-medium mb-1">Example - Dual Meet (6-4-3-2-1 scoring):</p>
+                          <p>• Two swimmers tie for 1st: (6 + 4) ÷ 2 = <strong>5 pts each</strong></p>
+                          <p className="mt-2 font-medium mb-1">Example - Championship (20-17-16-15... scoring):</p>
+                          <p>• Two swimmers tie for 1st: (20 + 17) ÷ 2 = <strong>18.5 pts each</strong></p>
+                          <p>• Three swimmers tie for 2nd: (17 + 16 + 15) ÷ 3 = <strong>16 pts each</strong></p>
+                        </div>
                       </div>
 
-                      <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-orange-50'}`}>
-                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-orange-400' : 'text-orange-700'}`}>Place Skipping</h5>
+                      <div className={`p-4 rounded-lg mb-4 ${darkMode ? 'bg-gray-700' : 'bg-orange-50'}`}>
+                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-orange-400' : 'text-orange-700'}`}>⏭️ Place Skipping</h5>
                         <p className="text-sm mb-2">After a tie, subsequent places are skipped based on how many swimmers tied.</p>
-                        <p className="text-sm"><strong>Example:</strong> If 2 swimmers tie for 1st, the next finisher places 3rd (2nd is skipped)</p>
+                        <div className={`text-sm p-3 rounded ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                          <p className="font-medium mb-1">Examples:</p>
+                          <p>• 2 swimmers tie for 1st → Next finisher gets <strong>3rd place</strong> (2nd skipped)</p>
+                          <p>• 3 swimmers tie for 2nd → Next finisher gets <strong>5th place</strong> (3rd & 4th skipped)</p>
+                          <p>• 2 swimmers tie for 5th → Next finisher gets <strong>7th place</strong> (6th skipped)</p>
+                        </div>
+                        <p className={`text-xs mt-2 ${darkMode ? 'text-orange-300' : 'text-orange-600'}`}>
+                          Skipped places will appear grayed out with "(tied above)" in the app
+                        </p>
+                      </div>
+
+                      <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-purple-50'}`}>
+                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-purple-400' : 'text-purple-700'}`}>🏆 Complete Tie Example</h5>
+                        <p className="text-sm mb-2">Dual meet scoring (6-4-3-2-1) with Team A and Team B:</p>
+                        <div className={`text-sm p-3 rounded ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                          <p>• 1st Place: Team A & Team B tie → Each gets 5 pts (6+4÷2)</p>
+                          <p>• 2nd Place: <span className="italic text-gray-500">(skipped - consumed by tie)</span></p>
+                          <p>• 3rd Place: Team A → Gets 3 pts</p>
+                          <p>• 4th Place: Team B → Gets 2 pts</p>
+                          <p>• 5th Place: Team A → Gets 1 pt</p>
+                          <p className="mt-2 font-medium">Final: Team A = 9 pts, Team B = 7 pts</p>
+                        </div>
                       </div>
                     </section>
 
@@ -1649,7 +1858,7 @@
                 </div>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => setShowAbout(true)}
+                    onClick={() => { setShowAbout(true); trackEvent('open_help'); }}
                     className={`flex items-center gap-2 px-3 py-2 rounded-lg transition text-sm ${darkMode ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}
                   >
                     <HelpCircle className="w-5 h-5" />
@@ -1660,6 +1869,7 @@
                       setShowSettings(!showSettings);
                       if (!showSettings) {
                         setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100);
+                        trackEvent('open_settings');
                       }
                     }}
                     className={`flex items-center gap-2 px-3 py-2 rounded-lg transition text-sm ${darkMode ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}
@@ -1960,10 +2170,20 @@
 
               <div className={`rounded-lg p-6 mb-6 ${darkMode ? 'bg-gradient-to-r from-gray-700 to-gray-600' : 'bg-gradient-to-r from-blue-500 to-cyan-500'}`}>
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
-                  <h2 className="text-2xl font-bold text-white">Scoreboard</h2>
+                  <div className="flex items-center gap-3">
+                    <h2 className="text-2xl font-bold text-white">Scoreboard</h2>
+                    <button
+                      onClick={shareScores}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition bg-white/20 text-white hover:bg-white/30"
+                      title="Share scores"
+                    >
+                      <Share className="w-4 h-4" />
+                      Share
+                    </button>
+                  </div>
                   <div className="flex gap-1.5">
                     <button
-                      onClick={() => setScoringMode('combined')}
+                      onClick={() => { setScoringMode('combined'); trackEvent('change_scoring_mode', { mode: 'combined' }); }}
                       className={`px-2 py-1 rounded-lg text-xs font-medium transition ${
                         scoringMode === 'combined'
                           ? 'bg-white text-blue-600'
@@ -1973,7 +2193,7 @@
                       Combined
                     </button>
                     <button
-                      onClick={() => setScoringMode('girls')}
+                      onClick={() => { setScoringMode('girls'); trackEvent('change_scoring_mode', { mode: 'girls' }); }}
                       className={`px-2 py-1 rounded-lg text-xs font-medium transition ${
                         scoringMode === 'girls'
                           ? 'bg-pink-500 text-white'
@@ -1983,7 +2203,7 @@
                       Girls Only
                     </button>
                     <button
-                      onClick={() => setScoringMode('boys')}
+                      onClick={() => { setScoringMode('boys'); trackEvent('change_scoring_mode', { mode: 'boys' }); }}
                       className={`px-2 py-1 rounded-lg text-xs font-medium transition ${
                         scoringMode === 'boys'
                           ? 'bg-indigo-500 text-white'
@@ -2052,7 +2272,12 @@
               </div>
 
               <div>
-                <h3 className={`text-xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>Events</h3>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
+                  <h3 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Events</h3>
+                  <div className={`text-xs px-3 py-1.5 rounded-full ${darkMode ? 'bg-yellow-500/20 text-yellow-300' : 'bg-yellow-100 text-yellow-700'}`}>
+                    💡 Tip: Select multiple teams in a place for ties
+                  </div>
+                </div>
                 {scoringMode === 'combined' ? (
                   <div className="space-y-4">
                     {events.map((event, index) => {
@@ -2268,6 +2493,7 @@
                   href="https://buymeacoffee.com/kadenco" 
                   target="_blank" 
                   rel="noopener noreferrer"
+                  onClick={() => trackEvent('click_donate')}
                   className="inline-flex items-center gap-3 px-8 py-4 bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold text-lg rounded-xl transition shadow-lg hover:shadow-xl hover:scale-105 transform"
                 >
                   <svg className="w-7 h-7" viewBox="0 0 24 24" fill="currentColor">
@@ -2301,6 +2527,26 @@
 
     const root = ReactDOM.createRoot(document.getElementById('root'));
     root.render(<SwimMeetScore />);
+  </script>
+
+  <!-- Service Worker Registration for Offline Support -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then((registration) => {
+            console.log('SwimMeetScore: Service Worker registered successfully');
+            
+            // Check for updates periodically
+            setInterval(() => {
+              registration.update();
+            }, 60 * 60 * 1000); // Check every hour
+          })
+          .catch((error) => {
+            console.log('SwimMeetScore: Service Worker registration failed:', error);
+          });
+      });
+    }
   </script>
 </body>
 </html>
