@@ -708,6 +708,20 @@
         };
       }, []);
 
+      // Track online/offline status
+      useEffect(() => {
+        const handleOnline = () => setIsOffline(false);
+        const handleOffline = () => setIsOffline(true);
+        
+        window.addEventListener('online', handleOnline);
+        window.addEventListener('offline', handleOffline);
+        
+        return () => {
+          window.removeEventListener('online', handleOnline);
+          window.removeEventListener('offline', handleOffline);
+        };
+      }, []);
+
       // Function to trigger the install prompt
       const handleInstallClick = async () => {
         if (!deferredPrompt) {
@@ -823,6 +837,7 @@
       const [showSettings, setShowSettings] = useState(false);
       const [showAbout, setShowAbout] = useState(false);
       const [deferredPrompt, setDeferredPrompt] = useState(null);
+      const [isOffline, setIsOffline] = useState(!navigator.onLine);
       const [newTeamName, setNewTeamName] = useState('');
       const [darkMode, setDarkMode] = useState(() => utils.loadFromStorage('darkMode', true));
       const [scoringMode, setScoringMode] = useState(() => utils.loadFromStorage('scoringMode', 'combined'));
@@ -849,6 +864,7 @@
       });
       const [newTemplateName, setNewTemplateName] = useState('');
       const [showSaveTemplate, setShowSaveTemplate] = useState(false);
+      const [shareSuccess, setShareSuccess] = useState(false);
       
       const [individualPointSystem, setIndividualPointSystem] = useState(() => {
         const loaded = utils.loadFromStorage('individualPointSystem', defaultIndividualPoints);
@@ -1517,6 +1533,12 @@
         setDivingPointSystem({
           1: 5, 2: 3, 3: 1, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0, 15: 0, 16: 0, 17: 0, 18: 0, 19: 0, 20: 0
         });
+        // Set 2 default teams for dual meet
+        const dualMeetTeams = [
+          { id: utils.generateId(), name: 'Home Team', score: 0, girlsScore: 0, boysScore: 0 },
+          { id: utils.generateId(), name: 'Away Team', score: 0, girlsScore: 0, boysScore: 0 }
+        ];
+        setTeams(dualMeetTeams);
         const newEvents = highSchoolEvents.map((e) => ({
           id: utils.generateId(),
           name: e.name,
@@ -1524,12 +1546,12 @@
           results: []
         }));
         setEvents(newEvents);
-        recalculateAllScores(teams, newEvents);
+        recalculateAllScores(dualMeetTeams, newEvents);
         // Track event
         trackEvent('load_template', { template_name: 'high_school_meet' });
       };
 
-      const loadCompetitionMode = () => {
+      const loadChampionshipMeet = () => {
         setNumIndividualPlaces(16);
         setNumRelayPlaces(16);
         setNumDivingPlaces(16);
@@ -1542,6 +1564,18 @@
         setDivingPointSystem({
           1: 20, 2: 17, 3: 16, 4: 15, 5: 14, 6: 13, 7: 12, 8: 11, 9: 9, 10: 7, 11: 6, 12: 5, 13: 4, 14: 3, 15: 2, 16: 1, 17: 0, 18: 0, 19: 0, 20: 0
         });
+        // Set 8 default teams for championship meet
+        const championshipTeams = [
+          { id: utils.generateId(), name: 'Team 1', score: 0, girlsScore: 0, boysScore: 0 },
+          { id: utils.generateId(), name: 'Team 2', score: 0, girlsScore: 0, boysScore: 0 },
+          { id: utils.generateId(), name: 'Team 3', score: 0, girlsScore: 0, boysScore: 0 },
+          { id: utils.generateId(), name: 'Team 4', score: 0, girlsScore: 0, boysScore: 0 },
+          { id: utils.generateId(), name: 'Team 5', score: 0, girlsScore: 0, boysScore: 0 },
+          { id: utils.generateId(), name: 'Team 6', score: 0, girlsScore: 0, boysScore: 0 },
+          { id: utils.generateId(), name: 'Team 7', score: 0, girlsScore: 0, boysScore: 0 },
+          { id: utils.generateId(), name: 'Team 8', score: 0, girlsScore: 0, boysScore: 0 }
+        ];
+        setTeams(championshipTeams);
         const newEvents = competitionEvents.map((e) => ({
           id: utils.generateId(),
           name: e.name,
@@ -1549,9 +1583,9 @@
           results: []
         }));
         setEvents(newEvents);
-        recalculateAllScores(teams, newEvents);
+        recalculateAllScores(championshipTeams, newEvents);
         // Track event
-        trackEvent('load_template', { template_name: 'competition_mode' });
+        trackEvent('load_template', { template_name: 'championship_meet' });
       };
 
       // Generate shareable score text
@@ -1611,8 +1645,6 @@
         }
       };
 
-      const [shareSuccess, setShareSuccess] = useState(false);
-
       return (
         <div className={`min-h-screen p-4 ${darkMode ? 'bg-gradient-to-br from-gray-900 to-gray-800' : 'bg-gradient-to-br from-blue-50 to-cyan-50'}`}>
           <div className="max-w-6xl mx-auto">
@@ -1633,6 +1665,14 @@
             {shareSuccess && (
               <div className={`mb-4 p-4 rounded-lg flex items-center gap-3 ${darkMode ? 'bg-green-900 text-green-100' : 'bg-green-100 text-green-800'}`}>
                 <span>✅ Scores copied to clipboard!</span>
+              </div>
+            )}
+
+            {/* Offline Indicator */}
+            {isOffline && (
+              <div className={`mb-4 p-3 rounded-lg flex items-center gap-3 ${darkMode ? 'bg-cyan-900/70 text-cyan-100 border border-cyan-700' : 'bg-cyan-100 text-cyan-800 border border-cyan-300'}`}>
+                <span className="text-lg">📶</span>
+                <span><strong>Offline Mode</strong> — No worries! The app works offline. Your data is saved locally.</span>
               </div>
             )}
 
@@ -1688,10 +1728,27 @@
                     <section className="mb-8">
                       <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>📱 About Swim Meet Score</h4>
                       <p className="mb-3">
-                        Swim Meet Score is a free, ad-free tool for tracking scores during swim meets. Perfect for coaches, parents, and officials at high school, club, and competitive swimming events.
+                        Swim Meet Score is a free, ad-free tool for tracking scores during swim meets. Perfect for coaches, parents, and officials at high school and competitive swimming events.
                       </p>
-                      <p>
-                        All your data is saved locally in your browser - we never collect or transmit your information.
+                      
+                      {/* Feature highlights */}
+                      <div className={`grid grid-cols-2 gap-2 text-sm`}>
+                        <div className={`p-3 rounded-lg flex items-center gap-2 ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                          <span>✅</span> <span>100% Free</span>
+                        </div>
+                        <div className={`p-3 rounded-lg flex items-center gap-2 ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                          <span>🚫</span> <span>No Ads</span>
+                        </div>
+                        <div className={`p-3 rounded-lg flex items-center gap-2 ${darkMode ? 'bg-cyan-900/50 border border-cyan-700' : 'bg-cyan-100 border border-cyan-300'}`}>
+                          <span>📶</span> <span className="font-medium">Works Offline</span>
+                        </div>
+                        <div className={`p-3 rounded-lg flex items-center gap-2 ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                          <span>🔒</span> <span>Private & Secure</span>
+                        </div>
+                      </div>
+                      
+                      <p className={`mt-4 text-sm ${darkMode ? 'text-cyan-400' : 'text-cyan-700'}`}>
+                        📶 <strong>Works at pools with poor cell service!</strong> Once loaded, the app works completely offline.
                       </p>
                     </section>
 
@@ -1749,7 +1806,7 @@
                       <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>🏊 How to Use</h4>
                       <ol className="list-decimal list-inside space-y-2">
                         <li><strong>Add Teams:</strong> Go to Settings and add your competing teams</li>
-                        <li><strong>Choose a Template:</strong> Select "High School Meet" or "Competition Mode" for preset events and point systems, or customize your own</li>
+                        <li><strong>Choose a Template:</strong> Select "High School Meet" or "Championship Meet" for preset events and point systems, or customize your own</li>
                         <li><strong>Record Results:</strong> For each event, select the team(s) that placed 1st, 2nd, 3rd, etc.</li>
                         <li><strong>View Scores:</strong> The scoreboard updates automatically as you enter results</li>
                       </ol>
@@ -1819,9 +1876,11 @@
                     <section className="mb-8">
                       <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>💡 Tips</h4>
                       <ul className="space-y-2">
+                        <li>• <strong>Works Offline:</strong> Once loaded, works without internet - perfect for pools with bad service!</li>
                         <li>• <strong>Save Templates:</strong> Create custom templates for your league's specific scoring rules</li>
                         <li>• <strong>Dark Mode:</strong> Use dark mode for better visibility at indoor pools</li>
                         <li>• <strong>Data Persists:</strong> Your data stays saved even if you close the browser</li>
+                        <li>• <strong>Share Scores:</strong> Tap the Share button to send results via text or email</li>
                         <li>• <strong>Clear Data:</strong> Start fresh anytime from Settings → Clear Data</li>
                       </ul>
                     </section>
@@ -1948,10 +2007,10 @@
                         High School Meet
                       </button>
                       <button
-                        onClick={loadCompetitionMode}
+                        onClick={loadChampionshipMeet}
                         className={`px-4 py-2 rounded-lg ${darkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'} text-white font-medium`}
                       >
-                        Competition Mode (Top 16)
+                        Championship Meet (Top 16)
                       </button>
                     </div>
 
