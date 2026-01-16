@@ -708,7 +708,7 @@
         };
       }, []);
 
-      // Track online/offline status
+      // Track online/offline status with periodic check for mobile reliability
       useEffect(() => {
         const handleOnline = () => setIsOffline(false);
         const handleOffline = () => setIsOffline(true);
@@ -716,9 +716,31 @@
         window.addEventListener('online', handleOnline);
         window.addEventListener('offline', handleOffline);
         
+        // Periodic connectivity check for mobile (events aren't always reliable)
+        const checkConnectivity = () => {
+          // navigator.onLine can be unreliable, but it's a good first check
+          if (!navigator.onLine) {
+            setIsOffline(true);
+            return;
+          }
+          
+          // Try to fetch a tiny resource to confirm actual connectivity
+          fetch('/favicon.ico', { method: 'HEAD', cache: 'no-store' })
+            .then(() => setIsOffline(false))
+            .catch(() => setIsOffline(true));
+        };
+        
+        // Check connectivity every 30 seconds on mobile
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        let intervalId;
+        if (isMobile) {
+          intervalId = setInterval(checkConnectivity, 30000);
+        }
+        
         return () => {
           window.removeEventListener('online', handleOnline);
           window.removeEventListener('offline', handleOffline);
+          if (intervalId) clearInterval(intervalId);
         };
       }, []);
 
@@ -1806,7 +1828,7 @@
                       <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>🏊 How to Use</h4>
                       <ol className="list-decimal list-inside space-y-2">
                         <li><strong>Add Teams:</strong> Go to Settings and add your competing teams</li>
-                        <li><strong>Choose a Template:</strong> Select "High School Meet" or "Championship Meet" for preset events and point systems, or customize your own</li>
+                        <li><strong>Choose a Template:</strong> Select "High School Dual Meet" or "Competition Mode" for preset events and point systems, or customize your own</li>
                         <li><strong>Record Results:</strong> For each event, select the team(s) that placed 1st, 2nd, 3rd, etc.</li>
                         <li><strong>View Scores:</strong> The scoreboard updates automatically as you enter results</li>
                       </ol>
@@ -2004,7 +2026,7 @@
                         onClick={loadHighSchoolMeet}
                         className={`px-4 py-2 rounded-lg ${darkMode ? 'bg-pink-600 hover:bg-pink-700' : 'bg-pink-500 hover:bg-pink-600'} text-white font-medium`}
                       >
-                        High School Meet
+                        High School Dual Meet
                       </button>
                       <button
                         onClick={loadChampionshipMeet}
