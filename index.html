@@ -377,6 +377,18 @@
       </svg>
     );
 
+    const QrCode = ({ className }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h6v6H3V3zm12 0h6v6h-6V3zM3 15h6v6H3v-6zm12 3h3m-3 3h3m-6-6h6v3h-3m0 3h3M6 6h0m0 12h0m12-12h0" />
+      </svg>
+    );
+
+    const Printer = ({ className }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+      </svg>
+    );
+
     const ChevronUp = ({ className }) => (
       <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
@@ -1667,6 +1679,58 @@
         }
       };
 
+      // Print QR Code for spectators
+      const printQRCode = () => {
+        trackEvent('print_qr_code');
+        
+        // Create print window with US Letter sizing
+        const printWindow = window.open('', '_blank', 'width=850,height=1100');
+        
+        const htmlContent = '<!DOCTYPE html>' +
+          '<html>' +
+          '<head>' +
+            '<title>SwimMeetScore QR Code</title>' +
+            '<style>' +
+              '@page { size: letter; margin: 0; }' +
+              '* { margin: 0; padding: 0; box-sizing: border-box; }' +
+              'html, body { width: 8.5in; height: 11in; }' +
+              'body { font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0.5in; text-align: center; }' +
+              '.header { margin-bottom: 0.4in; }' +
+              '.header h1 { font-size: 36pt; font-weight: bold; color: #0891b2; margin-bottom: 0.15in; line-height: 1.2; }' +
+              '.header p { font-size: 16pt; color: #374151; }' +
+              '.qr-container { padding: 0.25in; border: 4px solid #0891b2; border-radius: 0.2in; background: white; margin-bottom: 0.4in; }' +
+              '.qr-code { width: 3.5in; height: 3.5in; display: block; }' +
+              '.url { font-size: 24pt; font-weight: bold; color: #0891b2; margin-bottom: 0.25in; }' +
+              '.tagline { font-size: 14pt; color: #6b7280; max-width: 6in; line-height: 1.4; }' +
+              '.swimmer-icon { margin-top: 0.25in; font-size: 36pt; }' +
+              '@media print { html, body { width: 100%; height: 100%; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }' +
+            '</style>' +
+          '</head>' +
+          '<body>' +
+            '<div class="header">' +
+              '<h1>🏊 Scan to Track<br/>Live Swim Meet Scores!</h1>' +
+              '<p>Point your phone camera at the QR code below</p>' +
+            '</div>' +
+            '<div class="qr-container">' +
+              '<img src="https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=https://swimmeetscore.com" class="qr-code" alt="QR Code for SwimMeetScore.com" />' +
+            '</div>' +
+            '<div class="url">SwimMeetScore.com</div>' +
+            '<div class="tagline">Free swim meet scoring tool — Track scores in real-time!<br/>Works on any phone • No app download required</div>' +
+            '<div class="swimmer-icon">🏆</div>' +
+          '</body>' +
+          '</html>';
+        
+        printWindow.document.write(htmlContent);
+        printWindow.document.close();
+        
+        // Wait for content to load then trigger print
+        printWindow.onload = function() {
+          setTimeout(function() {
+            printWindow.print();
+          }, 250);
+        };
+      };
+
       return (
         <div className={`min-h-screen p-4 ${darkMode ? 'bg-gradient-to-br from-gray-900 to-gray-800' : 'bg-gradient-to-br from-blue-50 to-cyan-50'}`}>
           <div className="max-w-6xl mx-auto">
@@ -1753,23 +1817,23 @@
                         Swim Meet Score is a free, ad-free tool for tracking scores during swim meets. Perfect for coaches, parents, and officials at high school and competitive swimming events.
                       </p>
                       
-                      {/* Feature highlights */}
-                      <div className={`grid grid-cols-2 gap-2 text-sm`}>
-                        <div className={`p-3 rounded-lg flex items-center gap-2 ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
-                          <span>✅</span> <span>100% Free</span>
-                        </div>
-                        <div className={`p-3 rounded-lg flex items-center gap-2 ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
-                          <span>🚫</span> <span>No Ads</span>
-                        </div>
-                        <div className={`p-3 rounded-lg flex items-center gap-2 ${darkMode ? 'bg-cyan-900/50 border border-cyan-700' : 'bg-cyan-100 border border-cyan-300'}`}>
-                          <span>📶</span> <span className="font-medium">Works Offline</span>
-                        </div>
-                        <div className={`p-3 rounded-lg flex items-center gap-2 ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
-                          <span>🔒</span> <span>Private & Secure</span>
-                        </div>
+                      {/* QR Code for Spectators - Meet Organizers */}
+                      <div className={`p-4 rounded-lg ${darkMode ? 'bg-cyan-900/50 border border-cyan-700' : 'bg-cyan-50 border border-cyan-200'}`}>
+                        <h5 className={`font-semibold mb-1 ${darkMode ? 'text-cyan-400' : 'text-cyan-700'}`}>📱 For Meet Organizers: QR Code Poster</h5>
+                        <p className={`text-xs mb-2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>(Spectators can skip this section)</p>
+                        <p className={`text-sm mb-3 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                          Print a QR code poster so spectators can scan and track scores on their own phones — no printed score sheets needed!
+                        </p>
+                        <button
+                          onClick={printQRCode}
+                          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition ${darkMode ? 'bg-cyan-600 hover:bg-cyan-700 text-white' : 'bg-cyan-600 hover:bg-cyan-700 text-white'}`}
+                        >
+                          <Printer className="w-5 h-5" />
+                          Print QR Code Poster
+                        </button>
                       </div>
                       
-                      <p className={`mt-4 text-sm ${darkMode ? 'text-cyan-400' : 'text-cyan-700'}`}>
+                      <p className={`mt-6 text-sm ${darkMode ? 'text-cyan-400' : 'text-cyan-700'}`}>
                         📶 <strong>Works at pools with poor cell service!</strong> Once loaded, the app works completely offline.
                       </p>
                     </section>
