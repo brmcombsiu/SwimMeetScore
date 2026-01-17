@@ -1,5 +1,5 @@
 // SwimMeetScore Service Worker
-const CACHE_NAME = 'swimmeetscore-v1';
+const CACHE_NAME = 'swimmeetscore-v2';
 
 // Files to cache for offline use
 const CACHE_FILES = [
@@ -14,13 +14,38 @@ const CACHE_FILES = [
   '/apple-touch-icon.png'
 ];
 
+// External CDN resources to cache
+const CDN_CACHE = [
+  'https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js',
+  'https://cdn.tailwindcss.com'
+];
+
 // Install event - cache all static files
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
         console.log('SwimMeetScore: Caching app files for offline use');
-        return cache.addAll(CACHE_FILES);
+        // Cache local files first
+        return cache.addAll(CACHE_FILES)
+          .then(() => {
+            // Try to cache CDN resources (don't fail if these fail)
+            return Promise.allSettled(
+              CDN_CACHE.map(url => 
+                fetch(url, { mode: 'cors' })
+                  .then(response => {
+                    if (response.ok) {
+                      return cache.put(url, response);
+                    }
+                  })
+                  .catch(() => {
+                    console.log('SwimMeetScore: Could not cache CDN resource:', url);
+                  })
+              )
+            );
+          });
       })
       .then(() => {
         // Activate immediately without waiting
@@ -58,16 +83,37 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Skip external requests (like Google Analytics)
   const url = new URL(event.request.url);
-  if (url.origin !== location.origin) {
+  
+  // Skip Google Analytics
+  if (url.hostname.includes('google')) {
     return;
   }
 
+  // For CDN resources and local files, try cache first
   event.respondWith(
     caches.match(event.request)
       .then((cachedResponse) => {
         // Return cached version if available
+        if (cachedResponse) {
+          // Also fetch from network to update cache in background (for local files only)
+          if (url.origin === location.origin) {
+            fetchAndCache(event.request);
+          }
+          return cachedResponse;
+        }
+
+        // Not in cache - fetch from network
+        return fetchAndCache(event.request);
+      })
+      .catch(() => {
+        // If both cache and network fail, show offline page for navigation requests
+        if (event.request.mode === 'navigate') {
+          return caches.match('/index.html');
+        }
+      })
+  );
+});
         if (cachedResponse) {
           // Also fetch from network to update cache in background
           fetchAndCache(event.request);
