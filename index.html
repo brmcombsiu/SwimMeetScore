@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <!-- Primary Meta Tags -->
-  <title>Swim Meet Score - Free Swimming Competition Scoring Tool | Track Team Scores</title>
-  <meta name="title" content="Swim Meet Score - Free Swimming Competition Scoring Tool | Track Team Scores">
-  <meta name="description" content="Free swim meet scoring tool. Track team scores, individual events, relays, and diving. Perfect for high school and competitive swimming meets. Start scoring instantly!">
-  <meta name="keywords" content="swim meet score, swimming competition scoring, swim meet tracker, swimming scoreboard, team swimming scores, swim meet management, diving scores, relay scoring, high school swim meet">
+  <title>Swim Meet Score - Free Swimming Scoresheet & Scoring Tool | SwimMeet Tracker</title>
+  <meta name="title" content="Swim Meet Score - Free Swimming Scoresheet & Scoring Tool | SwimMeet Tracker">
+  <meta name="description" content="Free swim meet scoring tool and printable swimming scoresheet. Track team scores, individual events, relays, and diving. High school swim meet scoring sheet, dual meet scoresheet, diving score sheet. No download required!">
+  <meta name="keywords" content="swim meet score, swimmeet, swimming scoresheet, swim meet score sheet, print swim meet, printable scoring sheet, diving score sheet, swimming scoresheet, dual meet scoresheet, high school swim meet scoring sheet, high school combined meet, swim meet tracker, swimming scoreboard, team swimming scores, swim meet management, diving scores, relay scoring, high school swim meet, varsity swimming, JV swim meet, swim and dive scoring">
   <meta name="author" content="Kaden Co">
   <meta name="robots" content="index, follow">
   <meta name="language" content="English">
@@ -20,8 +20,8 @@
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://swimmeetscore.com/">
-  <meta property="og:title" content="Swim Meet Score - Free Swimming Competition Scoring Tool">
-  <meta property="og:description" content="Free swim meet scoring tool. Track team scores, individual events, relays, and diving. Perfect for high school and competitive swimming meets. Start scoring instantly!">
+  <meta property="og:title" content="Swim Meet Score - Free Swimming Scoresheet & Scoring Tool">
+  <meta property="og:description" content="Free swim meet scoring tool and printable swimming scoresheet. Track team scores for high school dual meets, championship meets, diving, and relays. No app download required!">
   <meta property="og:image" content="https://swimmeetscore.com/og-image.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
@@ -31,8 +31,8 @@
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:url" content="https://swimmeetscore.com/">
-  <meta name="twitter:title" content="Swim Meet Score - Free Swimming Competition Scoring Tool">
-  <meta name="twitter:description" content="Free swim meet scoring tool. Track team scores, individual events, relays, and diving. Perfect for high school and competitive swimming meets. Start scoring instantly!">
+  <meta name="twitter:title" content="Swim Meet Score - Free Swimming Scoresheet & Scoring Tool">
+  <meta name="twitter:description" content="Free swim meet scoring tool and printable swimming scoresheet. Track team scores for high school dual meets, championship meets, diving, and relays. No app download required!">
   <meta name="twitter:image" content="https://swimmeetscore.com/og-image.png">
   
   <!-- PWA / Mobile -->
@@ -133,7 +133,8 @@
     "@context": "https://schema.org",
     "@type": "WebApplication",
     "name": "Swim Meet Score",
-    "description": "Free online swim meet scoring application. Track team scores, individual events, relays, and diving competitions for swimming meets.",
+    "alternateName": ["SwimMeet Score", "Swimming Scoresheet", "Swim Meet Scoring Sheet"],
+    "description": "Free online swim meet scoring application and swimming scoresheet. Track team scores, individual events, relays, and diving competitions. Perfect for high school dual meets, championship meets, and varsity swimming.",
     "url": "https://swimmeetscore.com",
     "applicationCategory": "SportsApplication",
     "operatingSystem": "Web Browser",
@@ -154,15 +155,20 @@
     "featureList": [
       "Team score tracking",
       "Individual event scoring",
-      "Relay event scoring",
-      "Diving competition scoring",
-      "High school meet templates",
-      "Competition mode with top 16 scoring",
+      "Relay event scoring", 
+      "Diving score sheet",
+      "High school swim meet scoring sheet",
+      "Dual meet scoresheet",
+      "Championship meet scoring",
+      "Combined meet scoring",
+      "Printable scoring sheet",
       "Customizable point systems",
       "Real-time score updates",
+      "Works offline at pools",
       "Dark mode support",
       "Mobile responsive design"
-    ]
+    ],
+    "keywords": "swim meet score, swimmeet, swimming scoresheet, dual meet scoresheet, diving score sheet, high school swim meet, printable scoring sheet"
   }
   </script>
   
@@ -171,7 +177,8 @@
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     "name": "Swim Meet Score",
-    "description": "Professional swim meet scoring tool for tracking team and individual event scores during swimming competitions.",
+    "alternateName": "SwimMeet Scoresheet",
+    "description": "Professional swim meet scoring tool and swimming scoresheet for tracking team and individual event scores during high school dual meets, championship meets, and competitive swimming events.",
     "applicationCategory": "SportsApplication",
     "operatingSystem": "Any",
     "browserRequirements": "Requires JavaScript. Requires HTML5.",
@@ -188,12 +195,228 @@
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  
+  <!-- Preconnect to CDNs for faster loading -->
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+  <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+  <link rel="dns-prefetch" href="https://cdn.tailwindcss.com">
+  
+  <!-- Custom Font: Outfit - geometric, modern, sporty -->
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Critical CSS for loading screen and custom properties -->
+  <style>
+    :root {
+      /* Pool water palette */
+      --pool-deep: #0c1929;
+      --pool-mid: #0f2942;
+      --pool-light: #164e6e;
+      --chlorine: #00d4aa;
+      --chlorine-glow: #00ffcc;
+      --lane-gold: #fbbf24;
+      --lane-gold-bright: #fcd34d;
+      --foam-white: #e0f7fa;
+      --tile-blue: #38bdf8;
+      
+      /* Light mode palette */
+      --sky-pool: #e0f2fe;
+      --shallow-water: #7dd3fc;
+      --deep-end: #0369a1;
+      --sunlit-gold: #f59e0b;
+    }
+    
+    .loading-screen {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(180deg, var(--pool-deep) 0%, var(--pool-mid) 50%, var(--pool-light) 100%);
+      color: white;
+      font-family: 'Outfit', system-ui, sans-serif;
+      z-index: 9999;
+      overflow: hidden;
+    }
+    
+    /* Animated pool lane lines */
+    .loading-screen::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        90deg,
+        transparent 0px,
+        transparent 60px,
+        rgba(251, 191, 36, 0.1) 60px,
+        rgba(251, 191, 36, 0.1) 64px
+      );
+      animation: lanes-drift 3s linear infinite;
+    }
+    
+    @keyframes lanes-drift {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(64px); }
+    }
+    
+    /* Water ripple effect */
+    .loading-screen::after {
+      content: '';
+      position: absolute;
+      width: 200%;
+      height: 200%;
+      top: -50%;
+      left: -50%;
+      background: radial-gradient(ellipse at center, transparent 0%, transparent 50%, rgba(0, 212, 170, 0.03) 50%, transparent 70%);
+      animation: ripple 4s ease-in-out infinite;
+    }
+    
+    @keyframes ripple {
+      0%, 100% { transform: scale(0.8); opacity: 0; }
+      50% { transform: scale(1.2); opacity: 1; }
+    }
+    
+    .loading-spinner {
+      width: 56px;
+      height: 56px;
+      border: 3px solid rgba(0, 212, 170, 0.2);
+      border-top-color: var(--chlorine);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      position: relative;
+      z-index: 1;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .loading-text {
+      margin-top: 20px;
+      font-size: 20px;
+      font-weight: 500;
+      color: var(--chlorine);
+      letter-spacing: 0.5px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    /* Swimming wave animation for loading */
+    .wave-loader {
+      display: flex;
+      gap: 4px;
+      margin-top: 16px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .wave-loader span {
+      width: 6px;
+      height: 6px;
+      background: var(--chlorine);
+      border-radius: 50%;
+      animation: wave 1.2s ease-in-out infinite;
+    }
+    
+    .wave-loader span:nth-child(2) { animation-delay: 0.1s; }
+    .wave-loader span:nth-child(3) { animation-delay: 0.2s; }
+    .wave-loader span:nth-child(4) { animation-delay: 0.3s; }
+    .wave-loader span:nth-child(5) { animation-delay: 0.4s; }
+    
+    @keyframes wave {
+      0%, 100% { transform: translateY(0); opacity: 0.5; }
+      50% { transform: translateY(-10px); opacity: 1; }
+    }
+    
+    /* Entrance animations */
+    @keyframes fadeSlideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    .animate-fade-slide-up {
+      animation: fadeSlideUp 0.5s ease-out forwards;
+    }
+    
+    .animate-fade-in {
+      animation: fadeIn 0.4s ease-out forwards;
+    }
+    
+    /* Staggered animation delays */
+    .delay-100 { animation-delay: 0.1s; opacity: 0; }
+    .delay-200 { animation-delay: 0.2s; opacity: 0; }
+    .delay-300 { animation-delay: 0.3s; opacity: 0; }
+    
+    /* Gold shimmer for 1st place */
+    @keyframes goldShimmer {
+      0% { background-position: -200% center; }
+      100% { background-position: 200% center; }
+    }
+    
+    .gold-shimmer {
+      background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(251, 191, 36, 0.1) 50%, 
+        transparent 100%
+      );
+      background-size: 200% 100%;
+      animation: goldShimmer 3s ease-in-out infinite;
+    }
+  </style>
+  
+  <!-- Load scripts with defer for non-blocking -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            'outfit': ['Outfit', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            'pool': {
+              'deep': '#0c1929',
+              'mid': '#0f2942',
+              'light': '#164e6e',
+            },
+            'chlorine': {
+              DEFAULT: '#00d4aa',
+              'glow': '#00ffcc',
+              'dim': '#00a88a',
+            },
+            'lane': {
+              'gold': '#fbbf24',
+              'bright': '#fcd34d',
+            },
+            'foam': '#e0f7fa',
+            'tile': '#38bdf8',
+          }
+        }
+      }
+    }
+  </script>
   <style>
-    body { margin: 0; font-family: system-ui, -apple-system, sans-serif; }
+    body { 
+      margin: 0; 
+      font-family: 'Outfit', system-ui, -apple-system, sans-serif;
+    }
     
     /* Hide native number input spinners */
     input[type="number"]::-webkit-outer-spin-button,
@@ -234,8 +457,27 @@
   </style>
 </head>
 <body>
+  <!-- Loading screen shown while app initializes -->
+  <div id="loading-screen" class="loading-screen">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Swim Meet Score</div>
+    <div class="wave-loader">
+      <span></span><span></span><span></span><span></span><span></span>
+    </div>
+  </div>
+  
   <div id="root"></div>
   <script type="text/babel">
+    // Hide loading screen once React renders
+    const hideLoadingScreen = () => {
+      const loadingScreen = document.getElementById('loading-screen');
+      if (loadingScreen) {
+        loadingScreen.style.opacity = '0';
+        loadingScreen.style.transition = 'opacity 0.3s ease-out';
+        setTimeout(() => loadingScreen.remove(), 300);
+      }
+    };
+
     const { useState, useEffect, useCallback, useMemo, useRef } = React;
 
     // Utility functions for production robustness
@@ -352,6 +594,12 @@
     const Share = ({ className }) => (
       <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+      </svg>
+    );
+
+    const Mail = ({ className }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
       </svg>
     );
 
@@ -1370,9 +1618,10 @@
           
           setEvents(newEvents);
           recalculateAllScores(teams, newEvents);
-          // Track result recording (only when adding, not removing)
+          // Track result recording and provide haptic feedback (only when adding, not removing)
           if (isChecked && teamId) {
             trackEvent('record_result', { place: place });
+            triggerHaptic('light');
           }
         } catch (e) {
           console.error('Error updating event result:', e);
@@ -1622,6 +1871,19 @@
         trackEvent('load_template', { template_name: 'championship_meet' });
       };
 
+      // Haptic feedback for mobile devices
+      const triggerHaptic = (style = 'light') => {
+        // Try vibration API first (Android, some browsers)
+        if ('vibrate' in navigator) {
+          const patterns = {
+            light: [10],
+            medium: [20],
+            heavy: [30]
+          };
+          navigator.vibrate(patterns[style] || patterns.light);
+        }
+      };
+
       // Generate shareable score text
       const generateShareText = () => {
         const modeLabel = scoringMode === 'combined' ? '' : scoringMode === 'girls' ? ' (Girls)' : ' (Boys)';
@@ -1641,6 +1903,9 @@
         
         text += `\n📊 Scored with SwimMeetScore\n`;
         text += `https://swimmeetscore.com`;
+        
+        // Add extra newlines at end for email clients that append signatures
+        text += `\n\n\n`;
         
         return text;
       };
@@ -1731,8 +1996,99 @@
         };
       };
 
+      // Email formatted results
+      const emailResults = () => {
+        trackEvent('email_results', { scoring_mode: scoringMode });
+        
+        const modeLabel = scoringMode === 'combined' ? '' : scoringMode === 'girls' ? ' (Girls Only)' : ' (Boys Only)';
+        const sortedTeams = [...teams].sort((a, b) => {
+          const scoreA = scoringMode === 'girls' ? a.girlsScore : scoringMode === 'boys' ? a.boysScore : a.score;
+          const scoreB = scoringMode === 'girls' ? b.girlsScore : scoringMode === 'boys' ? b.boysScore : b.score;
+          return scoreB - scoreA;
+        });
+        
+        // Filter events based on scoring mode
+        const filteredEvents = scoringMode === 'combined' 
+          ? events 
+          : events.filter(e => e.gender === scoringMode);
+        
+        const subject = encodeURIComponent('Swim Meet Results' + modeLabel);
+        
+        let body = 'SWIM MEET RESULTS' + modeLabel.toUpperCase() + '\n';
+        body += '================================\n\n';
+        body += 'FINAL STANDINGS:\n\n';
+        
+        sortedTeams.forEach((team, index) => {
+          const score = scoringMode === 'girls' ? team.girlsScore : scoringMode === 'boys' ? team.boysScore : team.score;
+          const place = index + 1;
+          const placeStr = place === 1 ? '1st' : place === 2 ? '2nd' : place === 3 ? '3rd' : place + 'th';
+          body += placeStr + ' Place: ' + team.name + ' - ' + score + ' points\n';
+        });
+        
+        if (scoringMode === 'combined' && sortedTeams.length > 0) {
+          body += '\n--------------------------------\n';
+          body += 'BREAKDOWN BY GENDER:\n\n';
+          body += 'Girls Scores:\n';
+          [...teams].sort((a, b) => b.girlsScore - a.girlsScore).forEach((team, index) => {
+            body += '  ' + (index + 1) + '. ' + team.name + ': ' + team.girlsScore + ' pts\n';
+          });
+          body += '\nBoys Scores:\n';
+          [...teams].sort((a, b) => b.boysScore - a.boysScore).forEach((team, index) => {
+            body += '  ' + (index + 1) + '. ' + team.name + ': ' + team.boysScore + ' pts\n';
+          });
+        }
+        
+        // Add event-by-event results
+        if (filteredEvents.length > 0) {
+          body += '\n================================\n';
+          body += 'EVENT-BY-EVENT RESULTS:\n';
+          body += '================================\n\n';
+          
+          filteredEvents.forEach((event) => {
+            const genderPrefix = scoringMode === 'combined' ? (event.gender === 'girls' ? 'Girls ' : 'Boys ') : '';
+            body += genderPrefix + event.name + ':\n';
+            
+            if (event.results && event.results.length > 0) {
+              // Sort results by place
+              const sortedResults = [...event.results].sort((a, b) => a.place - b.place);
+              
+              sortedResults.forEach((result) => {
+                const placeNum = result.place;
+                const placeStr = placeNum === 1 ? '1st' : placeNum === 2 ? '2nd' : placeNum === 3 ? '3rd' : placeNum + 'th';
+                const teamNames = result.teamIds.map(id => {
+                  const team = teams.find(t => String(t.id) === String(id));
+                  return team ? team.name : 'Unknown';
+                }).join(', ');
+                
+                if (result.teamIds.length > 1) {
+                  body += '  ' + placeStr + ' (TIE): ' + teamNames + '\n';
+                } else {
+                  body += '  ' + placeStr + ': ' + teamNames + '\n';
+                }
+              });
+            } else {
+              body += '  (No results recorded)\n';
+            }
+            body += '\n';
+          });
+        }
+        
+        body += '================================\n';
+        body += 'Scored with SwimMeetScore.com\n';
+        body += 'Free swim meet scoring tool\n';
+        
+        const mailtoLink = 'mailto:?subject=' + subject + '&body=' + encodeURIComponent(body);
+        window.location.href = mailtoLink;
+      };
+
       return (
-        <div className={`min-h-screen p-4 ${darkMode ? 'bg-gradient-to-br from-gray-900 to-gray-800' : 'bg-gradient-to-br from-blue-50 to-cyan-50'}`}>
+        <div className={`min-h-screen p-4 font-outfit ${darkMode ? 'bg-pool-deep' : 'bg-gradient-to-b from-sky-100 via-cyan-50 to-blue-100'}`} style={darkMode ? {background: 'linear-gradient(180deg, #0c1929 0%, #0f2942 50%, #164e6e 100%)'} : {}}>
+          {/* Pool lane pattern overlay for dark mode */}
+          {darkMode && (
+            <div className="fixed inset-0 pointer-events-none opacity-[0.03]" style={{
+              backgroundImage: 'repeating-linear-gradient(90deg, transparent 0px, transparent 80px, #fbbf24 80px, #fbbf24 84px)',
+            }} />
+          )}
           <div className="max-w-6xl mx-auto">
             {/* Error Message Display */}
             {error && (
@@ -1966,19 +2322,51 @@
                         <li>• <strong>Save Templates:</strong> Create custom templates for your league's specific scoring rules</li>
                         <li>• <strong>Dark Mode:</strong> Use dark mode for better visibility at indoor pools</li>
                         <li>• <strong>Data Persists:</strong> Your data stays saved even if you close the browser</li>
-                        <li>• <strong>Share Scores:</strong> Tap the Share button to send results via text or email</li>
+                        <li>• <strong>Share Scores:</strong> Tap the Share button on the Scoreboard to quickly send team standings via text or social media</li>
+                        <li>• <strong>Email Results:</strong> Tap the Email Results button next to Events to send a complete meet report including final standings and all event-by-event results with places</li>
                         <li>• <strong>Clear Data:</strong> Start fresh anytime from Settings → Clear Data</li>
                       </ul>
                     </section>
 
                     {/* Scoring Modes */}
-                    <section>
+                    <section className="mb-8">
                       <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>📊 Scoring Modes</h4>
                       <ul className="space-y-2">
                         <li>• <strong>Combined:</strong> Shows total team scores (boys + girls)</li>
                         <li>• <strong>Girls Only:</strong> Shows only girls' events and scores</li>
                         <li>• <strong>Boys Only:</strong> Shows only boys' events and scores</li>
                       </ul>
+                    </section>
+
+                    {/* Sharing & Emailing */}
+                    <section>
+                      <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>📤 Sharing & Emailing Results</h4>
+                      
+                      <div className={`p-4 rounded-lg mb-4 ${darkMode ? 'bg-cyan-900/30 border border-cyan-700/50' : 'bg-cyan-50 border border-cyan-200'}`}>
+                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-cyan-400' : 'text-cyan-700'}`}>Share Button (Quick Share)</h5>
+                        <p className={`text-sm mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                          Located on the Scoreboard. Quickly shares team standings with medal emojis via text, social media, or copies to clipboard.
+                        </p>
+                        <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                          Best for: Quick updates during the meet, social media posts
+                        </p>
+                      </div>
+                      
+                      <div className={`p-4 rounded-lg ${darkMode ? 'bg-amber-900/30 border border-amber-700/50' : 'bg-amber-50 border border-amber-200'}`}>
+                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-amber-400' : 'text-amber-700'}`}>Email Results Button (Full Report)</h5>
+                        <p className={`text-sm mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                          Located next to the Events heading. Opens your email app with a complete meet report including:
+                        </p>
+                        <ul className={`text-sm space-y-1 ml-4 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                          <li>• Final team standings with points</li>
+                          <li>• Gender breakdown (Combined mode)</li>
+                          <li>• Event-by-event results with all places</li>
+                          <li>• Tie indicators where applicable</li>
+                        </ul>
+                        <p className={`text-xs mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                          Best for: Post-meet reports to coaches, parents, athletic directors
+                        </p>
+                      </div>
                     </section>
                   </div>
 
@@ -1995,16 +2383,22 @@
               </div>
             )}
 
-            <div className={`rounded-lg shadow-lg p-4 sm:p-6 mb-6 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+            <div className={`rounded-2xl shadow-xl p-4 sm:p-6 mb-6 backdrop-blur-sm ${darkMode ? 'bg-pool-mid/80 border border-chlorine/20' : 'bg-white/90 border border-cyan-200'}`}>
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
                 <div className="flex items-center gap-3">
-                  <Swimmer className={`w-8 h-8 ${darkMode ? 'text-cyan-400' : 'text-blue-600'}`} />
-                  <h1 className={`text-2xl sm:text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Swim Meet Score</h1>
+                  <div className={`p-2 rounded-xl ${darkMode ? 'bg-chlorine/20' : 'bg-cyan-100'}`}>
+                    <Swimmer className={`w-8 h-8 ${darkMode ? 'text-chlorine' : 'text-cyan-600'}`} />
+                  </div>
+                  <div>
+                    <h1 className={`text-2xl sm:text-3xl font-bold tracking-tight ${darkMode ? 'text-white' : 'text-slate-800'}`}>
+                      Swim Meet <span className={darkMode ? 'text-chlorine' : 'text-cyan-600'}>Score</span>
+                    </h1>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => { setShowAbout(true); trackEvent('open_help'); }}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg transition text-sm ${darkMode ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition text-sm font-medium ${darkMode ? 'bg-pool-light/50 hover:bg-pool-light text-white border border-white/10' : 'bg-cyan-50 hover:bg-cyan-100 text-cyan-700 border border-cyan-200'}`}
                   >
                     <HelpCircle className="w-5 h-5" />
                     Help & Info
@@ -2017,7 +2411,7 @@
                         trackEvent('open_settings');
                       }
                     }}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg transition text-sm ${darkMode ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition text-sm font-medium ${darkMode ? 'bg-chlorine/20 hover:bg-chlorine/30 text-chlorine border border-chlorine/30' : 'bg-cyan-600 hover:bg-cyan-700 text-white'}`}
                   >
                     <Settings className="w-5 h-5" />
                     Settings
@@ -2026,56 +2420,56 @@
               </div>
               
               {/* SEO-friendly description */}
-              <p className={`text-sm mb-6 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                Free swim meet scoring tool. Track team scores, individual events, relays, and diving. Perfect for high school and competitive swimming meets. Start scoring instantly!
+              <p className={`text-sm mb-6 ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                Free swimming scoresheet and swim meet scoring tool. Track team scores, individual events, relays, and diving. High school dual meet scoresheet, championship meets, and more — use instantly, no download required!
               </p>
 
               {showSettings && (
-                <div className={`rounded-xl mb-6 relative overflow-hidden ${darkMode ? 'bg-gray-900 border-2 border-cyan-500' : 'bg-white border-2 border-blue-500 shadow-xl'}`}>
+                <div className={`rounded-2xl mb-6 mt-6 relative overflow-hidden ${darkMode ? 'bg-pool-mid border border-chlorine/30' : 'bg-white border border-cyan-200 shadow-xl'}`}>
                   {/* Settings Header Bar */}
-                  <div className={`px-4 sm:px-6 py-4 flex items-center justify-between ${darkMode ? 'bg-cyan-600' : 'bg-blue-600'}`}>
+                  <div className={`px-4 sm:px-6 py-4 flex items-center justify-between ${darkMode ? 'bg-chlorine/20' : 'bg-gradient-to-r from-cyan-500 to-blue-500'}`}>
                     <div className="flex items-center gap-3">
-                      <Settings className="w-6 h-6 text-white" />
-                      <h3 className="text-xl font-bold text-white">Settings</h3>
+                      <Settings className={`w-6 h-6 ${darkMode ? 'text-chlorine' : 'text-white'}`} />
+                      <h3 className={`text-xl font-bold ${darkMode ? 'text-chlorine' : 'text-white'}`}>Settings</h3>
                     </div>
                     <button
                       onClick={() => setShowSettings(false)}
-                      className="p-2 rounded-lg transition bg-white/20 hover:bg-white/30"
+                      className={`p-2 rounded-lg transition ${darkMode ? 'bg-white/10 hover:bg-white/20' : 'bg-white/20 hover:bg-white/30'}`}
                     >
-                      <X className="w-5 h-5 text-white" />
+                      <X className={`w-5 h-5 ${darkMode ? 'text-white' : 'text-white'}`} />
                     </button>
                   </div>
 
                   {/* Settings Content */}
                   <div className="p-4 sm:p-6">
                   <div className="mb-6">
-                    <h4 className={`font-semibold mb-2 ${darkMode ? 'text-white' : 'text-gray-800'}`}>Appearance</h4>
+                    <h4 className={`font-semibold mb-2 ${darkMode ? 'text-white' : 'text-slate-800'}`}>Appearance</h4>
                     <label className="flex items-center gap-3 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={darkMode}
                         onChange={(e) => setDarkMode(e.target.checked)}
-                        className="w-5 h-5"
+                        className="w-5 h-5 rounded accent-cyan-500"
                       />
-                      <span className={darkMode ? 'text-gray-200' : 'text-gray-700'}>Dark Mode</span>
+                      <span className={darkMode ? 'text-slate-200' : 'text-slate-700'}>Dark Mode</span>
                     </label>
                   </div>
 
                   <div className="mb-6">
-                    <h4 className={`font-semibold mb-2 ${darkMode ? 'text-white' : 'text-gray-800'}`}>Data Management</h4>
-                    <p className={`text-sm mb-3 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    <h4 className={`font-semibold mb-2 ${darkMode ? 'text-white' : 'text-slate-800'}`}>Data Management</h4>
+                    <p className={`text-sm mb-3 ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
                       Your data will persist when you refresh the page until you clear it.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-3">
                       <button
                         onClick={clearAllDataKeepTemplates}
-                        className="px-4 py-2 rounded-lg bg-orange-600 hover:bg-orange-700 text-white font-medium"
+                        className={`px-4 py-2.5 rounded-xl font-medium transition ${darkMode ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30 hover:bg-orange-500/30' : 'bg-orange-500 hover:bg-orange-600 text-white'}`}
                       >
                         Clear Data (Keep Templates)
                       </button>
                       <button
                         onClick={clearAllDataAndTemplates}
-                        className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium"
+                        className={`px-4 py-2.5 rounded-xl font-medium transition ${darkMode ? 'bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30' : 'bg-red-500 hover:bg-red-600 text-white'}`}
                       >
                         Clear All Data & Templates
                       </button>
@@ -2313,13 +2707,18 @@
                 </div>
               )}
 
-              <div className={`rounded-lg p-6 mb-6 ${darkMode ? 'bg-gradient-to-r from-gray-700 to-gray-600' : 'bg-gradient-to-r from-blue-500 to-cyan-500'}`}>
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
+              <div className={`rounded-2xl p-6 mb-6 relative overflow-hidden ${darkMode ? 'bg-gradient-to-br from-pool-mid to-pool-light border border-chlorine/20' : 'bg-gradient-to-br from-cyan-500 to-blue-600'}`}>
+                {/* Lane lines decoration */}
+                <div className="absolute inset-0 opacity-10" style={{
+                  backgroundImage: 'repeating-linear-gradient(90deg, transparent 0px, transparent 40px, rgba(255,255,255,0.3) 40px, rgba(255,255,255,0.3) 42px)'
+                }} />
+                
+                <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
                   <div className="flex items-center gap-3">
-                    <h2 className="text-2xl font-bold text-white">Scoreboard</h2>
+                    <h2 className={`text-2xl font-bold ${darkMode ? 'text-chlorine' : 'text-white'}`}>Scoreboard</h2>
                     <button
                       onClick={shareScores}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition bg-white/20 text-white hover:bg-white/30"
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${darkMode ? 'bg-chlorine/20 text-chlorine hover:bg-chlorine/30 border border-chlorine/30' : 'bg-white/20 text-white hover:bg-white/30'}`}
                       title="Share scores"
                     >
                       <Share className="w-4 h-4" />
@@ -2329,9 +2728,9 @@
                   <div className="flex gap-1.5">
                     <button
                       onClick={() => { setScoringMode('combined'); trackEvent('change_scoring_mode', { mode: 'combined' }); }}
-                      className={`px-2 py-1 rounded-lg text-xs font-medium transition ${
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
                         scoringMode === 'combined'
-                          ? 'bg-white text-blue-600'
+                          ? (darkMode ? 'bg-chlorine text-pool-deep' : 'bg-white text-cyan-600')
                           : 'bg-white/20 text-white hover:bg-white/30'
                       }`}
                     >
@@ -2339,37 +2738,45 @@
                     </button>
                     <button
                       onClick={() => { setScoringMode('girls'); trackEvent('change_scoring_mode', { mode: 'girls' }); }}
-                      className={`px-2 py-1 rounded-lg text-xs font-medium transition ${
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
                         scoringMode === 'girls'
                           ? 'bg-pink-500 text-white'
-                          : 'bg-pink-400/40 text-white hover:bg-pink-400/60'
+                          : 'bg-pink-400/30 text-white hover:bg-pink-400/50'
                       }`}
                     >
                       Girls Only
                     </button>
                     <button
                       onClick={() => { setScoringMode('boys'); trackEvent('change_scoring_mode', { mode: 'boys' }); }}
-                      className={`px-2 py-1 rounded-lg text-xs font-medium transition ${
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
                         scoringMode === 'boys'
-                          ? 'bg-indigo-500 text-white'
-                          : 'bg-indigo-400/40 text-white hover:bg-indigo-400/60'
+                          ? 'bg-blue-500 text-white'
+                          : 'bg-blue-400/30 text-white hover:bg-blue-400/50'
                       }`}
                     >
                       Boys Only
                     </button>
                   </div>
                 </div>
-                <div className="grid gap-3">
+                <div className="relative grid gap-3">
                   {sortedTeams.length === 0 ? (
-                    <div className={`rounded-lg p-4 text-center ${darkMode ? 'bg-gray-800 text-gray-400' : 'bg-white text-gray-500'}`}>
+                    <div className={`rounded-xl p-4 text-center ${darkMode ? 'bg-pool-deep/50 text-slate-400 border border-white/10' : 'bg-white/90 text-slate-500'}`}>
                       No teams added yet. Add teams in Settings.
                     </div>
                   ) : (
                     sortedTeams.map((team, index) => (
-                    <div key={team.id} className={`rounded-lg p-3 sm:p-4 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                    <div key={team.id} className={`rounded-xl p-3 sm:p-4 transition-all ${
+                      index === 0 
+                        ? (darkMode ? 'bg-gradient-to-r from-lane-gold/20 to-transparent border-l-4 border-lane-gold' : 'bg-gradient-to-r from-amber-50 to-white border-l-4 border-amber-400')
+                        : (darkMode ? 'bg-pool-deep/50 border border-white/5' : 'bg-white/90')
+                    }`}>
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                         <div className="flex items-center gap-3 sm:gap-4">
-                          <span className={`text-xl sm:text-2xl font-bold ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>#{index + 1}</span>
+                          <span className={`text-xl sm:text-2xl font-bold ${
+                            index === 0 
+                              ? (darkMode ? 'text-lane-gold' : 'text-amber-500')
+                              : (darkMode ? 'text-slate-500' : 'text-slate-400')
+                          }`}>#{index + 1}</span>
                           {editingTeamId === team.id ? (
                             <input
                               type="text"
@@ -2418,8 +2825,18 @@
 
               <div>
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
-                  <h3 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Events</h3>
-                  <div className={`text-xs px-3 py-1.5 rounded-full ${darkMode ? 'bg-yellow-500/20 text-yellow-300' : 'bg-yellow-100 text-yellow-700'}`}>
+                  <div className="flex items-center gap-3">
+                    <h3 className={`text-xl font-bold ${darkMode ? 'text-chlorine' : 'text-slate-800'}`}>Events</h3>
+                    <button
+                      onClick={emailResults}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${darkMode ? 'bg-chlorine/20 text-chlorine hover:bg-chlorine/30 border border-chlorine/30' : 'bg-cyan-600 text-white hover:bg-cyan-700'}`}
+                      title="Email full results"
+                    >
+                      <Mail className="w-4 h-4" />
+                      Email Results
+                    </button>
+                  </div>
+                  <div className={`text-xs px-3 py-1.5 rounded-full ${darkMode ? 'bg-lane-gold/20 text-lane-gold border border-lane-gold/30' : 'bg-amber-100 text-amber-700 border border-amber-200'}`}>
                     💡 Tip: Select multiple teams in a place for ties
                   </div>
                 </div>
@@ -2429,9 +2846,9 @@
                       const isDiving = event.name === 'Diving';
                       const isRelay = event.name.includes('Relay');
                       return (
-                        <div key={event.id} className={`rounded-lg p-4 ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                        <div key={event.id} className={`rounded-xl p-4 ${darkMode ? 'bg-pool-mid/80 border border-white/10' : 'bg-white border border-slate-200 shadow-sm'}`}>
                           <div className="flex items-center justify-between mb-3">
-                            <h5 className={`font-semibold text-lg ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+                            <h5 className={`font-semibold text-lg ${darkMode ? 'text-white' : 'text-slate-800'}`}>
                               <span className={event.gender === 'girls' ? (darkMode ? 'text-pink-400' : 'text-pink-600') : (darkMode ? 'text-blue-400' : 'text-blue-600')}>
                                 {event.gender === 'girls' ? 'Girls' : 'Boys'}
                               </span>
@@ -2444,20 +2861,20 @@
                               <button
                                 onClick={() => moveEventUp(index)}
                                 disabled={index === 0}
-                                className={`p-1 rounded ${index === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-gray-600'} ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}
+                                className={`p-1 rounded ${index === 0 ? 'opacity-30 cursor-not-allowed' : (darkMode ? 'hover:bg-white/10' : 'hover:bg-slate-100')} ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}
                               >
                                 <ChevronUp className="w-5 h-5" />
                               </button>
                               <button
                                 onClick={() => moveEventDown(index)}
                                 disabled={index === events.length - 1}
-                                className={`p-1 rounded ${index === events.length - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-gray-600'} ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}
+                                className={`p-1 rounded ${index === events.length - 1 ? 'opacity-30 cursor-not-allowed' : (darkMode ? 'hover:bg-white/10' : 'hover:bg-slate-100')} ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}
                               >
                                 <ChevronDown className="w-5 h-5" />
                               </button>
                               <button
                                 onClick={() => removeEvent(event.id)}
-                                className="p-1 rounded hover:bg-red-500 text-red-500 hover:text-white"
+                                className={`p-1 rounded ${darkMode ? 'text-red-400 hover:bg-red-500/20' : 'text-red-500 hover:bg-red-50'}`}
                               >
                                 <X className="w-5 h-5" />
                               </button>
@@ -2499,27 +2916,27 @@
                         const allEvents = events.filter(e => e.gender === scoringMode);
                         const actualIndex = events.findIndex(e => e.id === event.id);
                         return (
-                          <div key={event.id} className={`rounded-lg p-4 ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                          <div key={event.id} className={`rounded-xl p-4 ${darkMode ? 'bg-pool-mid/80 border border-white/10' : 'bg-white border border-slate-200 shadow-sm'}`}>
                             <div className="flex items-center justify-between mb-3">
-                              <h5 className={`font-semibold text-lg ${isDiving ? (darkMode ? 'text-orange-400' : 'text-orange-600') : (darkMode ? 'text-white' : 'text-gray-800')}`}>{event.name}</h5>
+                              <h5 className={`font-semibold text-lg ${isDiving ? (darkMode ? 'text-orange-400' : 'text-orange-600') : (darkMode ? 'text-white' : 'text-slate-800')}`}>{event.name}</h5>
                               <div className="flex items-center gap-2">
                                 <button
                                   onClick={() => moveEventUp(actualIndex)}
                                   disabled={actualIndex === 0}
-                                  className={`p-1 rounded ${actualIndex === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-gray-600'} ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}
+                                  className={`p-1 rounded ${actualIndex === 0 ? 'opacity-30 cursor-not-allowed' : (darkMode ? 'hover:bg-white/10' : 'hover:bg-slate-100')} ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}
                                 >
                                   <ChevronUp className="w-5 h-5" />
                                 </button>
                                 <button
                                   onClick={() => moveEventDown(actualIndex)}
                                   disabled={actualIndex === events.length - 1}
-                                  className={`p-1 rounded ${actualIndex === events.length - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-gray-600'} ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}
+                                  className={`p-1 rounded ${actualIndex === events.length - 1 ? 'opacity-30 cursor-not-allowed' : (darkMode ? 'hover:bg-white/10' : 'hover:bg-slate-100')} ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}
                                 >
                                   <ChevronDown className="w-5 h-5" />
                                 </button>
                                 <button
                                   onClick={() => removeEvent(event.id)}
-                                  className="p-1 rounded hover:bg-red-500 text-red-500 hover:text-white"
+                                  className={`p-1 rounded ${darkMode ? 'text-red-400 hover:bg-red-500/20' : 'text-red-500 hover:bg-red-50'}`}
                                 >
                                   <X className="w-5 h-5" />
                                 </button>
@@ -2672,6 +3089,9 @@
 
     const root = ReactDOM.createRoot(document.getElementById('root'));
     root.render(<SwimMeetScore />);
+    
+    // Hide loading screen after render
+    hideLoadingScreen();
   </script>
 
   <!-- Service Worker Registration for Offline Support -->
