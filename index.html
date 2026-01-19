@@ -46,6 +46,38 @@
   <!-- Verification -->
   <meta name="google-site-verification" content="E6jMP8Bm02-2gUIhCyzFM6nRLixGSuCHrVdv4qh13ks" />
   
+  <!-- Microsoft Bing SEO -->
+  <!-- To complete Bing verification: Add your site at https://www.bing.com/webmasters -->
+  <!-- Then replace YOUR_BING_VERIFICATION_CODE with your actual code -->
+  <meta name="msvalidate.01" content="YOUR_BING_VERIFICATION_CODE" />
+  
+  <!-- Additional Bing/Microsoft SEO Meta Tags -->
+  <meta name="msnbot" content="index, follow">
+  <meta name="bingbot" content="index, follow">
+  <meta name="geo.region" content="US">
+  <meta name="geo.placename" content="United States">
+  <meta name="rating" content="general">
+  <meta name="distribution" content="global">
+  <meta name="coverage" content="Worldwide">
+  <meta name="target" content="all">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  
+  <!-- Additional SEO - Helps all search engines -->
+  <meta name="subject" content="Swim Meet Scoring Application">
+  <meta name="topic" content="Swimming, Sports Scoring, Swim Meet Management">
+  <meta name="summary" content="Free online swim meet scoring tool for tracking team scores, individual events, relays, and diving at high school and competitive swim meets.">
+  <meta name="classification" content="Sports/Swimming">
+  <meta name="designer" content="Kaden Co">
+  <meta name="owner" content="Kaden Co">
+  <meta name="url" content="https://swimmeetscore.com">
+  <meta name="identifier-URL" content="https://swimmeetscore.com">
+  <meta name="pagename" content="Swim Meet Score - Free Swimming Scoresheet">
+  <meta name="category" content="Sports, Swimming, Scoring Tools">
+  
+  <!-- Link to sitemap for search engines -->
+  <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+  
   <!-- Google Analytics 4 with Offline Support -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-0G72MC7J4M"></script>
   <script>
@@ -188,6 +220,75 @@
       "@type": "Organization",
       "name": "Kaden Co"
     }
+  }
+  </script>
+  
+  <!-- Organization Schema for Bing -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Kaden Co",
+    "url": "https://swimmeetscore.com",
+    "logo": "https://swimmeetscore.com/favicon-512x512.png",
+    "contactPoint": [{
+      "@type": "ContactPoint",
+      "email": "support@swimmeetscore.com",
+      "contactType": "customer support",
+      "availableLanguage": "English"
+    }],
+    "sameAs": []
+  }
+  </script>
+  
+  <!-- BreadcrumbList Schema -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [{
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://swimmeetscore.com/"
+    }]
+  }
+  </script>
+  
+  <!-- FAQPage Schema for common questions (helps with rich snippets) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [{
+      "@type": "Question",
+      "name": "What is Swim Meet Score?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Swim Meet Score is a free online swim meet scoring tool and swimming scoresheet. It helps coaches, parents, and officials track team scores, individual events, relays, and diving at high school and competitive swim meets."
+      }
+    }, {
+      "@type": "Question",
+      "name": "Does Swim Meet Score work offline?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes! Once loaded, Swim Meet Score works completely offline - perfect for pools with poor cell service. Your data is saved locally in your browser."
+      }
+    }, {
+      "@type": "Question",
+      "name": "Is Swim Meet Score free to use?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, Swim Meet Score is completely free and ad-free. No download or registration required."
+      }
+    }, {
+      "@type": "Question",
+      "name": "What scoring formats does Swim Meet Score support?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Swim Meet Score supports high school dual meets (5 places), championship meets (top 8 or top 16), and fully customizable point systems. It handles individual events, relays, and diving with proper tie-breaking rules."
+      }
+    }]
   }
   </script>
   <!-- Favicons -->
@@ -944,7 +1045,7 @@
           {/* Tie indicator */}
           {numTied > 1 && (
             <div className={`text-xs font-medium ${darkMode ? 'text-yellow-400' : 'text-yellow-600'}`}>
-              🤝 TIE: {numTied} teams
+              🤝 TIE: {numTied} teams
             </div>
           )}
         </div>
@@ -961,6 +1062,201 @@
         };
         navigator.vibrate(patterns[style] || patterns.light);
       }
+    };
+
+    // Quick Entry Event Card - Team-first entry mode (inline, not modal)
+    const QuickEntryEventCard = ({ event, teams, darkMode, numPlaces, pointSystem, onUpdate, onMoveUp, onMoveDown, onRemove, canMoveUp, canMoveDown }) => {
+      const isDiving = event.name === 'Diving';
+      const isRelay = event.name.includes('Relay');
+      
+      // Get current selections from event results
+      const getTeamPlaces = (teamId) => {
+        const places = [];
+        event.results.forEach(result => {
+          if (result.teamIds && result.teamIds.includes(String(teamId))) {
+            places.push(result.place);
+          }
+        });
+        return places.sort((a, b) => a - b);
+      };
+      
+      const getPlaceLabel = (place) => {
+        return place === 1 ? '1st' : place === 2 ? '2nd' : place === 3 ? '3rd' : `${place}th`;
+      };
+      
+      // Toggle a place for a team
+      const togglePlace = (teamId, place) => {
+        triggerHaptic('light');
+        const currentPlaces = getTeamPlaces(teamId);
+        const hasPlace = currentPlaces.includes(place);
+        onUpdate(event.id, place, teamId, !hasPlace);
+      };
+      
+      // Check if a place is taken by another team (for visual indication)
+      const getTeamsAtPlace = (place) => {
+        const result = event.results.find(r => r.place === place);
+        return result?.teamIds || [];
+      };
+      
+      // Check if place is consumed by a tie above it
+      const isPlaceConsumed = (place) => {
+        for (let p = 1; p < place; p++) {
+          const teamsAtP = getTeamsAtPlace(p);
+          if (teamsAtP.length > 1) {
+            // This place created a tie, check if current place falls within the skipped range
+            if (place <= p + teamsAtP.length - 1) {
+              return true;
+            }
+          }
+        }
+        return false;
+      };
+
+      return (
+        <div className={`rounded-xl p-3 ${darkMode ? 'bg-pool-mid/80 border border-white/10' : 'bg-white border border-slate-200 shadow-sm'}`}>
+          {/* Event Header */}
+          <div className="flex items-center justify-between mb-2">
+            <h5 className={`font-semibold ${darkMode ? 'text-white' : 'text-slate-800'}`}>
+              <span className={event.gender === 'girls' ? (darkMode ? 'text-pink-400' : 'text-pink-600') : (darkMode ? 'text-blue-400' : 'text-blue-600')}>
+                {event.gender === 'girls' ? 'G' : 'B'}
+              </span>
+              {' '}
+              <span className={isDiving ? (darkMode ? 'text-orange-400' : 'text-orange-600') : ''}>
+                {event.name}
+              </span>
+            </h5>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={onMoveUp}
+                disabled={!canMoveUp}
+                className={`p-1 rounded ${!canMoveUp ? 'opacity-30 cursor-not-allowed' : (darkMode ? 'hover:bg-white/10' : 'hover:bg-slate-100')} ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}
+              >
+                <ChevronUp className="w-4 h-4" />
+              </button>
+              <button
+                onClick={onMoveDown}
+                disabled={!canMoveDown}
+                className={`p-1 rounded ${!canMoveDown ? 'opacity-30 cursor-not-allowed' : (darkMode ? 'hover:bg-white/10' : 'hover:bg-slate-100')} ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}
+              >
+                <ChevronDown className="w-4 h-4" />
+              </button>
+              <button
+                onClick={onRemove}
+                className={`p-1 rounded ${darkMode ? 'text-red-400 hover:bg-red-500/20' : 'text-red-500 hover:bg-red-50'}`}
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+          
+          {/* Team rows with place buttons */}
+          <div className="space-y-2">
+            {teams.map(team => {
+              const teamPlaces = getTeamPlaces(team.id);
+              return (
+                <div key={team.id} className={`flex items-center gap-2 ${darkMode ? '' : ''}`}>
+                  {/* Team name - fixed width */}
+                  <div className={`w-20 sm:w-24 flex-shrink-0 text-xs font-medium truncate ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    {team.name}
+                  </div>
+                  
+                  {/* Place buttons - scrollable on mobile */}
+                  <div className="flex gap-1 flex-wrap">
+                    {Array.from({ length: numPlaces }, (_, i) => i + 1).map(place => {
+                      const isSelected = teamPlaces.includes(place);
+                      const teamsAtPlace = getTeamsAtPlace(place);
+                      const isTie = teamsAtPlace.length > 1;
+                      const hasOtherTeam = teamsAtPlace.some(id => id !== String(team.id));
+                      const consumed = isPlaceConsumed(place) && !isSelected;
+                      const points = pointSystem[place] || 0;
+                      
+                      if (consumed) {
+                        return (
+                          <div
+                            key={place}
+                            className={`w-8 h-8 sm:w-9 sm:h-9 rounded flex items-center justify-center text-xs opacity-30 ${darkMode ? 'bg-gray-700 text-gray-500' : 'bg-gray-200 text-gray-400'}`}
+                            title="Consumed by tie above"
+                          >
+                            -
+                          </div>
+                        );
+                      }
+                      
+                      return (
+                        <button
+                          key={place}
+                          onClick={() => togglePlace(team.id, place)}
+                          className={`w-8 h-8 sm:w-9 sm:h-9 rounded font-medium text-xs transition-all ${
+                            isSelected
+                              ? (place === 1 
+                                  ? 'bg-gradient-to-br from-amber-400 to-amber-500 text-amber-900' 
+                                  : place === 2 
+                                    ? 'bg-gradient-to-br from-gray-300 to-gray-400 text-gray-800'
+                                    : place === 3 
+                                      ? 'bg-gradient-to-br from-orange-400 to-orange-500 text-orange-900'
+                                      : (darkMode ? 'bg-chlorine text-pool-deep' : 'bg-cyan-600 text-white'))
+                              : hasOtherTeam
+                                ? (darkMode ? 'bg-gray-600/50 text-gray-400 border border-dashed border-gray-500' : 'bg-gray-100 text-gray-400 border border-dashed border-gray-300')
+                                : (darkMode ? 'bg-gray-700/50 text-gray-400 hover:bg-gray-600 border border-gray-600' : 'bg-gray-50 text-gray-500 hover:bg-gray-100 border border-gray-200')
+                          } ${isTie && isSelected ? 'ring-2 ring-yellow-400' : ''}`}
+                          title={`${getPlaceLabel(place)} (${points}pts)${hasOtherTeam && !isSelected ? ' - taken' : ''}`}
+                        >
+                          {place}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  
+                  {/* Points earned indicator - accounts for ties and consumed places */}
+                  {teamPlaces.length > 0 && (
+                    <div className={`text-xs font-medium ml-auto ${darkMode ? 'text-chlorine' : 'text-cyan-600'}`}>
+                      {(() => {
+                        let totalPts = 0;
+                        
+                        // Build a map of place -> teamIds for this event
+                        const resultsByPlace = {};
+                        for (let p = 1; p <= numPlaces; p++) {
+                          const teamsAtP = getTeamsAtPlace(p);
+                          if (teamsAtP.length > 0) {
+                            resultsByPlace[p] = teamsAtP;
+                          }
+                        }
+                        
+                        // Process places sequentially, skipping consumed ones (same logic as recalculateAllScores)
+                        let currentPlace = 1;
+                        while (currentPlace <= numPlaces) {
+                          const teamsAtPlace = resultsByPlace[currentPlace];
+                          
+                          if (teamsAtPlace && teamsAtPlace.length > 0) {
+                            const numTied = teamsAtPlace.length;
+                            
+                            // Check if this team is at this place
+                            if (teamsAtPlace.includes(String(team.id))) {
+                              // Sum up points for all places consumed by this tie
+                              let tiedPoints = 0;
+                              for (let i = 0; i < numTied && (currentPlace + i) <= numPlaces; i++) {
+                                tiedPoints += (pointSystem[currentPlace + i]) || 0;
+                              }
+                              totalPts += tiedPoints / numTied;
+                            }
+                            
+                            // Skip places consumed by this tie
+                            currentPlace += numTied;
+                          } else {
+                            currentPlace++;
+                          }
+                        }
+                        
+                        return Math.round(totalPts * 10) / 10;
+                      })()}pt
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
     };
 
     // Bulk Entry Modal - Quick entry for all places for a team
@@ -1267,6 +1563,7 @@
       const [error, setError] = useState(null);
       const [showConfirmDialog, setShowConfirmDialog] = useState(null);
       const [bulkEntryEvent, setBulkEntryEvent] = useState(null); // For bulk entry modal
+      const [quickEntryMode, setQuickEntryMode] = useState(false); // Toggle between place-first and team-first entry modes
       
       // Clear error after 5 seconds
       useEffect(() => {
@@ -2215,6 +2512,43 @@
         trackEvent('load_template', { template_name: 'championship_meet' });
       };
 
+      const loadChampionshipMeet8 = () => {
+        setNumIndividualPlaces(8);
+        setNumRelayPlaces(8);
+        setNumDivingPlaces(8);
+        setIndividualPointSystem({
+          1: 11, 2: 9, 3: 8, 4: 7, 5: 6, 6: 5, 7: 4, 8: 3, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0, 15: 0, 16: 0, 17: 0, 18: 0, 19: 0, 20: 0
+        });
+        setRelayPointSystem({
+          1: 22, 2: 18, 3: 16, 4: 14, 5: 12, 6: 10, 7: 8, 8: 6, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0, 15: 0, 16: 0, 17: 0, 18: 0, 19: 0, 20: 0
+        });
+        setDivingPointSystem({
+          1: 11, 2: 9, 3: 8, 4: 7, 5: 6, 6: 5, 7: 4, 8: 3, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0, 15: 0, 16: 0, 17: 0, 18: 0, 19: 0, 20: 0
+        });
+        // Set 8 default teams for championship meet
+        const championshipTeams = [
+          { id: utils.generateId(), name: 'Team 1', score: 0, girlsScore: 0, boysScore: 0 },
+          { id: utils.generateId(), name: 'Team 2', score: 0, girlsScore: 0, boysScore: 0 },
+          { id: utils.generateId(), name: 'Team 3', score: 0, girlsScore: 0, boysScore: 0 },
+          { id: utils.generateId(), name: 'Team 4', score: 0, girlsScore: 0, boysScore: 0 },
+          { id: utils.generateId(), name: 'Team 5', score: 0, girlsScore: 0, boysScore: 0 },
+          { id: utils.generateId(), name: 'Team 6', score: 0, girlsScore: 0, boysScore: 0 },
+          { id: utils.generateId(), name: 'Team 7', score: 0, girlsScore: 0, boysScore: 0 },
+          { id: utils.generateId(), name: 'Team 8', score: 0, girlsScore: 0, boysScore: 0 }
+        ];
+        setTeams(championshipTeams);
+        const newEvents = competitionEvents.map((e) => ({
+          id: utils.generateId(),
+          name: e.name,
+          gender: e.gender,
+          results: []
+        }));
+        setEvents(newEvents);
+        recalculateAllScores(championshipTeams, newEvents);
+        // Track event
+        trackEvent('load_template', { template_name: 'championship_meet_8' });
+      };
+
       // Generate shareable score text
       const generateShareText = () => {
         const modeLabel = scoringMode === 'combined' ? '' : scoringMode === 'girls' ? ' (Girls)' : ' (Boys)';
@@ -2229,7 +2563,13 @@
         sortedTeams.forEach((team, index) => {
           const score = scoringMode === 'girls' ? team.girlsScore : scoringMode === 'boys' ? team.boysScore : team.score;
           const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '  ';
-          text += `${medal} #${index + 1} ${team.name}: ${score} pts\n`;
+          
+          if (scoringMode === 'combined') {
+            // Show breakdown for combined mode
+            text += `${medal} #${index + 1} ${team.name}: ${score} pts (G: ${team.girlsScore}, B: ${team.boysScore})\n`;
+          } else {
+            text += `${medal} #${index + 1} ${team.name}: ${score} pts\n`;
+          }
         });
         
         text += `\n📊 Scored with SwimMeetScore\n`;
@@ -2615,36 +2955,41 @@
                     <section className="mb-8">
                       <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>⚡ Quick Entry Mode</h4>
                       <p className="mb-3">
-                        Quick Entry lets you enter all places for a team at once - much faster than selecting each dropdown individually!
+                        Toggle Quick Mode ON for faster score entry, especially on mobile. This mode shows a compact view where you tap place numbers directly for each team.
                       </p>
                       
                       <div className={`p-4 rounded-lg mb-4 ${darkMode ? 'bg-lane-gold/20 border border-lane-gold/30' : 'bg-amber-50 border border-amber-200'}`}>
-                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-lane-gold' : 'text-amber-700'}`}>🚀 How to Use Quick Entry</h5>
+                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-lane-gold' : 'text-amber-700'}`}>🚀 How to Use Quick Mode</h5>
                         <ol className="text-sm space-y-1 list-decimal list-inside">
-                          <li>Click the <strong>"Quick"</strong> button next to any event name</li>
-                          <li>Select which team you are entering results for</li>
-                          <li>Tap the place buttons (1st, 2nd, 3rd, etc.) that team earned</li>
-                          <li>Click "Save Results" to apply</li>
+                          <li>Click the <strong>"Quick Mode"</strong> button next to the Events header</li>
+                          <li>Each event shows a row per team with numbered place buttons</li>
+                          <li>Tap place numbers (1, 2, 3...) to assign them to each team</li>
+                          <li>Scores update instantly - no save button needed!</li>
                         </ol>
                       </div>
                       
-                      <div className={`p-4 rounded-lg ${darkMode ? 'bg-green-900/30 border border-green-700/50' : 'bg-green-50 border border-green-200'}`}>
-                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-green-400' : 'text-green-700'}`}>🎯 Auto-Fill for Dual Meets</h5>
-                        <p className="text-sm mb-2">
-                          When you have exactly 2 teams, Quick Entry can automatically fill in the remaining places for the other team!
-                        </p>
-                        <div className={`text-sm p-3 rounded ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-                          <p className="font-medium mb-1">Example:</p>
-                          <p>• You select Team A got 1st, 3rd, and 5th</p>
-                          <p>• Auto-fill automatically assigns Team B to 2nd and 4th</p>
-                          <p className="mt-2 italic text-xs">This saves time and prevents errors in dual meets!</p>
+                      <div className={`p-4 rounded-lg mb-4 ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>📋 Two Entry Modes</h5>
+                        <div className="text-sm space-y-2">
+                          <p><strong>Quick Mode OFF (Default):</strong> Pick teams for each place using dropdowns. Best for recording ties.</p>
+                          <p><strong>Quick Mode ON:</strong> Tap place numbers for each team. Faster for mobile and dual meets.</p>
                         </div>
+                      </div>
+                      
+                      <div className={`p-4 rounded-lg ${darkMode ? 'bg-green-900/30 border border-green-700/50' : 'bg-green-50 border border-green-200'}`}>
+                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-green-400' : 'text-green-700'}`}>🎯 Tips for Quick Mode</h5>
+                        <ul className="text-sm space-y-1">
+                          <li>• Each team's row shows their total points earned</li>
+                          <li>• Grayed numbers with dashes (-) are consumed by ties above</li>
+                          <li>• Dashed borders show places already taken by another team</li>
+                          <li>• Gold/silver/bronze colors highlight 1st/2nd/3rd places</li>
+                        </ul>
                       </div>
                     </section>
 
                     {/* Tie Handling */}
                     <section className="mb-8">
-                      <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>🤝 How Ties Are Handled</h4>
+                      <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>🤝 How Ties Are Handled</h4>
                       <p className="mb-3">
                         Swim Meet Score follows official tie-breaking rules used in competitive swimming:
                       </p>
@@ -2706,7 +3051,7 @@
                     <section className="mb-8">
                       <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>💡 Tips</h4>
                       <ul className="space-y-2">
-                        <li>• <strong>Quick Entry Mode:</strong> Tap the ⚡ Quick button on any event to enter multiple places for a team at once (e.g., "Team A got 1st, 3rd, 5th")</li>
+                        <li>• <strong>Quick Mode:</strong> Toggle "Quick Mode" next to Events header for faster mobile entry - tap place numbers directly for each team</li>
                         <li>• <strong>Works Offline:</strong> Once loaded, works without internet - perfect for pools with bad service!</li>
                         <li>• <strong>Save Templates:</strong> Create custom templates for your league's specific scoring rules</li>
                         <li>• <strong>Dark Mode:</strong> Use dark mode for better visibility at indoor pools</li>
@@ -2874,6 +3219,12 @@
                         className={`px-4 py-2 rounded-lg ${darkMode ? 'bg-pink-600 hover:bg-pink-700' : 'bg-pink-500 hover:bg-pink-600'} text-white font-medium`}
                       >
                         High School Dual Meet
+                      </button>
+                      <button
+                        onClick={loadChampionshipMeet8}
+                        className={`px-4 py-2 rounded-lg ${darkMode ? 'bg-purple-600 hover:bg-purple-700' : 'bg-purple-500 hover:bg-purple-600'} text-white font-medium`}
+                      >
+                        Championship Meet (Top 8)
                       </button>
                       <button
                         onClick={loadChampionshipMeet}
@@ -3214,8 +3565,21 @@
 
               <div>
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <h3 className={`text-xl font-bold ${darkMode ? 'text-chlorine' : 'text-slate-800'}`}>Events</h3>
+                    {/* Entry Mode Toggle */}
+                    <button
+                      onClick={() => { setQuickEntryMode(!quickEntryMode); triggerHaptic('light'); trackEvent('toggle_entry_mode', { mode: !quickEntryMode ? 'team-first' : 'place-first' }); }}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
+                        quickEntryMode
+                          ? (darkMode ? 'bg-lane-gold text-pool-deep' : 'bg-amber-500 text-white')
+                          : (darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600 border border-gray-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-300')
+                      }`}
+                      title={quickEntryMode ? "Switch to Place-First mode" : "Switch to Team-First Quick Entry mode"}
+                    >
+                      <Zap className="w-3.5 h-3.5" />
+                      {quickEntryMode ? 'Quick Mode ON' : 'Quick Mode'}
+                    </button>
                     <button
                       onClick={emailResults}
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${darkMode ? 'bg-chlorine/20 text-chlorine hover:bg-chlorine/30 border border-chlorine/30' : 'bg-cyan-600 text-white hover:bg-cyan-700'}`}
@@ -3226,14 +3590,41 @@
                     </button>
                   </div>
                   <div className={`text-xs px-3 py-1.5 rounded-full ${darkMode ? 'bg-lane-gold/20 text-lane-gold border border-lane-gold/30' : 'bg-amber-100 text-amber-700 border border-amber-200'}`}>
-                    💡 Tip: Select multiple teams in a place for ties
+                    {quickEntryMode 
+                      ? '⚡ Tap place numbers to assign to each team'
+                      : '💡 Tip: Select multiple teams in a place for ties'
+                    }
                   </div>
                 </div>
                 {scoringMode === 'combined' ? (
-                  <div className="space-y-4">
+                  <div className={`space-y-${quickEntryMode ? '2' : '4'}`}>
                     {events.map((event, index) => {
                       const isDiving = event.name === 'Diving';
                       const isRelay = event.name.includes('Relay');
+                      const pointSystem = isDiving ? divingPointSystem : isRelay ? relayPointSystem : individualPointSystem;
+                      const numPlaces = isDiving ? numDivingPlaces : isRelay ? numRelayPlaces : numIndividualPlaces;
+                      
+                      // Quick Entry Mode - Team-first compact cards
+                      if (quickEntryMode) {
+                        return (
+                          <QuickEntryEventCard
+                            key={event.id}
+                            event={event}
+                            teams={teams}
+                            darkMode={darkMode}
+                            numPlaces={numPlaces}
+                            pointSystem={pointSystem}
+                            onUpdate={updateEventResult}
+                            onMoveUp={() => moveEventUp(index)}
+                            onMoveDown={() => moveEventDown(index)}
+                            onRemove={() => removeEvent(event.id)}
+                            canMoveUp={index > 0}
+                            canMoveDown={index < events.length - 1}
+                          />
+                        );
+                      }
+                      
+                      // Default Mode - Place-first with dropdowns
                       return (
                         <div key={event.id} className={`rounded-xl p-4 ${darkMode ? 'bg-pool-mid/80 border border-white/10' : 'bg-white border border-slate-200 shadow-sm'}`}>
                           <div className="flex items-center justify-between mb-3">
@@ -3247,14 +3638,6 @@
                                   {event.name}
                                 </span>
                               </h5>
-                              <button
-                                onClick={() => setBulkEntryEvent(event)}
-                                className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition ${darkMode ? 'bg-lane-gold/20 text-lane-gold hover:bg-lane-gold/30 border border-lane-gold/30' : 'bg-amber-100 text-amber-700 hover:bg-amber-200 border border-amber-200'}`}
-                                title="Quick Entry - Enter all results for a team at once"
-                              >
-                                <Zap className="w-3.5 h-3.5" />
-                                Quick
-                              </button>
                             </div>
                             <div className="flex items-center gap-2">
                               <button
@@ -3282,8 +3665,6 @@
                           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-1">
                             {(() => {
                               const consumedPlaces = getConsumedPlaces(event);
-                              const pointSystem = isDiving ? divingPointSystem : isRelay ? relayPointSystem : individualPointSystem;
-                              const numPlaces = isDiving ? numDivingPlaces : isRelay ? numRelayPlaces : numIndividualPlaces;
                               return getPlacesArray(event).map(place => (
                                 <PlaceSelector
                                   key={place}
@@ -3308,25 +3689,41 @@
                     <h4 className={`text-lg font-semibold mb-4 ${scoringMode === 'girls' ? (darkMode ? 'text-pink-400' : 'text-pink-600') : (darkMode ? 'text-blue-400' : 'text-blue-600')}`}>
                       {scoringMode === 'girls' ? 'Girls Events' : 'Boys Events'}
                     </h4>
-                    <div className="space-y-4">
+                    <div className={`space-y-${quickEntryMode ? '2' : '4'}`}>
                       {events.filter(e => e.gender === scoringMode).map((event, index) => {
                         const isDiving = event.name === 'Diving';
                         const isRelay = event.name.includes('Relay');
                         const allEvents = events.filter(e => e.gender === scoringMode);
                         const actualIndex = events.findIndex(e => e.id === event.id);
+                        const pointSystem = isDiving ? divingPointSystem : isRelay ? relayPointSystem : individualPointSystem;
+                        const numPlaces = isDiving ? numDivingPlaces : isRelay ? numRelayPlaces : numIndividualPlaces;
+                        
+                        // Quick Entry Mode - Team-first compact cards
+                        if (quickEntryMode) {
+                          return (
+                            <QuickEntryEventCard
+                              key={event.id}
+                              event={event}
+                              teams={teams}
+                              darkMode={darkMode}
+                              numPlaces={numPlaces}
+                              pointSystem={pointSystem}
+                              onUpdate={updateEventResult}
+                              onMoveUp={() => moveEventUp(actualIndex)}
+                              onMoveDown={() => moveEventDown(actualIndex)}
+                              onRemove={() => removeEvent(event.id)}
+                              canMoveUp={actualIndex > 0}
+                              canMoveDown={actualIndex < events.length - 1}
+                            />
+                          );
+                        }
+                        
+                        // Default Mode - Place-first with dropdowns
                         return (
                           <div key={event.id} className={`rounded-xl p-4 ${darkMode ? 'bg-pool-mid/80 border border-white/10' : 'bg-white border border-slate-200 shadow-sm'}`}>
                             <div className="flex items-center justify-between mb-3">
                               <div className="flex items-center gap-2">
                                 <h5 className={`font-semibold text-lg ${isDiving ? (darkMode ? 'text-orange-400' : 'text-orange-600') : (darkMode ? 'text-white' : 'text-slate-800')}`}>{event.name}</h5>
-                                <button
-                                  onClick={() => setBulkEntryEvent(event)}
-                                  className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition ${darkMode ? 'bg-lane-gold/20 text-lane-gold hover:bg-lane-gold/30 border border-lane-gold/30' : 'bg-amber-100 text-amber-700 hover:bg-amber-200 border border-amber-200'}`}
-                                  title="Quick Entry - Enter all results for a team at once"
-                                >
-                                  <Zap className="w-3.5 h-3.5" />
-                                  Quick
-                                </button>
                               </div>
                               <div className="flex items-center gap-2">
                                 <button
@@ -3354,8 +3751,6 @@
                             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-1">
                               {(() => {
                                 const consumedPlaces = getConsumedPlaces(event);
-                                const pointSystem = isDiving ? divingPointSystem : isRelay ? relayPointSystem : individualPointSystem;
-                                const numPlaces = isDiving ? numDivingPlaces : isRelay ? numRelayPlaces : numIndividualPlaces;
                                 return getPlacesArray(event).map(place => (
                                   <PlaceSelector
                                     key={place}

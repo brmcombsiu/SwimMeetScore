@@ -1,0 +1,41 @@
+# Robots.txt for SwimMeetScore.com
+# https://swimmeetscore.com
+
+# Allow all search engine crawlers
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://swimmeetscore.com/sitemap.xml
+
+# Crawl delay (optional, be nice to the server)
+Crawl-delay: 1
+
+# Specific crawler permissions
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+User-agent: Baiduspider
+Allow: /
+
+User-agent: YandexBot
+Allow: /
+
+# Block common bad bots (optional)
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
