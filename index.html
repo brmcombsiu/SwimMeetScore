@@ -944,41 +944,65 @@
           {/* Tie indicator */}
           {numTied > 1 && (
             <div className={`text-xs font-medium ${darkMode ? 'text-yellow-400' : 'text-yellow-600'}`}>
-              ðŸ¤ TIE: {numTied} teams
+              🤝 TIE: {numTied} teams
             </div>
           )}
         </div>
       );
     };
 
+    // Haptic feedback for mobile devices (defined at module level for use in BulkEntryModal)
+    const triggerHaptic = (style = 'light') => {
+      if ('vibrate' in navigator) {
+        const patterns = {
+          light: [10],
+          medium: [20],
+          heavy: [30]
+        };
+        navigator.vibrate(patterns[style] || patterns.light);
+      }
+    };
+
     // Bulk Entry Modal - Quick entry for all places for a team
     const BulkEntryModal = ({ event, teams, darkMode, numPlaces, pointSystem, onSave, onClose, existingResults }) => {
-      const [selectedTeam, setSelectedTeam] = useState(teams[0]?.id || null);
-      const [selectedPlaces, setSelectedPlaces] = useState([]);
-      const [autoFillEnabled, setAutoFillEnabled] = useState(teams.length === 2);
-      
-      // Get existing places for the selected team
-      useEffect(() => {
-        if (selectedTeam && existingResults) {
-          const teamPlaces = [];
+      // Track selections for ALL teams, not just the current one
+      const [allSelections, setAllSelections] = useState(() => {
+        // Initialize from existing results
+        const initial = {};
+        teams.forEach(t => { initial[t.id] = []; });
+        if (existingResults) {
           existingResults.forEach(result => {
-            if (result.teamIds && result.teamIds.includes(String(selectedTeam))) {
-              teamPlaces.push(result.place);
+            if (result.teamIds && result.place) {
+              result.teamIds.forEach(teamId => {
+                if (initial[teamId]) {
+                  initial[teamId].push(result.place);
+                }
+              });
             }
           });
-          setSelectedPlaces(teamPlaces);
-        } else {
-          setSelectedPlaces([]);
         }
-      }, [selectedTeam, existingResults]);
+        // Sort each team's places
+        Object.keys(initial).forEach(k => { initial[k].sort((a, b) => a - b); });
+        return initial;
+      });
+      
+      const [selectedTeam, setSelectedTeam] = useState(teams[0]?.id || null);
+      const [autoFillEnabled, setAutoFillEnabled] = useState(teams.length === 2);
+      
+      const selectedPlaces = allSelections[selectedTeam] || [];
       
       const togglePlace = (place) => {
-        setSelectedPlaces(prev => {
-          if (prev.includes(place)) {
-            return prev.filter(p => p !== place);
+        triggerHaptic('light');
+        setAllSelections(prev => {
+          const teamPlaces = [...(prev[selectedTeam] || [])];
+          const idx = teamPlaces.indexOf(place);
+          if (idx >= 0) {
+            teamPlaces.splice(idx, 1);
           } else {
-            return [...prev, place].sort((a, b) => a - b);
+            teamPlaces.push(place);
+            teamPlaces.sort((a, b) => a - b);
           }
+          return { ...prev, [selectedTeam]: teamPlaces };
         });
       };
       
@@ -986,239 +1010,252 @@
         return place === 1 ? '1st' : place === 2 ? '2nd' : place === 3 ? '3rd' : `${place}th`;
       };
       
-      // Calculate points for selected places
-      const calculatePoints = () => {
-        return selectedPlaces.reduce((sum, place) => sum + (pointSystem[place] || 0), 0);
+      // Get which team(s) have a place selected (for showing ties/other team selections)
+      const getTeamsAtPlace = (place) => {
+        const teamsAtPlace = [];
+        Object.entries(allSelections).forEach(([teamId, places]) => {
+          if (places.includes(place)) {
+            teamsAtPlace.push(teamId);
+          }
+        });
+        return teamsAtPlace;
       };
       
-      // Auto-fill remaining places for the other team (dual meet)
+      // Calculate total places selected across all teams
+      const getTotalPlacesSelected = () => {
+        let total = 0;
+        Object.values(allSelections).forEach(places => { total += places.length; });
+        return total;
+      };
+      
+      // Get place count for a specific team
+      const getTeamPlaceCount = (teamId) => {
+        return (allSelections[teamId] || []).length;
+      };
+      
       const handleSave = () => {
-        if (!selectedTeam) return;
-        
-        // Build results for selected team
+        // Build results from all selections
         const newResults = [];
-        selectedPlaces.forEach(place => {
-          newResults.push({ place, teamIds: [String(selectedTeam)] });
+        const placeToTeams = {};
+        
+        // Group teams by place
+        Object.entries(allSelections).forEach(([teamId, places]) => {
+          places.forEach(place => {
+            if (!placeToTeams[place]) placeToTeams[place] = [];
+            placeToTeams[place].push(String(teamId));
+          });
         });
         
         // If dual meet and auto-fill is enabled, fill remaining places with other team
         if (autoFillEnabled && teams.length === 2) {
-          const otherTeam = teams.find(t => t.id !== selectedTeam);
-          if (otherTeam) {
-            for (let p = 1; p <= numPlaces; p++) {
-              if (!selectedPlaces.includes(p)) {
-                newResults.push({ place: p, teamIds: [String(otherTeam.id)] });
+          const [team1, team2] = teams;
+          for (let p = 1; p <= numPlaces; p++) {
+            if (!placeToTeams[p] || placeToTeams[p].length === 0) {
+              // Assign to the team that doesn't have this place
+              const team1Has = (allSelections[team1.id] || []).includes(p);
+              const team2Has = (allSelections[team2.id] || []).includes(p);
+              if (!team1Has && !team2Has) {
+                // Neither team has it - give to the one with fewer places
+                const team1Count = (allSelections[team1.id] || []).length;
+                const team2Count = (allSelections[team2.id] || []).length;
+                placeToTeams[p] = [String(team1Count <= team2Count ? team1.id : team2.id)];
               }
             }
           }
         }
         
+        // Convert to results format
+        Object.entries(placeToTeams).forEach(([place, teamIds]) => {
+          if (teamIds.length > 0) {
+            newResults.push({ place: parseInt(place), teamIds });
+          }
+        });
+        
         onSave(event.id, newResults);
         onClose();
-        trackEvent('bulk_entry_save', { team_count: teams.length, places_selected: selectedPlaces.length, auto_fill: autoFillEnabled });
+        trackEvent('bulk_entry_save', { team_count: teams.length, places_selected: getTotalPlacesSelected(), auto_fill: autoFillEnabled });
         triggerHaptic('medium');
       };
       
       const clearAll = () => {
-        setSelectedPlaces([]);
-      };
-      
-      const selectAll = () => {
-        setSelectedPlaces(Array.from({ length: numPlaces }, (_, i) => i + 1));
+        triggerHaptic('light');
+        setAllSelections(prev => ({ ...prev, [selectedTeam]: [] }));
       };
 
       return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className={`rounded-2xl max-w-lg w-full max-h-[90vh] overflow-hidden flex flex-col ${darkMode ? 'bg-pool-mid border border-chlorine/30' : 'bg-white'}`}>
-            {/* Header */}
-            <div className={`px-5 py-4 flex items-center justify-between border-b ${darkMode ? 'bg-gradient-to-r from-chlorine/20 to-transparent border-chlorine/20' : 'bg-gradient-to-r from-cyan-500 to-blue-500'}`}>
-              <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg ${darkMode ? 'bg-chlorine/20' : 'bg-white/20'}`}>
-                  <Zap className={`w-5 h-5 ${darkMode ? 'text-chlorine' : 'text-white'}`} />
-                </div>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
+          <div className={`rounded-2xl w-full max-w-lg flex flex-col ${darkMode ? 'bg-pool-mid border border-chlorine/30' : 'bg-white'}`} style={{ maxHeight: 'calc(100vh - 16px)' }}>
+            {/* Header - Compact */}
+            <div className={`px-4 py-3 flex items-center justify-between border-b shrink-0 ${darkMode ? 'bg-gradient-to-r from-chlorine/20 to-transparent border-chlorine/20' : 'bg-gradient-to-r from-cyan-500 to-blue-500'}`}>
+              <div className="flex items-center gap-2">
+                <Zap className={`w-5 h-5 ${darkMode ? 'text-chlorine' : 'text-white'}`} />
                 <div>
-                  <h3 className={`text-lg font-bold ${darkMode ? 'text-chlorine' : 'text-white'}`}>Quick Entry</h3>
+                  <h3 className={`text-base font-bold ${darkMode ? 'text-chlorine' : 'text-white'}`}>Quick Entry</h3>
                   <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-white/80'}`}>
                     {event.gender === 'girls' ? 'Girls' : 'Boys'} {event.name}
                   </p>
                 </div>
               </div>
-              <button
-                onClick={onClose}
-                className={`p-2 rounded-lg transition ${darkMode ? 'hover:bg-white/10' : 'hover:bg-white/20'}`}
-              >
+              <button onClick={onClose} className={`p-2 rounded-lg transition ${darkMode ? 'hover:bg-white/10' : 'hover:bg-white/20'}`}>
                 <X className={`w-5 h-5 ${darkMode ? 'text-gray-300' : 'text-white'}`} />
               </button>
             </div>
 
-            {/* Content */}
-            <div className="flex-1 overflow-y-auto p-5">
-              {/* Team Selector */}
-              <div className="mb-5">
-                <label className={`text-sm font-medium block mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                  Select Team
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  {teams.map(team => (
-                    <button
-                      key={team.id}
-                      onClick={() => setSelectedTeam(team.id)}
-                      className={`px-4 py-3 rounded-xl font-medium text-sm transition-all ${
-                        selectedTeam === team.id
-                          ? (darkMode ? 'bg-chlorine text-pool-deep ring-2 ring-chlorine/50' : 'bg-cyan-600 text-white ring-2 ring-cyan-300')
-                          : (darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')
-                      }`}
-                    >
-                      {team.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Places Grid */}
-              <div className="mb-5">
-                <div className="flex items-center justify-between mb-2">
-                  <label className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                    Select Places for {teams.find(t => t.id === selectedTeam)?.name || 'Team'}
-                  </label>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={clearAll}
-                      className={`text-xs px-2 py-1 rounded ${darkMode ? 'text-gray-400 hover:text-gray-300 hover:bg-gray-700' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'}`}
-                    >
-                      Clear
-                    </button>
-                    <button
-                      onClick={selectAll}
-                      className={`text-xs px-2 py-1 rounded ${darkMode ? 'text-chlorine hover:bg-chlorine/20' : 'text-cyan-600 hover:bg-cyan-50'}`}
-                    >
-                      Select All
-                    </button>
-                  </div>
-                </div>
-                <div className="grid grid-cols-5 gap-2">
-                  {Array.from({ length: numPlaces }, (_, i) => i + 1).map(place => {
-                    const isSelected = selectedPlaces.includes(place);
-                    const points = pointSystem[place] || 0;
+            {/* Content - Scrollable only if needed */}
+            <div className="flex-1 overflow-y-auto p-4">
+              {/* Team Selector - Compact grid */}
+              <div className="mb-3">
+                <div className={`grid gap-2 ${teams.length <= 2 ? 'grid-cols-2' : teams.length <= 4 ? 'grid-cols-2' : 'grid-cols-3'}`}>
+                  {teams.map(team => {
+                    const placeCount = getTeamPlaceCount(team.id);
                     return (
                       <button
-                        key={place}
-                        onClick={() => togglePlace(place)}
-                        className={`relative p-3 rounded-xl font-medium text-center transition-all ${
-                          isSelected
-                            ? (place === 1 
-                                ? 'bg-gradient-to-br from-amber-400 to-amber-500 text-amber-900 ring-2 ring-amber-300 shadow-lg shadow-amber-500/30' 
-                                : place === 2 
-                                  ? 'bg-gradient-to-br from-gray-300 to-gray-400 text-gray-800 ring-2 ring-gray-300'
-                                  : place === 3 
-                                    ? 'bg-gradient-to-br from-orange-400 to-orange-500 text-orange-900 ring-2 ring-orange-300'
-                                    : (darkMode ? 'bg-chlorine text-pool-deep ring-2 ring-chlorine/50' : 'bg-cyan-600 text-white ring-2 ring-cyan-300'))
-                            : (darkMode ? 'bg-gray-700/50 text-gray-400 hover:bg-gray-600 border border-gray-600' : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200')
+                        key={team.id}
+                        onClick={() => { setSelectedTeam(team.id); triggerHaptic('light'); }}
+                        className={`px-3 py-2 rounded-xl font-medium text-sm transition-all ${
+                          selectedTeam === team.id
+                            ? (darkMode ? 'bg-chlorine text-pool-deep ring-2 ring-chlorine/50' : 'bg-cyan-600 text-white ring-2 ring-cyan-300')
+                            : (darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')
                         }`}
                       >
-                        {isSelected && (
-                          <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-                            <Check className="w-3 h-3 text-white" />
-                          </div>
+                        <span className="truncate">{team.name}</span>
+                        {placeCount > 0 && (
+                          <span className={`ml-1 text-xs ${selectedTeam === team.id ? 'opacity-80' : (darkMode ? 'text-gray-400' : 'text-gray-500')}`}>
+                            ({placeCount})
+                          </span>
                         )}
-                        <div className="text-lg font-bold">{getPlaceLabel(place)}</div>
-                        <div className={`text-xs ${isSelected ? 'opacity-80' : (darkMode ? 'text-gray-500' : 'text-gray-400')}`}>
-                          {points} pts
-                        </div>
                       </button>
                     );
                   })}
                 </div>
               </div>
 
-              {/* Auto-fill toggle for dual meets */}
+              {/* Places Grid - Compact */}
+              <div className="mb-3">
+                <div className="flex items-center justify-between mb-2">
+                  <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    Tap places for {teams.find(t => t.id === selectedTeam)?.name}
+                  </span>
+                  <button
+                    onClick={clearAll}
+                    className={`text-xs px-2 py-0.5 rounded ${darkMode ? 'text-gray-400 hover:text-gray-300 hover:bg-gray-700' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'}`}
+                  >
+                    Clear
+                  </button>
+                </div>
+                <div className="grid grid-cols-5 gap-1.5">
+                  {Array.from({ length: numPlaces }, (_, i) => i + 1).map(place => {
+                    const isSelected = selectedPlaces.includes(place);
+                    const teamsAtPlace = getTeamsAtPlace(place);
+                    const hasOtherTeam = teamsAtPlace.some(id => id !== String(selectedTeam));
+                    const isTie = teamsAtPlace.length > 1;
+                    const points = pointSystem[place] || 0;
+                    
+                    return (
+                      <button
+                        key={place}
+                        onClick={() => togglePlace(place)}
+                        className={`relative p-2 rounded-lg font-medium text-center transition-all ${
+                          isSelected
+                            ? (place === 1 
+                                ? 'bg-gradient-to-br from-amber-400 to-amber-500 text-amber-900 ring-2 ring-amber-300' 
+                                : place === 2 
+                                  ? 'bg-gradient-to-br from-gray-300 to-gray-400 text-gray-800 ring-2 ring-gray-300'
+                                  : place === 3 
+                                    ? 'bg-gradient-to-br from-orange-400 to-orange-500 text-orange-900 ring-2 ring-orange-300'
+                                    : (darkMode ? 'bg-chlorine text-pool-deep ring-2 ring-chlorine/50' : 'bg-cyan-600 text-white ring-2 ring-cyan-300'))
+                            : hasOtherTeam
+                              ? (darkMode ? 'bg-gray-600 text-gray-300 border-2 border-dashed border-gray-500' : 'bg-gray-200 text-gray-600 border-2 border-dashed border-gray-400')
+                              : (darkMode ? 'bg-gray-700/50 text-gray-400 hover:bg-gray-600 border border-gray-600' : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200')
+                        } ${isTie ? 'ring-2 ring-yellow-400' : ''}`}
+                      >
+                        {isSelected && (
+                          <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-green-500 rounded-full flex items-center justify-center">
+                            <Check className="w-2.5 h-2.5 text-white" />
+                          </div>
+                        )}
+                        {isTie && (
+                          <div className="absolute -top-1 -left-1 w-3.5 h-3.5 bg-yellow-500 rounded-full flex items-center justify-center text-[8px] font-bold text-yellow-900">
+                            {teamsAtPlace.length}
+                          </div>
+                        )}
+                        <div className="text-sm font-bold">{getPlaceLabel(place)}</div>
+                        <div className={`text-[10px] ${isSelected ? 'opacity-80' : (darkMode ? 'text-gray-500' : 'text-gray-400')}`}>
+                          {points}pt
+                        </div>
+                        {hasOtherTeam && !isSelected && (
+                          <div className={`text-[8px] truncate ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                            {teams.find(t => teamsAtPlace.includes(String(t.id)) && t.id !== selectedTeam)?.name?.slice(0, 6)}
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Auto-fill toggle for dual meets - Compact */}
               {teams.length === 2 && (
-                <div className={`p-4 rounded-xl mb-5 ${darkMode ? 'bg-lane-gold/10 border border-lane-gold/30' : 'bg-amber-50 border border-amber-200'}`}>
-                  <label className="flex items-start gap-3 cursor-pointer">
+                <div className={`p-3 rounded-xl mb-3 ${darkMode ? 'bg-lane-gold/10 border border-lane-gold/30' : 'bg-amber-50 border border-amber-200'}`}>
+                  <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={autoFillEnabled}
-                      onChange={(e) => setAutoFillEnabled(e.target.checked)}
-                      className="w-5 h-5 mt-0.5 rounded accent-amber-500"
+                      onChange={(e) => { setAutoFillEnabled(e.target.checked); triggerHaptic('light'); }}
+                      className="w-4 h-4 rounded accent-amber-500"
                     />
-                    <div>
-                      <span className={`font-medium ${darkMode ? 'text-lane-gold' : 'text-amber-700'}`}>
-                        ⚡ Auto-fill remaining places
-                      </span>
-                      <p className={`text-xs mt-1 ${darkMode ? 'text-gray-400' : 'text-amber-600'}`}>
-                        Automatically assign unselected places to {teams.find(t => t.id !== selectedTeam)?.name}
-                      </p>
-                    </div>
+                    <span className={`text-sm font-medium ${darkMode ? 'text-lane-gold' : 'text-amber-700'}`}>
+                      Auto-fill remaining to {teams.find(t => t.id !== selectedTeam)?.name}
+                    </span>
                   </label>
                 </div>
               )}
 
-              {/* Preview */}
-              <div className={`p-4 rounded-xl ${darkMode ? 'bg-gray-800/50' : 'bg-gray-50'}`}>
-                <h4 className={`text-sm font-medium mb-3 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Preview</h4>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className={darkMode ? 'text-white' : 'text-gray-800'}>
-                      {teams.find(t => t.id === selectedTeam)?.name}:
-                    </span>
-                    <span className={`font-bold ${darkMode ? 'text-chlorine' : 'text-cyan-600'}`}>
-                      {selectedPlaces.length > 0 ? selectedPlaces.map(p => getPlaceLabel(p)).join(', ') : 'No places selected'}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className={darkMode ? 'text-gray-400' : 'text-gray-500'}>Points:</span>
-                    <span className={`font-bold text-lg ${darkMode ? 'text-lane-gold' : 'text-amber-600'}`}>
-                      {calculatePoints()} pts
-                    </span>
-                  </div>
-                  {autoFillEnabled && teams.length === 2 && selectedPlaces.length > 0 && (
-                    <>
-                      <div className={`border-t my-2 ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}></div>
-                      <div className="flex items-center justify-between">
-                        <span className={darkMode ? 'text-gray-400' : 'text-gray-500'}>
-                          {teams.find(t => t.id !== selectedTeam)?.name}:
+              {/* Summary - Compact, no "Preview" heading */}
+              <div className={`p-3 rounded-xl ${darkMode ? 'bg-gray-800/50' : 'bg-gray-50'}`}>
+                <div className="space-y-1.5 text-sm">
+                  {teams.map(team => {
+                    const places = allSelections[team.id] || [];
+                    if (places.length === 0) return null;
+                    return (
+                      <div key={team.id} className="flex items-center justify-between">
+                        <span className={`${team.id === selectedTeam ? (darkMode ? 'text-chlorine font-medium' : 'text-cyan-600 font-medium') : (darkMode ? 'text-gray-400' : 'text-gray-500')}`}>
+                          {team.name}:
                         </span>
-                        <span className={`font-medium ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                          {Array.from({ length: numPlaces }, (_, i) => i + 1)
-                            .filter(p => !selectedPlaces.includes(p))
-                            .map(p => getPlaceLabel(p))
-                            .join(', ') || 'None'}
+                        <span className={`font-medium ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+                          {places.map(p => getPlaceLabel(p)).join(', ')}
                         </span>
                       </div>
-                      <div className="flex items-center justify-between">
-                        <span className={darkMode ? 'text-gray-400' : 'text-gray-500'}>Points:</span>
-                        <span className={`font-medium ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                          {Array.from({ length: numPlaces }, (_, i) => i + 1)
-                            .filter(p => !selectedPlaces.includes(p))
-                            .reduce((sum, p) => sum + (pointSystem[p] || 0), 0)} pts
-                        </span>
-                      </div>
-                    </>
+                    );
+                  })}
+                  {getTotalPlacesSelected() === 0 && (
+                    <div className={`text-center ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                      No places selected
+                    </div>
                   )}
                 </div>
               </div>
             </div>
 
-            {/* Footer */}
-            <div className={`px-5 py-4 border-t flex gap-3 ${darkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
+            {/* Footer - Fixed */}
+            <div className={`px-4 py-3 border-t flex gap-2 shrink-0 ${darkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
               <button
                 onClick={onClose}
-                className={`flex-1 py-3 rounded-xl font-semibold transition ${darkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'}`}
+                className={`flex-1 py-2.5 rounded-xl font-semibold transition text-sm ${darkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'}`}
               >
                 Cancel
               </button>
               <button
                 onClick={handleSave}
-                disabled={selectedPlaces.length === 0}
-                className={`flex-1 py-3 rounded-xl font-semibold transition flex items-center justify-center gap-2 ${
-                  selectedPlaces.length === 0
+                disabled={getTotalPlacesSelected() === 0}
+                className={`flex-1 py-2.5 rounded-xl font-semibold transition flex items-center justify-center gap-1.5 text-sm ${
+                  getTotalPlacesSelected() === 0
                     ? (darkMode ? 'bg-gray-700 text-gray-500 cursor-not-allowed' : 'bg-gray-200 text-gray-400 cursor-not-allowed')
                     : (darkMode ? 'bg-chlorine hover:bg-chlorine-glow text-pool-deep' : 'bg-cyan-600 hover:bg-cyan-700 text-white')
                 }`}
               >
-                <Check className="w-5 h-5" />
-                Save Results
-              </button>
+                <Check className="w-4 h-4" />
+                Apply ({getTotalPlacesSelected()})</button>
             </div>
           </div>
         </div>
@@ -2178,19 +2215,6 @@
         trackEvent('load_template', { template_name: 'championship_meet' });
       };
 
-      // Haptic feedback for mobile devices
-      const triggerHaptic = (style = 'light') => {
-        // Try vibration API first (Android, some browsers)
-        if ('vibrate' in navigator) {
-          const patterns = {
-            light: [10],
-            medium: [20],
-            heavy: [30]
-          };
-          navigator.vibrate(patterns[style] || patterns.light);
-        }
-      };
-
       // Generate shareable score text
       const generateShareText = () => {
         const modeLabel = scoringMode === 'combined' ? '' : scoringMode === 'girls' ? ' (Girls)' : ' (Boys)';
@@ -2200,15 +2224,15 @@
           return scoreB - scoreA;
         });
         
-        let text = `ðŸŠ Swim Meet Scores${modeLabel}\n\n`;
+        let text = `🏊 Swim Meet Scores${modeLabel}\n\n`;
         
         sortedTeams.forEach((team, index) => {
           const score = scoringMode === 'girls' ? team.girlsScore : scoringMode === 'boys' ? team.boysScore : team.score;
-          const medal = index === 0 ? 'ðŸ¥‡' : index === 1 ? 'ðŸ¥ˆ' : index === 2 ? 'ðŸ¥‰' : '  ';
+          const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '  ';
           text += `${medal} #${index + 1} ${team.name}: ${score} pts\n`;
         });
         
-        text += `\nðŸ“Š Scored with SwimMeetScore\n`;
+        text += `\n📊 Scored with SwimMeetScore\n`;
         text += `https://swimmeetscore.com`;
         
         // Add extra newlines at end for email clients that append signatures
@@ -2280,15 +2304,15 @@
           '</head>' +
           '<body>' +
             '<div class="header">' +
-              '<h1>ðŸŠ Scan to Track<br/>Live Swim Meet Scores!</h1>' +
+              '<h1>🏊 Scan to Track<br/>Live Swim Meet Scores!</h1>' +
               '<p>Point your phone camera at the QR code below</p>' +
             '</div>' +
             '<div class="qr-container">' +
               '<img src="https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=https://swimmeetscore.com" class="qr-code" alt="QR Code for SwimMeetScore.com" />' +
             '</div>' +
             '<div class="url">SwimMeetScore.com</div>' +
-            '<div class="tagline">Free swim meet scoring tool â€” Track scores in real-time!<br/>Works on any phone â€¢ No app download required</div>' +
-            '<div class="swimmer-icon">ðŸ†</div>' +
+            '<div class="tagline">Free swim meet scoring tool — Track scores in real-time!<br/>Works on any phone • No app download required</div>' +
+            '<div class="swimmer-icon">🏆</div>' +
           '</body>' +
           '</html>';
         
@@ -2413,15 +2437,15 @@
             {/* Share Success Message */}
             {shareSuccess && (
               <div className={`mb-4 p-4 rounded-lg flex items-center gap-3 ${darkMode ? 'bg-green-900 text-green-100' : 'bg-green-100 text-green-800'}`}>
-                <span>âœ… Scores copied to clipboard!</span>
+                <span>✅ Scores copied to clipboard!</span>
               </div>
             )}
 
             {/* Offline Indicator */}
             {isOffline && (
               <div className={`mb-4 p-3 rounded-lg flex items-center gap-3 ${darkMode ? 'bg-cyan-900/70 text-cyan-100 border border-cyan-700' : 'bg-cyan-100 text-cyan-800 border border-cyan-300'}`}>
-                <span className="text-lg">ðŸ“¶</span>
-                <span><strong>Offline Mode</strong> â€” No worries! The app works offline. Your data is saved locally.</span>
+                <span className="text-lg">📶</span>
+                <span><strong>Offline Mode</strong> — No worries! The app works offline. Your data is saved locally.</span>
               </div>
             )}
 
@@ -2501,17 +2525,17 @@
                   <div className={`flex-1 overflow-y-auto p-6 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                     {/* About Section */}
                     <section className="mb-8">
-                      <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>ðŸ“± About Swim Meet Score</h4>
+                      <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>📱 About Swim Meet Score</h4>
                       <p className="mb-3">
                         Swim Meet Score is a free, ad-free tool for tracking scores during swim meets. Perfect for coaches, parents, and officials at high school and competitive swimming events.
                       </p>
                       
                       {/* QR Code for Spectators - Meet Organizers */}
                       <div className={`p-4 rounded-lg ${darkMode ? 'bg-cyan-900/50 border border-cyan-700' : 'bg-cyan-50 border border-cyan-200'}`}>
-                        <h5 className={`font-semibold mb-1 ${darkMode ? 'text-cyan-400' : 'text-cyan-700'}`}>ðŸ“± For Meet Organizers: QR Code Poster</h5>
+                        <h5 className={`font-semibold mb-1 ${darkMode ? 'text-cyan-400' : 'text-cyan-700'}`}>📱 For Meet Organizers: QR Code Poster</h5>
                         <p className={`text-xs mb-2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>(Spectators can skip this section)</p>
                         <p className={`text-sm mb-3 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                          Print a QR code poster so spectators can scan and track scores on their own phones â€” no printed score sheets needed!
+                          Print a QR code poster so spectators can scan and track scores on their own phones — no printed score sheets needed!
                         </p>
                         <button
                           onClick={printQRCode}
@@ -2523,13 +2547,13 @@
                       </div>
                       
                       <p className={`mt-6 text-sm ${darkMode ? 'text-cyan-400' : 'text-cyan-700'}`}>
-                        ðŸ“¶ <strong>Works at pools with poor cell service!</strong> Once loaded, the app works completely offline.
+                        📶 <strong>Works at pools with poor cell service!</strong> Once loaded, the app works completely offline.
                       </p>
                     </section>
 
                     {/* Install on Phone */}
                     <section className="mb-8">
-                      <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>ðŸ“² Install on Your Phone</h4>
+                      <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>📲 Install on Your Phone</h4>
                       
                       <div className={`p-4 rounded-lg mb-4 ${darkMode ? 'bg-gray-700' : 'bg-blue-50'}`}>
                         <h5 className={`font-semibold mb-2 ${darkMode ? 'text-blue-400' : 'text-blue-700'}`}>iPhone / iPad (Safari)</h5>
@@ -2561,7 +2585,7 @@
                           </div>
                         ) : (
                           <div className={`mb-3 p-3 rounded-lg text-sm ${darkMode ? 'bg-gray-600 text-gray-300' : 'bg-green-100 text-green-800'}`}>
-                            <p className="font-medium mb-1">ðŸ“± Already installed or not available?</p>
+                            <p className="font-medium mb-1">📱 Already installed or not available?</p>
                             <p className="text-xs">The install button appears automatically on Android Chrome. If you don't see it, you may have already installed the app, or try the manual steps below.</p>
                           </div>
                         )}
@@ -2569,7 +2593,7 @@
                         <p className={`text-xs font-medium mb-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Or install manually:</p>
                         <ol className="list-decimal list-inside space-y-1 text-sm">
                           <li>Open swimmeetscore.com in Chrome</li>
-                          <li>Tap the three-dot menu (â‹®) in the top right</li>
+                          <li>Tap the three-dot menu (⋮) in the top right</li>
                           <li>Tap "Add to Home screen" or "Install app"</li>
                           <li>Tap "Add" or "Install" to confirm</li>
                         </ol>
@@ -2578,7 +2602,7 @@
 
                     {/* How to Use */}
                     <section className="mb-8">
-                      <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>ðŸŠ How to Use</h4>
+                      <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>🏊 How to Use</h4>
                       <ol className="list-decimal list-inside space-y-2">
                         <li><strong>Add Teams:</strong> Go to Settings and add your competing teams</li>
                         <li><strong>Choose a Template:</strong> Select "High School Dual Meet" or "Competition Mode" for preset events and point systems, or customize your own</li>
@@ -2620,44 +2644,44 @@
 
                     {/* Tie Handling */}
                     <section className="mb-8">
-                      <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>ðŸ¤ How Ties Are Handled</h4>
+                      <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>🤝 How Ties Are Handled</h4>
                       <p className="mb-3">
                         Swim Meet Score follows official tie-breaking rules used in competitive swimming:
                       </p>
                       
                       {/* How to Record a Tie */}
                       <div className={`p-4 rounded-lg mb-4 ${darkMode ? 'bg-cyan-900/50 border border-cyan-700' : 'bg-cyan-50 border border-cyan-200'}`}>
-                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-cyan-400' : 'text-cyan-700'}`}>ðŸ“ How to Record a Tie</h5>
+                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-cyan-400' : 'text-cyan-700'}`}>🔍 How to Record a Tie</h5>
                         <ol className="text-sm space-y-1 list-decimal list-inside">
                           <li>Click on the place dropdown (1st, 2nd, etc.)</li>
                           <li>Check the boxes for ALL teams that tied for that place</li>
                           <li>The app will automatically calculate split points and skip places</li>
                         </ol>
                         <p className={`text-xs mt-2 ${darkMode ? 'text-cyan-300' : 'text-cyan-600'}`}>
-                          ðŸ’¡ You'll see a yellow highlight and "TIE" indicator when multiple teams are selected
+                          💡 You'll see a yellow highlight and "TIE" indicator when multiple teams are selected
                         </p>
                       </div>
                       
                       <div className={`p-4 rounded-lg mb-4 ${darkMode ? 'bg-gray-700' : 'bg-yellow-50'}`}>
-                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-yellow-400' : 'text-yellow-700'}`}>âš–ï¸ Point Splitting</h5>
+                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-yellow-400' : 'text-yellow-700'}`}>⚖️ Point Splitting</h5>
                         <p className="text-sm mb-2">When swimmers tie, the points for the tied places are added together and split evenly.</p>
                         <div className={`text-sm p-3 rounded ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
                           <p className="font-medium mb-1">Example - Dual Meet (6-4-3-2-1 scoring):</p>
-                          <p>â€¢ Two swimmers tie for 1st: (6 + 4) Ã· 2 = <strong>5 pts each</strong></p>
+                          <p>• Two swimmers tie for 1st: (6 + 4) ÷ 2 = <strong>5 pts each</strong></p>
                           <p className="mt-2 font-medium mb-1">Example - Championship (20-17-16-15... scoring):</p>
-                          <p>â€¢ Two swimmers tie for 1st: (20 + 17) Ã· 2 = <strong>18.5 pts each</strong></p>
-                          <p>â€¢ Three swimmers tie for 2nd: (17 + 16 + 15) Ã· 3 = <strong>16 pts each</strong></p>
+                          <p>• Two swimmers tie for 1st: (20 + 17) ÷ 2 = <strong>18.5 pts each</strong></p>
+                          <p>• Three swimmers tie for 2nd: (17 + 16 + 15) ÷ 3 = <strong>16 pts each</strong></p>
                         </div>
                       </div>
 
                       <div className={`p-4 rounded-lg mb-4 ${darkMode ? 'bg-gray-700' : 'bg-orange-50'}`}>
-                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-orange-400' : 'text-orange-700'}`}>â­ï¸ Place Skipping</h5>
+                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-orange-400' : 'text-orange-700'}`}>⭐ Place Skipping</h5>
                         <p className="text-sm mb-2">After a tie, subsequent places are skipped based on how many swimmers tied.</p>
                         <div className={`text-sm p-3 rounded ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
                           <p className="font-medium mb-1">Examples:</p>
-                          <p>â€¢ 2 swimmers tie for 1st â†’ Next finisher gets <strong>3rd place</strong> (2nd skipped)</p>
-                          <p>â€¢ 3 swimmers tie for 2nd â†’ Next finisher gets <strong>5th place</strong> (3rd & 4th skipped)</p>
-                          <p>â€¢ 2 swimmers tie for 5th â†’ Next finisher gets <strong>7th place</strong> (6th skipped)</p>
+                          <p>• 2 swimmers tie for 1st → Next finisher gets <strong>3rd place</strong> (2nd skipped)</p>
+                          <p>• 3 swimmers tie for 2nd → Next finisher gets <strong>5th place</strong> (3rd & 4th skipped)</p>
+                          <p>• 2 swimmers tie for 5th → Next finisher gets <strong>7th place</strong> (6th skipped)</p>
                         </div>
                         <p className={`text-xs mt-2 ${darkMode ? 'text-orange-300' : 'text-orange-600'}`}>
                           Skipped places will appear grayed out with "(tied above)" in the app
@@ -2665,14 +2689,14 @@
                       </div>
 
                       <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-purple-50'}`}>
-                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-purple-400' : 'text-purple-700'}`}>ðŸ† Complete Tie Example</h5>
+                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-purple-400' : 'text-purple-700'}`}>🏆 Complete Tie Example</h5>
                         <p className="text-sm mb-2">Dual meet scoring (6-4-3-2-1) with Team A and Team B:</p>
                         <div className={`text-sm p-3 rounded ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-                          <p>â€¢ 1st Place: Team A & Team B tie â†’ Each gets 5 pts (6+4Ã·2)</p>
-                          <p>â€¢ 2nd Place: <span className="italic text-gray-500">(skipped - consumed by tie)</span></p>
-                          <p>â€¢ 3rd Place: Team A â†’ Gets 3 pts</p>
-                          <p>â€¢ 4th Place: Team B â†’ Gets 2 pts</p>
-                          <p>â€¢ 5th Place: Team A â†’ Gets 1 pt</p>
+                          <p>• 1st Place: Team A & Team B tie → Each gets 5 pts (6+4÷2)</p>
+                          <p>• 2nd Place: <span className="italic text-gray-500">(skipped - consumed by tie)</span></p>
+                          <p>• 3rd Place: Team A → Gets 3 pts</p>
+                          <p>• 4th Place: Team B → Gets 2 pts</p>
+                          <p>• 5th Place: Team A → Gets 1 pt</p>
                           <p className="mt-2 font-medium">Final: Team A = 9 pts, Team B = 7 pts</p>
                         </div>
                       </div>
@@ -2680,32 +2704,32 @@
 
                     {/* Tips */}
                     <section className="mb-8">
-                      <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>ðŸ’¡ Tips</h4>
+                      <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>💡 Tips</h4>
                       <ul className="space-y-2">
-                        <li>• <strong>Quick Entry:</strong> Use the ⚡Quick button on each event to enter all places for a team at once - much faster for dual meets!</li>
-                        <li>â€¢ <strong>Works Offline:</strong> Once loaded, works without internet - perfect for pools with bad service!</li>
-                        <li>â€¢ <strong>Save Templates:</strong> Create custom templates for your league's specific scoring rules</li>
-                        <li>â€¢ <strong>Dark Mode:</strong> Use dark mode for better visibility at indoor pools</li>
-                        <li>â€¢ <strong>Data Persists:</strong> Your data stays saved even if you close the browser</li>
-                        <li>â€¢ <strong>Share Scores:</strong> Tap the Share button on the Scoreboard to quickly send team standings via text or social media</li>
-                        <li>â€¢ <strong>Email Results:</strong> Tap the Email Results button next to Events to send a complete meet report including final standings and all event-by-event results with places</li>
-                        <li>â€¢ <strong>Clear Data:</strong> Start fresh anytime from Settings â†’ Clear Data</li>
+                        <li>• <strong>Quick Entry Mode:</strong> Tap the ⚡ Quick button on any event to enter multiple places for a team at once (e.g., "Team A got 1st, 3rd, 5th")</li>
+                        <li>• <strong>Works Offline:</strong> Once loaded, works without internet - perfect for pools with bad service!</li>
+                        <li>• <strong>Save Templates:</strong> Create custom templates for your league's specific scoring rules</li>
+                        <li>• <strong>Dark Mode:</strong> Use dark mode for better visibility at indoor pools</li>
+                        <li>• <strong>Data Persists:</strong> Your data stays saved even if you close the browser</li>
+                        <li>• <strong>Share Scores:</strong> Tap the Share button on the Scoreboard to quickly send team standings via text or social media</li>
+                        <li>• <strong>Email Results:</strong> Tap the Email Results button next to Events to send a complete meet report including final standings and all event-by-event results with places</li>
+                        <li>• <strong>Clear Data:</strong> Start fresh anytime from Settings → Clear Data</li>
                       </ul>
                     </section>
 
                     {/* Scoring Modes */}
                     <section className="mb-8">
-                      <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>ðŸ“Š Scoring Modes</h4>
+                      <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>📊 Scoring Modes</h4>
                       <ul className="space-y-2">
-                        <li>â€¢ <strong>Combined:</strong> Shows total team scores (boys + girls)</li>
-                        <li>â€¢ <strong>Girls Only:</strong> Shows only girls' events and scores</li>
-                        <li>â€¢ <strong>Boys Only:</strong> Shows only boys' events and scores</li>
+                        <li>• <strong>Combined:</strong> Shows total team scores (boys + girls)</li>
+                        <li>• <strong>Girls Only:</strong> Shows only girls' events and scores</li>
+                        <li>• <strong>Boys Only:</strong> Shows only boys' events and scores</li>
                       </ul>
                     </section>
 
                     {/* Sharing & Emailing */}
                     <section>
-                      <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>ðŸ“¤ Sharing & Emailing Results</h4>
+                      <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>📤 Sharing & Emailing Results</h4>
                       
                       <div className={`p-4 rounded-lg mb-4 ${darkMode ? 'bg-cyan-900/30 border border-cyan-700/50' : 'bg-cyan-50 border border-cyan-200'}`}>
                         <h5 className={`font-semibold mb-2 ${darkMode ? 'text-cyan-400' : 'text-cyan-700'}`}>Share Button (Quick Share)</h5>
@@ -2723,10 +2747,10 @@
                           Located next to the Events heading. Opens your email app with a complete meet report including:
                         </p>
                         <ul className={`text-sm space-y-1 ml-4 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                          <li>â€¢ Final team standings with points</li>
-                          <li>â€¢ Gender breakdown (Combined mode)</li>
-                          <li>â€¢ Event-by-event results with all places</li>
-                          <li>â€¢ Tie indicators where applicable</li>
+                          <li>• Final team standings with points</li>
+                          <li>• Gender breakdown (Combined mode)</li>
+                          <li>• Event-by-event results with all places</li>
+                          <li>• Tie indicators where applicable</li>
                         </ul>
                         <p className={`text-xs mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                           Best for: Post-meet reports to coaches, parents, athletic directors
@@ -2786,7 +2810,7 @@
               
               {/* SEO-friendly description */}
               <p className={`text-sm mb-6 ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                Free swimming scoresheet and swim meet scoring tool. Track team scores, individual events, relays, and diving. High school dual meet scoresheet, championship meets, and more â€” use instantly, no download required!
+                Free swimming scoresheet and swim meet scoring tool. Track team scores, individual events, relays, and diving. High school dual meet scoresheet, championship meets, and more — use instantly, no download required!
               </p>
 
               {showSettings && (
@@ -3202,7 +3226,7 @@
                     </button>
                   </div>
                   <div className={`text-xs px-3 py-1.5 rounded-full ${darkMode ? 'bg-lane-gold/20 text-lane-gold border border-lane-gold/30' : 'bg-amber-100 text-amber-700 border border-amber-200'}`}>
-                    ⚡ Use Quick Entry for faster scoring
+                    💡 Tip: Select multiple teams in a place for ties
                   </div>
                 </div>
                 {scoringMode === 'combined' ? (
@@ -3431,7 +3455,7 @@
               {/* Donate Button */}
               <div className={`mt-6 p-6 rounded-xl text-center ${darkMode ? 'bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30' : 'bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200'}`}>
                 <p className={`text-lg font-medium mb-2 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
-                  â˜• Enjoying Swim Meet Score?
+                  ☕ Enjoying Swim Meet Score?
                 </p>
                 <p className={`text-sm mb-4 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                   SwimMeetScore is free and ad-free. If it saved you time today, consider a coffee!
@@ -3452,7 +3476,7 @@
 
               {/* Copyright */}
               <div className={`mt-6 pt-4 border-t text-center text-sm ${darkMode ? 'border-gray-700 text-gray-400' : 'border-gray-200 text-gray-500'}`}>
-                Copyright Â© 2026 Kaden Co - All rights reserved.
+                Copyright © 2026 Kaden Co - All rights reserved.
               </div>
 
               {/* Legal Disclaimer */}
