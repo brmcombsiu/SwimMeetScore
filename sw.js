@@ -1,17 +1,17 @@
 // SwimMeetScore Service Worker
-const CACHE_NAME = 'swimmeetscore-v2';
+const CACHE_NAME = 'swimmeetscore-v5';
 
 // Files to cache for offline use
 const CACHE_FILES = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/favicon.ico',
-  '/favicon-16x16.png',
-  '/favicon-32x32.png',
-  '/favicon-192x192.png',
-  '/favicon-512x512.png',
-  '/apple-touch-icon.png'
+  './',
+  './index.html',
+  './manifest.json',
+  './favicon.ico',
+  './favicon16x16.png',
+  './favicon32x32.png',
+  './favicon192x192.png',
+  './favicon512x512.png',
+  './apple-touch-icon.png'
 ];
 
 // External CDN resources to cache
@@ -85,8 +85,8 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(event.request.url);
   
-  // Skip Google Analytics
-  if (url.hostname.includes('google')) {
+  // Skip Google Analytics and Clarity
+  if (url.hostname.includes('google') || url.hostname.includes('clarity')) {
     return;
   }
 
@@ -100,23 +100,6 @@ self.addEventListener('fetch', (event) => {
           if (url.origin === location.origin) {
             fetchAndCache(event.request);
           }
-          return cachedResponse;
-        }
-
-        // Not in cache - fetch from network
-        return fetchAndCache(event.request);
-      })
-      .catch(() => {
-        // If both cache and network fail, show offline page for navigation requests
-        if (event.request.mode === 'navigate') {
-          return caches.match('/index.html');
-        }
-      })
-  );
-});
-        if (cachedResponse) {
-          // Also fetch from network to update cache in background
-          fetchAndCache(event.request);
           return cachedResponse;
         }
 
