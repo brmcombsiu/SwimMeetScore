@@ -1603,10 +1603,13 @@
           // The saved event allows users to also install via our custom button if they missed the banner
           setDeferredPrompt(e);
 
-          // Auto-show the install prompt after 3 seconds for first-time visitors
-          // This ensures prompt() is called after preventDefault()
+          // Only prevent default and auto-show for first-time visitors
+          // This ensures prompt() is always called after preventDefault()
           const hasSeenPrompt = utils.loadFromStorage('hasSeenInstallPrompt', false);
           if (!hasSeenPrompt) {
+            // Prevent the mini-infobar from appearing on mobile
+            e.preventDefault();
+            // Auto-show the install prompt after 3 seconds
             setTimeout(() => {
               e.prompt();
               e.userChoice.then((result) => {
@@ -1616,6 +1619,8 @@
               });
             }, 3000);
           }
+          // For returning visitors, let the browser handle the prompt naturally
+          // They can also use the manual install button if available
         };
 
         window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
