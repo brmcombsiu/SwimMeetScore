@@ -1135,7 +1135,7 @@
                   {event.name}
                 </span>
               </h5>
-              {/* Visual indicators for NLC/Sectionals settings */}
+              {/* Visual indicators for Conference/Sectionals settings */}
               {heatLockEnabled && !isRelay && (
                 <span className={`text-xs px-1.5 py-0.5 rounded ${darkMode ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-700'}`}>
                   🔒 Heat Lock
@@ -1791,7 +1791,7 @@
       const [showSaveTemplate, setShowSaveTemplate] = useState(false);
       const [shareSuccess, setShareSuccess] = useState(false);
       
-      // NLC/Sectionals specific settings
+      // Conference/Sectionals specific settings
       const [heatLockEnabled, setHeatLockEnabled] = useState(() => utils.loadFromStorage('heatLockEnabled', false));
       const [aRelayOnly, setARelayOnly] = useState(() => utils.loadFromStorage('aRelayOnly', false));
       
@@ -2502,7 +2502,7 @@
         setDivingPointSystem({
           1: 5, 2: 3, 3: 1, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0, 15: 0, 16: 0, 17: 0, 18: 0, 19: 0, 20: 0
         });
-        // Disable NLC/Sectionals-specific features
+        // Disable Conference/Sectionals-specific features
         setHeatLockEnabled(false);
         setARelayOnly(false);
         // Set 2 default teams for dual meet
@@ -2536,7 +2536,7 @@
         setDivingPointSystem({
           1: 20, 2: 17, 3: 16, 4: 15, 5: 14, 6: 13, 7: 12, 8: 11, 9: 9, 10: 7, 11: 6, 12: 5, 13: 4, 14: 3, 15: 2, 16: 1, 17: 0, 18: 0, 19: 0, 20: 0
         });
-        // Disable NLC/Sectionals-specific features
+        // Disable Conference/Sectionals-specific features
         setHeatLockEnabled(false);
         setARelayOnly(false);
         // Set 8 default teams for championship meet
@@ -2576,7 +2576,7 @@
         setDivingPointSystem({
           1: 11, 2: 9, 3: 8, 4: 7, 5: 6, 6: 5, 7: 4, 8: 3, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0, 15: 0, 16: 0, 17: 0, 18: 0, 19: 0, 20: 0
         });
-        // Disable NLC/Sectionals-specific features
+        // Disable Conference/Sectionals-specific features
         setHeatLockEnabled(false);
         setARelayOnly(false);
         // Set 8 default teams for championship meet
@@ -2603,8 +2603,8 @@
         trackEvent('load_template', { template_name: 'championship_meet_8' });
       };
 
-      // NLC Meet - 16 places individual, 8 places relay (A-relay only), heat lock enabled
-      const loadNLCMeet = () => {
+      // Conference Meet - 16 places individual, 8 places relay (A-relay only), heat lock enabled
+      const loadConferenceMeet = () => {
         setNumIndividualPlaces(16);
         setNumRelayPlaces(8);
         setNumDivingPlaces(16);
@@ -2617,11 +2617,11 @@
         setDivingPointSystem({
           1: 20, 2: 17, 3: 16, 4: 15, 5: 14, 6: 13, 7: 12, 8: 11, 9: 9, 10: 7, 11: 6, 12: 5, 13: 4, 14: 3, 15: 2, 16: 1, 17: 0, 18: 0, 19: 0, 20: 0
         });
-        // Enable NLC-specific features
+        // Enable Conference-specific features
         setHeatLockEnabled(true);
         setARelayOnly(true);
-        // Set 8 default teams for NLC meet
-        const nlcTeams = [
+        // Set 8 default teams for Conference meet
+        const conferenceTeams = [
           { id: utils.generateId(), name: 'Team 1', score: 0, girlsScore: 0, boysScore: 0 },
           { id: utils.generateId(), name: 'Team 2', score: 0, girlsScore: 0, boysScore: 0 },
           { id: utils.generateId(), name: 'Team 3', score: 0, girlsScore: 0, boysScore: 0 },
@@ -2631,7 +2631,7 @@
           { id: utils.generateId(), name: 'Team 7', score: 0, girlsScore: 0, boysScore: 0 },
           { id: utils.generateId(), name: 'Team 8', score: 0, girlsScore: 0, boysScore: 0 }
         ];
-        setTeams(nlcTeams);
+        setTeams(conferenceTeams);
         const newEvents = competitionEvents.map((e) => ({
           id: utils.generateId(),
           name: e.name,
@@ -3200,15 +3200,15 @@
                       </ul>
                     </section>
 
-                    {/* NLC/Sectionals Templates */}
+                    {/* Conference/Sectionals Templates */}
                     <section className="mb-8">
-                      <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>🏅 NLC & Sectionals Templates</h4>
+                      <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>🏅 Conference & Sectionals Templates</h4>
                       <p className="mb-3">
                         These templates are designed for championship-style meets with prelims/finals heat structures.
                       </p>
                       
                       <div className={`p-4 rounded-lg mb-4 ${darkMode ? 'bg-amber-900/30 border border-amber-700/50' : 'bg-amber-50 border border-amber-200'}`}>
-                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-amber-400' : 'text-amber-700'}`}>NLC Meet Template</h5>
+                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-amber-400' : 'text-amber-700'}`}>Conference Meet Template</h5>
                         <ul className={`text-sm space-y-1 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                           <li>• <strong>Individual Events:</strong> 16 places scored (20-17-16-15-14-13-12-11-9-7-6-5-4-3-2-1)</li>
                           <li>• <strong>Relays:</strong> 8 places, A-relay only, double points (40-34-32-30-28-26-24-22)</li>
@@ -3228,9 +3228,9 @@
                       </div>
                       
                       <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
-                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Key Difference: NLC vs Sectionals</h5>
+                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Key Difference: Conference vs Sectionals</h5>
                         <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                          NLC scores relays to a fixed 8 places. Sectionals relay places dynamically match the number of teams (since only A-relays are allowed). Both use double points for relays compared to individual events.
+                          Conference scores relays to a fixed 8 places. Sectionals relay places dynamically match the number of teams (since only A-relays are allowed). Both use double points for relays compared to individual events.
                         </p>
                       </div>
                     </section>
@@ -3239,7 +3239,7 @@
                     <section className="mb-8">
                       <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>🔒 Heat Lock & A-Relay Settings</h4>
                       <p className="mb-3">
-                        Found in Settings under "NLC/Sectionals Options". These are visual reminders for championship meet scoring rules.
+                        Found in Settings under "Conference/Sectionals Options". These are visual reminders for championship meet scoring rules.
                       </p>
                       
                       <div className={`p-4 rounded-lg mb-4 ${darkMode ? 'bg-amber-900/30 border border-amber-700/50' : 'bg-amber-50 border border-amber-200'}`}>
@@ -3391,9 +3391,9 @@
                   </div>
 
                   <div className="mb-6">
-                    <h4 className={`font-semibold mb-2 ${darkMode ? 'text-white' : 'text-slate-800'}`}>NLC/Sectionals Options</h4>
+                    <h4 className={`font-semibold mb-2 ${darkMode ? 'text-white' : 'text-slate-800'}`}>Conference/Sectionals Options</h4>
                     <p className={`text-sm mb-3 ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                      Special scoring rules for NLC meets and Sectionals.
+                      Special scoring rules for Conference meets and Sectionals.
                     </p>
                     <div className="space-y-3">
                       <label className="flex items-center gap-3 cursor-pointer">
@@ -3476,10 +3476,10 @@
                         Championship Meet (Top 16)
                       </button>
                       <button
-                        onClick={loadNLCMeet}
+                        onClick={loadConferenceMeet}
                         className={`px-4 py-2 rounded-lg ${darkMode ? 'bg-amber-600 hover:bg-amber-700 active:ring-4 active:ring-amber-400 active:scale-95' : 'bg-amber-500 hover:bg-amber-600 active:ring-4 active:ring-amber-300 active:scale-95'} text-white font-medium transition-all shadow-lg hover:shadow-xl`}
                       >
-                        NLC Meet
+                        Conference Meet
                       </button>
                       <button
                         onClick={loadSectionalsMeet}
@@ -3895,7 +3895,7 @@
                                   {event.name}
                                 </span>
                               </h5>
-                              {/* Visual indicators for NLC/Sectionals settings */}
+                              {/* Visual indicators for Conference/Sectionals settings */}
                               {heatLockEnabled && !isRelay && (
                                 <span className={`text-xs px-2 py-0.5 rounded-full ${darkMode ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-amber-100 text-amber-700 border border-amber-200'}`}>
                                   🔒 1-8 Finals / 9-16 Consolation
@@ -3994,7 +3994,7 @@
                             <div className="flex items-center justify-between mb-3">
                               <div className="flex items-center gap-2 flex-wrap">
                                 <h5 className={`font-semibold text-lg ${isDiving ? (darkMode ? 'text-orange-400' : 'text-orange-600') : (darkMode ? 'text-white' : 'text-slate-800')}`}>{event.name}</h5>
-                                {/* Visual indicators for NLC/Sectionals settings */}
+                                {/* Visual indicators for Conference/Sectionals settings */}
                                 {heatLockEnabled && !isRelay && (
                                   <span className={`text-xs px-2 py-0.5 rounded-full ${darkMode ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-amber-100 text-amber-700 border border-amber-200'}`}>
                                     🔒 1-8 Finals / 9-16 Consolation
