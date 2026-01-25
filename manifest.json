@@ -2,7 +2,7 @@
   "name": "Swim Meet Score",
   "short_name": "SwimMeetScore",
   "description": "Free swim meet scoring tool - Track team scores in real-time",
-  "start_url": "./index.html",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "background_color": "#0f2942",
