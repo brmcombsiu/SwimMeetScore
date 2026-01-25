@@ -1602,10 +1602,24 @@
           e.preventDefault();
           // Save the event so it can be triggered later
           setDeferredPrompt(e);
+
+          // Auto-show the install prompt after 3 seconds for first-time visitors
+          // This ensures prompt() is called after preventDefault()
+          const hasSeenPrompt = utils.loadFromStorage('hasSeenInstallPrompt', false);
+          if (!hasSeenPrompt) {
+            setTimeout(() => {
+              e.prompt();
+              e.userChoice.then((result) => {
+                trackEvent('pwa_install_auto_prompt', { outcome: result.outcome });
+                utils.saveToStorage('hasSeenInstallPrompt', true);
+                setDeferredPrompt(null);
+              });
+            }, 3000);
+          }
         };
 
         window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-        
+
         return () => {
           window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
         };
@@ -1665,11 +1679,13 @@
       };
 
       // Default values
+      // Default teams match High School Dual Meet template
       const defaultTeams = [
-        { id: 1, name: 'Team A', score: 0, girlsScore: 0, boysScore: 0 },
-        { id: 2, name: 'Team B', score: 0, girlsScore: 0, boysScore: 0 }
+        { id: 1, name: 'Home Team', score: 0, girlsScore: 0, boysScore: 0 },
+        { id: 2, name: 'Away Team', score: 0, girlsScore: 0, boysScore: 0 }
       ];
 
+      // Default events match High School Dual Meet template (diving between 50 Free and 100 Fly)
       const defaultEvents = [
         { id: 1, name: '200 Medley Relay', results: [], gender: 'girls' },
         { id: 2, name: '200 Medley Relay', results: [], gender: 'boys' },
@@ -1679,22 +1695,22 @@
         { id: 6, name: '200 IM', results: [], gender: 'boys' },
         { id: 7, name: '50 Freestyle', results: [], gender: 'girls' },
         { id: 8, name: '50 Freestyle', results: [], gender: 'boys' },
-        { id: 9, name: '100 Butterfly', results: [], gender: 'girls' },
-        { id: 10, name: '100 Butterfly', results: [], gender: 'boys' },
-        { id: 11, name: '100 Freestyle', results: [], gender: 'girls' },
-        { id: 12, name: '100 Freestyle', results: [], gender: 'boys' },
-        { id: 12.5, name: 'Diving', results: [], gender: 'girls' },
-        { id: 12.6, name: 'Diving', results: [], gender: 'boys' },
-        { id: 13, name: '500 Freestyle', results: [], gender: 'girls' },
-        { id: 14, name: '500 Freestyle', results: [], gender: 'boys' },
-        { id: 15, name: '200 Freestyle Relay', results: [], gender: 'girls' },
-        { id: 16, name: '200 Freestyle Relay', results: [], gender: 'boys' },
-        { id: 17, name: '100 Backstroke', results: [], gender: 'girls' },
-        { id: 18, name: '100 Backstroke', results: [], gender: 'boys' },
-        { id: 19, name: '100 Breaststroke', results: [], gender: 'girls' },
-        { id: 20, name: '100 Breaststroke', results: [], gender: 'boys' },
-        { id: 21, name: '400 Freestyle Relay', results: [], gender: 'girls' },
-        { id: 22, name: '400 Freestyle Relay', results: [], gender: 'boys' }
+        { id: 9, name: 'Diving', results: [], gender: 'girls' },
+        { id: 10, name: 'Diving', results: [], gender: 'boys' },
+        { id: 11, name: '100 Butterfly', results: [], gender: 'girls' },
+        { id: 12, name: '100 Butterfly', results: [], gender: 'boys' },
+        { id: 13, name: '100 Freestyle', results: [], gender: 'girls' },
+        { id: 14, name: '100 Freestyle', results: [], gender: 'boys' },
+        { id: 15, name: '500 Freestyle', results: [], gender: 'girls' },
+        { id: 16, name: '500 Freestyle', results: [], gender: 'boys' },
+        { id: 17, name: '200 Freestyle Relay', results: [], gender: 'girls' },
+        { id: 18, name: '200 Freestyle Relay', results: [], gender: 'boys' },
+        { id: 19, name: '100 Backstroke', results: [], gender: 'girls' },
+        { id: 20, name: '100 Backstroke', results: [], gender: 'boys' },
+        { id: 21, name: '100 Breaststroke', results: [], gender: 'girls' },
+        { id: 22, name: '100 Breaststroke', results: [], gender: 'boys' },
+        { id: 23, name: '400 Freestyle Relay', results: [], gender: 'girls' },
+        { id: 24, name: '400 Freestyle Relay', results: [], gender: 'boys' }
       ];
 
       const defaultIndividualPoints = {
@@ -1794,7 +1810,10 @@
       // NLC/Sectionals specific settings
       const [heatLockEnabled, setHeatLockEnabled] = useState(() => utils.loadFromStorage('heatLockEnabled', false));
       const [aRelayOnly, setARelayOnly] = useState(() => utils.loadFromStorage('aRelayOnly', false));
-      
+
+      // Track which template is currently active (for visual indicator)
+      const [activeTemplate, setActiveTemplate] = useState(() => utils.loadFromStorage('activeTemplate', 'high_school'));
+
       const [individualPointSystem, setIndividualPointSystem] = useState(() => {
         const loaded = utils.loadFromStorage('individualPointSystem', defaultIndividualPoints);
         return loaded && typeof loaded === 'object' ? loaded : defaultIndividualPoints;
@@ -1890,6 +1909,10 @@
       useEffect(() => {
         utils.saveToStorage('aRelayOnly', aRelayOnly);
       }, [aRelayOnly]);
+
+      useEffect(() => {
+        utils.saveToStorage('activeTemplate', activeTemplate);
+      }, [activeTemplate]);
 
       // When A-Relay Only is enabled, automatically set relay places equal to number of teams
       // (since each team can only enter one relay, max places = number of teams)
@@ -2227,6 +2250,8 @@
           } else {
             recalculateAllScores(teams, events);
           }
+          // Set active template to custom template id
+          setActiveTemplate('custom_' + template.id);
           setError(null);
         } catch (e) {
           console.error('Error loading template:', e);
@@ -2236,6 +2261,12 @@
 
       const deleteTemplate = (id) => {
         setSavedTemplates(savedTemplates.filter(t => t.id !== id));
+      };
+
+      // Helper to clear active template when user manually changes settings
+      const handleManualSettingChange = (setter) => (value) => {
+        setActiveTemplate(null);
+        setter(value);
       };
 
       const updateEventResult = (eventId, place, teamId, isChecked) => {
@@ -2328,7 +2359,12 @@
               setNumIndividualPlaces(5);
               setNumRelayPlaces(3);
               setNumDivingPlaces(3);
-              
+              // Reset Heat Lock and A-Relay settings to defaults (off)
+              setHeatLockEnabled(false);
+              setARelayOnly(false);
+              // Reset active template to default (High School)
+              setActiveTemplate('high_school');
+
               utils.saveToStorage('teams', defaultTeams);
               utils.saveToStorage('events', defaultEvents);
               utils.saveToStorage('individualPointSystem', defaultIndividualPoints);
@@ -2337,8 +2373,11 @@
               utils.saveToStorage('numIndividualPlaces', 5);
               utils.saveToStorage('numRelayPlaces', 3);
               utils.saveToStorage('numDivingPlaces', 3);
+              utils.saveToStorage('heatLockEnabled', false);
+              utils.saveToStorage('aRelayOnly', false);
+              utils.saveToStorage('activeTemplate', 'high_school');
               utils.saveToStorage('version', CURRENT_VERSION);
-              
+
               recalculateAllScores(defaultTeams, defaultEvents);
               setShowConfirmDialog(null);
             } catch (e) {
@@ -2358,7 +2397,7 @@
             try {
               // Clear everything including templates
               localStorage.clear();
-              
+
               setTeams(defaultTeams);
               setEvents(defaultEvents);
               setIndividualPointSystem(defaultIndividualPoints);
@@ -2370,7 +2409,12 @@
               setSavedTemplates([]);
               setDarkMode(true);
               setScoringMode('combined');
-              
+              // Reset Heat Lock and A-Relay settings to defaults (off)
+              setHeatLockEnabled(false);
+              setARelayOnly(false);
+              // Reset active template to default (High School)
+              setActiveTemplate('high_school');
+
               utils.saveToStorage('version', CURRENT_VERSION);
               recalculateAllScores(defaultTeams, defaultEvents);
               setShowConfirmDialog(null);
@@ -2519,6 +2563,7 @@
         }));
         setEvents(newEvents);
         recalculateAllScores(dualMeetTeams, newEvents);
+        setActiveTemplate('high_school');
         // Track event
         trackEvent('load_template', { template_name: 'high_school_meet' });
       };
@@ -2559,6 +2604,7 @@
         }));
         setEvents(newEvents);
         recalculateAllScores(championshipTeams, newEvents);
+        setActiveTemplate('championship_16');
         // Track event
         trackEvent('load_template', { template_name: 'championship_meet' });
       };
@@ -2599,6 +2645,7 @@
         }));
         setEvents(newEvents);
         recalculateAllScores(championshipTeams, newEvents);
+        setActiveTemplate('championship_8');
         // Track event
         trackEvent('load_template', { template_name: 'championship_meet_8' });
       };
@@ -2640,6 +2687,7 @@
         }));
         setEvents(newEvents);
         recalculateAllScores(nlcTeams, newEvents);
+        setActiveTemplate('nlc');
         trackEvent('load_template', { template_name: 'nlc_meet' });
       };
 
@@ -2684,6 +2732,7 @@
         }));
         setEvents(newEvents);
         recalculateAllScores(sectionalsTeams, newEvents);
+        setActiveTemplate('sectionals');
         trackEvent('load_template', { template_name: 'sectionals_meet' });
       };
 
@@ -3400,7 +3449,7 @@
                         <input
                           type="checkbox"
                           checked={heatLockEnabled}
-                          onChange={(e) => setHeatLockEnabled(e.target.checked)}
+                          onChange={(e) => { setActiveTemplate(null); setHeatLockEnabled(e.target.checked); }}
                           className="w-5 h-5 rounded accent-amber-500"
                         />
                         <div>
@@ -3414,7 +3463,7 @@
                         <input
                           type="checkbox"
                           checked={aRelayOnly}
-                          onChange={(e) => setARelayOnly(e.target.checked)}
+                          onChange={(e) => { setActiveTemplate(null); setARelayOnly(e.target.checked); }}
                           className="w-5 h-5 rounded accent-amber-500"
                         />
                         <div>
@@ -3459,31 +3508,31 @@
                     <div className="flex flex-wrap gap-3 mb-4">
                       <button
                         onClick={loadHighSchoolMeet}
-                        className={`px-4 py-2 rounded-lg ${darkMode ? 'bg-pink-600 hover:bg-pink-700 active:ring-4 active:ring-pink-400 active:scale-95' : 'bg-pink-500 hover:bg-pink-600 active:ring-4 active:ring-pink-300 active:scale-95'} text-white font-medium transition-all shadow-lg hover:shadow-xl`}
+                        className={`px-4 py-2 rounded-lg ${darkMode ? 'bg-pink-600 hover:bg-pink-700 active:ring-4 active:ring-pink-400 active:scale-95' : 'bg-pink-500 hover:bg-pink-600 active:ring-4 active:ring-pink-300 active:scale-95'} text-white font-medium transition-all shadow-lg hover:shadow-xl ${activeTemplate === 'high_school' ? 'ring-4 ring-white ring-offset-2 ring-offset-transparent' : ''}`}
                       >
                         High School Dual Meet
                       </button>
                       <button
                         onClick={loadChampionshipMeet8}
-                        className={`px-4 py-2 rounded-lg ${darkMode ? 'bg-purple-600 hover:bg-purple-700 active:ring-4 active:ring-purple-400 active:scale-95' : 'bg-purple-500 hover:bg-purple-600 active:ring-4 active:ring-purple-300 active:scale-95'} text-white font-medium transition-all shadow-lg hover:shadow-xl`}
+                        className={`px-4 py-2 rounded-lg ${darkMode ? 'bg-purple-600 hover:bg-purple-700 active:ring-4 active:ring-purple-400 active:scale-95' : 'bg-purple-500 hover:bg-purple-600 active:ring-4 active:ring-purple-300 active:scale-95'} text-white font-medium transition-all shadow-lg hover:shadow-xl ${activeTemplate === 'championship_8' ? 'ring-4 ring-white ring-offset-2 ring-offset-transparent' : ''}`}
                       >
                         Championship Meet (Top 8)
                       </button>
                       <button
                         onClick={loadChampionshipMeet}
-                        className={`px-4 py-2 rounded-lg ${darkMode ? 'bg-blue-600 hover:bg-blue-700 active:ring-4 active:ring-blue-400 active:scale-95' : 'bg-blue-500 hover:bg-blue-600 active:ring-4 active:ring-blue-300 active:scale-95'} text-white font-medium transition-all shadow-lg hover:shadow-xl`}
+                        className={`px-4 py-2 rounded-lg ${darkMode ? 'bg-blue-600 hover:bg-blue-700 active:ring-4 active:ring-blue-400 active:scale-95' : 'bg-blue-500 hover:bg-blue-600 active:ring-4 active:ring-blue-300 active:scale-95'} text-white font-medium transition-all shadow-lg hover:shadow-xl ${activeTemplate === 'championship_16' ? 'ring-4 ring-white ring-offset-2 ring-offset-transparent' : ''}`}
                       >
                         Championship Meet (Top 16)
                       </button>
                       <button
                         onClick={loadNLCMeet}
-                        className={`px-4 py-2 rounded-lg ${darkMode ? 'bg-amber-600 hover:bg-amber-700 active:ring-4 active:ring-amber-400 active:scale-95' : 'bg-amber-500 hover:bg-amber-600 active:ring-4 active:ring-amber-300 active:scale-95'} text-white font-medium transition-all shadow-lg hover:shadow-xl`}
+                        className={`px-4 py-2 rounded-lg ${darkMode ? 'bg-amber-600 hover:bg-amber-700 active:ring-4 active:ring-amber-400 active:scale-95' : 'bg-amber-500 hover:bg-amber-600 active:ring-4 active:ring-amber-300 active:scale-95'} text-white font-medium transition-all shadow-lg hover:shadow-xl ${activeTemplate === 'nlc' ? 'ring-4 ring-white ring-offset-2 ring-offset-transparent' : ''}`}
                       >
                         NLC Meet
                       </button>
                       <button
                         onClick={loadSectionalsMeet}
-                        className={`px-4 py-2 rounded-lg ${darkMode ? 'bg-teal-600 hover:bg-teal-700 active:ring-4 active:ring-teal-400 active:scale-95' : 'bg-teal-500 hover:bg-teal-600 active:ring-4 active:ring-teal-300 active:scale-95'} text-white font-medium transition-all shadow-lg hover:shadow-xl`}
+                        className={`px-4 py-2 rounded-lg ${darkMode ? 'bg-teal-600 hover:bg-teal-700 active:ring-4 active:ring-teal-400 active:scale-95' : 'bg-teal-500 hover:bg-teal-600 active:ring-4 active:ring-teal-300 active:scale-95'} text-white font-medium transition-all shadow-lg hover:shadow-xl ${activeTemplate === 'sectionals' ? 'ring-4 ring-white ring-offset-2 ring-offset-transparent' : ''}`}
                       >
                         Sectionals
                       </button>
@@ -3494,7 +3543,7 @@
                         <p className={`text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Your Custom Templates:</p>
                         <div className="flex flex-wrap gap-2">
                           {savedTemplates.map(template => (
-                            <div key={template.id} className={`flex items-center gap-2 px-3 py-2 rounded-lg ${darkMode ? 'bg-gray-600' : 'bg-white border border-gray-300'}`}>
+                            <div key={template.id} className={`flex items-center gap-2 px-3 py-2 rounded-lg ${darkMode ? 'bg-gray-600' : 'bg-white border border-gray-300'} ${activeTemplate === 'custom_' + template.id ? 'ring-4 ring-white ring-offset-2 ring-offset-transparent' : ''}`}>
                               <button
                                 onClick={() => loadTemplate(template)}
                                 className={`font-medium ${darkMode ? 'text-cyan-400 hover:text-cyan-300' : 'text-blue-600 hover:text-blue-700'}`}
@@ -3562,7 +3611,7 @@
                       <div className="flex items-center gap-3 flex-wrap">
                         <NumberInput
                           value={numDivingPlaces}
-                          onChange={setNumDivingPlaces}
+                          onChange={handleManualSettingChange(setNumDivingPlaces)}
                           min={1}
                           max={20}
                           darkMode={darkMode}
@@ -3577,7 +3626,7 @@
                       <div className="flex items-center gap-3 flex-wrap">
                         <NumberInput
                           value={numIndividualPlaces}
-                          onChange={setNumIndividualPlaces}
+                          onChange={handleManualSettingChange(setNumIndividualPlaces)}
                           min={1}
                           max={20}
                           darkMode={darkMode}
@@ -3592,7 +3641,7 @@
                       <div className="flex items-center gap-3 flex-wrap">
                         <NumberInput
                           value={numRelayPlaces}
-                          onChange={setNumRelayPlaces}
+                          onChange={handleManualSettingChange(setNumRelayPlaces)}
                           min={1}
                           max={20}
                           darkMode={darkMode}
@@ -3645,6 +3694,7 @@
                           place={place}
                           value={divingPointSystem[place] ?? 0}
                           onChange={(value) => {
+                            setActiveTemplate(null);
                             const newPoints = { ...divingPointSystem, [place]: value };
                             setDivingPointSystem(newPoints);
                           }}
@@ -3662,6 +3712,7 @@
                           place={place}
                           value={individualPointSystem[place] ?? 0}
                           onChange={(value) => {
+                            setActiveTemplate(null);
                             const newPoints = { ...individualPointSystem, [place]: value };
                             setIndividualPointSystem(newPoints);
                           }}
@@ -3679,6 +3730,7 @@
                           place={place}
                           value={relayPointSystem[place] ?? 0}
                           onChange={(value) => {
+                            setActiveTemplate(null);
                             const newPoints = { ...relayPointSystem, [place]: value };
                             setRelayPointSystem(newPoints);
                           }}
