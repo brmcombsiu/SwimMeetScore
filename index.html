@@ -1598,14 +1598,14 @@
       // Capture the PWA install prompt
       useEffect(() => {
         const handleBeforeInstallPrompt = (e) => {
-          // Prevent the mini-infobar from appearing on mobile
-          e.preventDefault();
-          // Save the event so it can be triggered later
+          // Save the event so it can be triggered later (for the install button in About section)
+          // Note: We don't call e.preventDefault() here so the browser can show its default install banner
+          // The saved event allows users to also install via our custom button if they missed the banner
           setDeferredPrompt(e);
         };
 
         window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-        
+
         return () => {
           window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
         };
