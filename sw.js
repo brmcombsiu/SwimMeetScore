@@ -1,5 +1,5 @@
 // SwimMeetScore Service Worker
-const CACHE_NAME = 'swimmeetscore-v6';
+const CACHE_NAME = 'swimmeetscore-v9';
 
 // Files to cache for offline use
 const CACHE_FILES = [
@@ -15,11 +15,11 @@ const CACHE_FILES = [
 ];
 
 // External CDN resources to cache
+// Note: cdn.tailwindcss.com is excluded because it doesn't support CORS headers for caching
 const CDN_CACHE = [
   'https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js',
-  'https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js',
-  'https://cdn.tailwindcss.com'
+  'https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js'
 ];
 
 // Install event - cache all static files
@@ -109,7 +109,7 @@ self.addEventListener('fetch', (event) => {
       .catch(() => {
         // If both cache and network fail, show offline page for navigation requests
         if (event.request.mode === 'navigate') {
-          return caches.match('/index.html');
+          return caches.match('./');
         }
       })
   );
