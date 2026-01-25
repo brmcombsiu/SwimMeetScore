@@ -36,8 +36,8 @@
   <meta name="twitter:image" content="https://swimmeetscore.com/og-image.png">
   
   <!-- PWA / Mobile -->
-  <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#1e90ff">
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#0f2942">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -47,9 +47,7 @@
   <meta name="google-site-verification" content="E6jMP8Bm02-2gUIhCyzFM6nRLixGSuCHrVdv4qh13ks" />
   
   <!-- Microsoft Bing SEO -->
-  <!-- To complete Bing verification: Add your site at https://www.bing.com/webmasters -->
-  <!-- Then replace YOUR_BING_VERIFICATION_CODE with your actual code -->
-  <meta name="msvalidate.01" content="YOUR_BING_VERIFICATION_CODE" />
+  <!-- Bing verification: Site imported from Google Search Console (no separate verification needed) -->
   
   <!-- Additional Bing/Microsoft SEO Meta Tags -->
   <meta name="msnbot" content="index, follow">
@@ -76,10 +74,20 @@
   <meta name="category" content="Sports, Swimming, Scoring Tools">
   
   <!-- Link to sitemap for search engines -->
-  <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+  <link rel="sitemap" type="application/xml" title="Sitemap" href="./sitemap.xml">
   
   <!-- Google Analytics 4 with Offline Support -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-0G72MC7J4M"></script>
+  
+  <!-- Clarity tracking code for https://swimmeetscore.com/ -->
+  <script>
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i+"?ref=bwt";
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "v3wvpal09e");
+  </script>
+  
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
@@ -230,7 +238,7 @@
     "@type": "Organization",
     "name": "Kaden Co",
     "url": "https://swimmeetscore.com",
-    "logo": "https://swimmeetscore.com/favicon-512x512.png",
+    "logo": "https://swimmeetscore.com/favicon512x512.png",
     "contactPoint": [{
       "@type": "ContactPoint",
       "email": "support@swimmeetscore.com",
@@ -292,10 +300,11 @@
   }
   </script>
   <!-- Favicons -->
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-  <link rel="icon" type="image/x-icon" href="/favicon.ico">
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/x-icon" href="./favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="./favicon32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="./favicon16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+
   
   <!-- Preconnect to CDNs for faster loading -->
   <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
@@ -1014,7 +1023,7 @@
             {isOpen && (
               <div className={`absolute z-50 mt-1 w-full min-w-[140px] rounded-lg shadow-lg border ${
                 darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-200'
-              }`} style={{ maxHeight: '240px', overflowY: 'auto' }}>
+              }`} style={{ maxHeight: '400px', overflowY: 'auto' }}>
                 {teams.map(team => {
                   const isChecked = selectedTeamIds.includes(String(team.id));
                   return (
@@ -1065,7 +1074,7 @@
     };
 
     // Quick Entry Event Card - Team-first entry mode (inline, not modal)
-    const QuickEntryEventCard = ({ event, teams, darkMode, numPlaces, pointSystem, onUpdate, onMoveUp, onMoveDown, onRemove, canMoveUp, canMoveDown }) => {
+    const QuickEntryEventCard = ({ event, teams, darkMode, numPlaces, pointSystem, onUpdate, onMoveUp, onMoveDown, onRemove, canMoveUp, canMoveDown, heatLockEnabled, aRelayOnly }) => {
       const isDiving = event.name === 'Diving';
       const isRelay = event.name.includes('Relay');
       
@@ -1116,15 +1125,28 @@
         <div className={`rounded-xl p-3 ${darkMode ? 'bg-pool-mid/80 border border-white/10' : 'bg-white border border-slate-200 shadow-sm'}`}>
           {/* Event Header */}
           <div className="flex items-center justify-between mb-2">
-            <h5 className={`font-semibold ${darkMode ? 'text-white' : 'text-slate-800'}`}>
-              <span className={event.gender === 'girls' ? (darkMode ? 'text-pink-400' : 'text-pink-600') : (darkMode ? 'text-blue-400' : 'text-blue-600')}>
-                {event.gender === 'girls' ? 'G' : 'B'}
-              </span>
-              {' '}
-              <span className={isDiving ? (darkMode ? 'text-orange-400' : 'text-orange-600') : ''}>
-                {event.name}
-              </span>
-            </h5>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h5 className={`font-semibold ${darkMode ? 'text-white' : 'text-slate-800'}`}>
+                <span className={event.gender === 'girls' ? (darkMode ? 'text-pink-400' : 'text-pink-600') : (darkMode ? 'text-blue-400' : 'text-blue-600')}>
+                  {event.gender === 'girls' ? 'G' : 'B'}
+                </span>
+                {' '}
+                <span className={isDiving ? (darkMode ? 'text-orange-400' : 'text-orange-600') : ''}>
+                  {event.name}
+                </span>
+              </h5>
+              {/* Visual indicators for NLC/Sectionals settings */}
+              {heatLockEnabled && !isRelay && (
+                <span className={`text-xs px-1.5 py-0.5 rounded ${darkMode ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-700'}`}>
+                  🔒 Heat Lock
+                </span>
+              )}
+              {aRelayOnly && isRelay && (
+                <span className={`text-xs px-1.5 py-0.5 rounded ${darkMode ? 'bg-teal-500/20 text-teal-400' : 'bg-teal-100 text-teal-700'}`}>
+                  🅰️ A-Only
+                </span>
+              )}
+            </div>
             <div className="flex items-center gap-1">
               <button
                 onClick={onMoveUp}
@@ -1769,6 +1791,10 @@
       const [showSaveTemplate, setShowSaveTemplate] = useState(false);
       const [shareSuccess, setShareSuccess] = useState(false);
       
+      // NLC/Sectionals specific settings
+      const [heatLockEnabled, setHeatLockEnabled] = useState(() => utils.loadFromStorage('heatLockEnabled', false));
+      const [aRelayOnly, setARelayOnly] = useState(() => utils.loadFromStorage('aRelayOnly', false));
+      
       const [individualPointSystem, setIndividualPointSystem] = useState(() => {
         const loaded = utils.loadFromStorage('individualPointSystem', defaultIndividualPoints);
         return loaded && typeof loaded === 'object' ? loaded : defaultIndividualPoints;
@@ -1856,6 +1882,25 @@
           utils.saveToStorage('divingPointSystem', divingPointSystem);
         }
       }, [divingPointSystem]);
+
+      useEffect(() => {
+        utils.saveToStorage('heatLockEnabled', heatLockEnabled);
+      }, [heatLockEnabled]);
+
+      useEffect(() => {
+        utils.saveToStorage('aRelayOnly', aRelayOnly);
+      }, [aRelayOnly]);
+
+      // When A-Relay Only is enabled, automatically set relay places equal to number of teams
+      // (since each team can only enter one relay, max places = number of teams)
+      useEffect(() => {
+        if (aRelayOnly && teams.length > 0) {
+          const newRelayPlaces = Math.min(teams.length, 20); // Cap at 20 (max places supported)
+          if (numRelayPlaces !== newRelayPlaces) {
+            setNumRelayPlaces(newRelayPlaces);
+          }
+        }
+      }, [aRelayOnly, teams.length]);
 
       const recalculateAllScores = useCallback((teamsList, eventsList) => {
         if (!Array.isArray(teamsList) || !Array.isArray(eventsList)) return;
@@ -2401,12 +2446,12 @@
         { name: '200 IM', gender: 'boys' },
         { name: '50 Freestyle', gender: 'girls' },
         { name: '50 Freestyle', gender: 'boys' },
+        { name: 'Diving', gender: 'girls' },
+        { name: 'Diving', gender: 'boys' },
         { name: '100 Butterfly', gender: 'girls' },
         { name: '100 Butterfly', gender: 'boys' },
         { name: '100 Freestyle', gender: 'girls' },
         { name: '100 Freestyle', gender: 'boys' },
-        { name: 'Diving', gender: 'girls' },
-        { name: 'Diving', gender: 'boys' },
         { name: '500 Freestyle', gender: 'girls' },
         { name: '500 Freestyle', gender: 'boys' },
         { name: '200 Freestyle Relay', gender: 'girls' },
@@ -2457,6 +2502,9 @@
         setDivingPointSystem({
           1: 5, 2: 3, 3: 1, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0, 15: 0, 16: 0, 17: 0, 18: 0, 19: 0, 20: 0
         });
+        // Disable NLC/Sectionals-specific features
+        setHeatLockEnabled(false);
+        setARelayOnly(false);
         // Set 2 default teams for dual meet
         const dualMeetTeams = [
           { id: utils.generateId(), name: 'Home Team', score: 0, girlsScore: 0, boysScore: 0 },
@@ -2488,6 +2536,9 @@
         setDivingPointSystem({
           1: 20, 2: 17, 3: 16, 4: 15, 5: 14, 6: 13, 7: 12, 8: 11, 9: 9, 10: 7, 11: 6, 12: 5, 13: 4, 14: 3, 15: 2, 16: 1, 17: 0, 18: 0, 19: 0, 20: 0
         });
+        // Disable NLC/Sectionals-specific features
+        setHeatLockEnabled(false);
+        setARelayOnly(false);
         // Set 8 default teams for championship meet
         const championshipTeams = [
           { id: utils.generateId(), name: 'Team 1', score: 0, girlsScore: 0, boysScore: 0 },
@@ -2525,6 +2576,9 @@
         setDivingPointSystem({
           1: 11, 2: 9, 3: 8, 4: 7, 5: 6, 6: 5, 7: 4, 8: 3, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0, 15: 0, 16: 0, 17: 0, 18: 0, 19: 0, 20: 0
         });
+        // Disable NLC/Sectionals-specific features
+        setHeatLockEnabled(false);
+        setARelayOnly(false);
         // Set 8 default teams for championship meet
         const championshipTeams = [
           { id: utils.generateId(), name: 'Team 1', score: 0, girlsScore: 0, boysScore: 0 },
@@ -2547,6 +2601,90 @@
         recalculateAllScores(championshipTeams, newEvents);
         // Track event
         trackEvent('load_template', { template_name: 'championship_meet_8' });
+      };
+
+      // NLC Meet - 16 places individual, 8 places relay (A-relay only), heat lock enabled
+      const loadNLCMeet = () => {
+        setNumIndividualPlaces(16);
+        setNumRelayPlaces(8);
+        setNumDivingPlaces(16);
+        setIndividualPointSystem({
+          1: 20, 2: 17, 3: 16, 4: 15, 5: 14, 6: 13, 7: 12, 8: 11, 9: 9, 10: 7, 11: 6, 12: 5, 13: 4, 14: 3, 15: 2, 16: 1, 17: 0, 18: 0, 19: 0, 20: 0
+        });
+        setRelayPointSystem({
+          1: 40, 2: 34, 3: 32, 4: 30, 5: 28, 6: 26, 7: 24, 8: 22, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0, 15: 0, 16: 0, 17: 0, 18: 0, 19: 0, 20: 0
+        });
+        setDivingPointSystem({
+          1: 20, 2: 17, 3: 16, 4: 15, 5: 14, 6: 13, 7: 12, 8: 11, 9: 9, 10: 7, 11: 6, 12: 5, 13: 4, 14: 3, 15: 2, 16: 1, 17: 0, 18: 0, 19: 0, 20: 0
+        });
+        // Enable NLC-specific features
+        setHeatLockEnabled(true);
+        setARelayOnly(true);
+        // Set 8 default teams for NLC meet
+        const nlcTeams = [
+          { id: utils.generateId(), name: 'Team 1', score: 0, girlsScore: 0, boysScore: 0 },
+          { id: utils.generateId(), name: 'Team 2', score: 0, girlsScore: 0, boysScore: 0 },
+          { id: utils.generateId(), name: 'Team 3', score: 0, girlsScore: 0, boysScore: 0 },
+          { id: utils.generateId(), name: 'Team 4', score: 0, girlsScore: 0, boysScore: 0 },
+          { id: utils.generateId(), name: 'Team 5', score: 0, girlsScore: 0, boysScore: 0 },
+          { id: utils.generateId(), name: 'Team 6', score: 0, girlsScore: 0, boysScore: 0 },
+          { id: utils.generateId(), name: 'Team 7', score: 0, girlsScore: 0, boysScore: 0 },
+          { id: utils.generateId(), name: 'Team 8', score: 0, girlsScore: 0, boysScore: 0 }
+        ];
+        setTeams(nlcTeams);
+        const newEvents = competitionEvents.map((e) => ({
+          id: utils.generateId(),
+          name: e.name,
+          gender: e.gender,
+          results: []
+        }));
+        setEvents(newEvents);
+        recalculateAllScores(nlcTeams, newEvents);
+        trackEvent('load_template', { template_name: 'nlc_meet' });
+      };
+
+      // Sectionals - 16 places individual, 16 places relay (A-relay only, double points), heat lock enabled
+      const loadSectionalsMeet = () => {
+        setNumIndividualPlaces(16);
+        setNumDivingPlaces(16);
+        setIndividualPointSystem({
+          1: 20, 2: 17, 3: 16, 4: 15, 5: 14, 6: 13, 7: 12, 8: 11, 9: 9, 10: 7, 11: 6, 12: 5, 13: 4, 14: 3, 15: 2, 16: 1, 17: 0, 18: 0, 19: 0, 20: 0
+        });
+        // Relay points are double the individual points for all 20 places (to support up to 20 teams)
+        setRelayPointSystem({
+          1: 40, 2: 34, 3: 32, 4: 30, 5: 28, 6: 26, 7: 24, 8: 22, 9: 18, 10: 14, 11: 12, 12: 10, 13: 8, 14: 6, 15: 4, 16: 2, 17: 1, 18: 1, 19: 1, 20: 1
+        });
+        setDivingPointSystem({
+          1: 20, 2: 17, 3: 16, 4: 15, 5: 14, 6: 13, 7: 12, 8: 11, 9: 9, 10: 7, 11: 6, 12: 5, 13: 4, 14: 3, 15: 2, 16: 1, 17: 0, 18: 0, 19: 0, 20: 0
+        });
+        // Enable Sectionals-specific features
+        setHeatLockEnabled(true);
+        setARelayOnly(true);
+        // Set 10 default teams for Sectionals (typical entry size)
+        const sectionalsTeams = [
+          { id: utils.generateId(), name: 'Team 1', score: 0, girlsScore: 0, boysScore: 0 },
+          { id: utils.generateId(), name: 'Team 2', score: 0, girlsScore: 0, boysScore: 0 },
+          { id: utils.generateId(), name: 'Team 3', score: 0, girlsScore: 0, boysScore: 0 },
+          { id: utils.generateId(), name: 'Team 4', score: 0, girlsScore: 0, boysScore: 0 },
+          { id: utils.generateId(), name: 'Team 5', score: 0, girlsScore: 0, boysScore: 0 },
+          { id: utils.generateId(), name: 'Team 6', score: 0, girlsScore: 0, boysScore: 0 },
+          { id: utils.generateId(), name: 'Team 7', score: 0, girlsScore: 0, boysScore: 0 },
+          { id: utils.generateId(), name: 'Team 8', score: 0, girlsScore: 0, boysScore: 0 },
+          { id: utils.generateId(), name: 'Team 9', score: 0, girlsScore: 0, boysScore: 0 },
+          { id: utils.generateId(), name: 'Team 10', score: 0, girlsScore: 0, boysScore: 0 }
+        ];
+        setTeams(sectionalsTeams);
+        // For Sectionals with A-relay only, relay places = number of teams (one relay per team)
+        setNumRelayPlaces(sectionalsTeams.length);
+        const newEvents = competitionEvents.map((e) => ({
+          id: utils.generateId(),
+          name: e.name,
+          gender: e.gender,
+          results: []
+        }));
+        setEvents(newEvents);
+        recalculateAllScores(sectionalsTeams, newEvents);
+        trackEvent('load_template', { template_name: 'sectionals_meet' });
       };
 
       // Generate shareable score text
@@ -2777,7 +2915,7 @@
             {/* Share Success Message */}
             {shareSuccess && (
               <div className={`mb-4 p-4 rounded-lg flex items-center gap-3 ${darkMode ? 'bg-green-900 text-green-100' : 'bg-green-100 text-green-800'}`}>
-                <span>✅ Scores copied to clipboard!</span>
+                <span>✓ Scores copied to clipboard!</span>
               </div>
             )}
 
@@ -2865,7 +3003,7 @@
                   <div className={`flex-1 overflow-y-auto p-6 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                     {/* About Section */}
                     <section className="mb-8">
-                      <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>📱 About Swim Meet Score</h4>
+                      <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>🏊 About Swim Meet Score</h4>
                       <p className="mb-3">
                         Swim Meet Score is a free, ad-free tool for tracking scores during swim meets. Perfect for coaches, parents, and officials at high school and competitive swimming events.
                       </p>
@@ -2893,7 +3031,7 @@
 
                     {/* Install on Phone */}
                     <section className="mb-8">
-                      <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>📲 Install on Your Phone</h4>
+                      <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>→📱 Install on Your Phone</h4>
                       
                       <div className={`p-4 rounded-lg mb-4 ${darkMode ? 'bg-gray-700' : 'bg-blue-50'}`}>
                         <h5 className={`font-semibold mb-2 ${darkMode ? 'text-blue-400' : 'text-blue-700'}`}>iPhone / iPad (Safari)</h5>
@@ -2996,7 +3134,7 @@
                       
                       {/* How to Record a Tie */}
                       <div className={`p-4 rounded-lg mb-4 ${darkMode ? 'bg-cyan-900/50 border border-cyan-700' : 'bg-cyan-50 border border-cyan-200'}`}>
-                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-cyan-400' : 'text-cyan-700'}`}>🔍 How to Record a Tie</h5>
+                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-cyan-400' : 'text-cyan-700'}`}>📝 How to Record a Tie</h5>
                         <ol className="text-sm space-y-1 list-decimal list-inside">
                           <li>Click on the place dropdown (1st, 2nd, etc.)</li>
                           <li>Check the boxes for ALL teams that tied for that place</li>
@@ -3008,7 +3146,7 @@
                       </div>
                       
                       <div className={`p-4 rounded-lg mb-4 ${darkMode ? 'bg-gray-700' : 'bg-yellow-50'}`}>
-                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-yellow-400' : 'text-yellow-700'}`}>⚖️ Point Splitting</h5>
+                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-yellow-400' : 'text-yellow-700'}`}>➗ Point Splitting</h5>
                         <p className="text-sm mb-2">When swimmers tie, the points for the tied places are added together and split evenly.</p>
                         <div className={`text-sm p-3 rounded ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
                           <p className="font-medium mb-1">Example - Dual Meet (6-4-3-2-1 scoring):</p>
@@ -3020,7 +3158,7 @@
                       </div>
 
                       <div className={`p-4 rounded-lg mb-4 ${darkMode ? 'bg-gray-700' : 'bg-orange-50'}`}>
-                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-orange-400' : 'text-orange-700'}`}>⭐ Place Skipping</h5>
+                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-orange-400' : 'text-orange-700'}`}>⏭ Place Skipping</h5>
                         <p className="text-sm mb-2">After a tie, subsequent places are skipped based on how many swimmers tied.</p>
                         <div className={`text-sm p-3 rounded ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
                           <p className="font-medium mb-1">Examples:</p>
@@ -3060,6 +3198,69 @@
                         <li>• <strong>Email Results:</strong> Tap the Email Results button next to Events to send a complete meet report including final standings and all event-by-event results with places</li>
                         <li>• <strong>Clear Data:</strong> Start fresh anytime from Settings → Clear Data</li>
                       </ul>
+                    </section>
+
+                    {/* NLC/Sectionals Templates */}
+                    <section className="mb-8">
+                      <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>🏅 NLC & Sectionals Templates</h4>
+                      <p className="mb-3">
+                        These templates are designed for championship-style meets with prelims/finals heat structures.
+                      </p>
+                      
+                      <div className={`p-4 rounded-lg mb-4 ${darkMode ? 'bg-amber-900/30 border border-amber-700/50' : 'bg-amber-50 border border-amber-200'}`}>
+                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-amber-400' : 'text-amber-700'}`}>NLC Meet Template</h5>
+                        <ul className={`text-sm space-y-1 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                          <li>• <strong>Individual Events:</strong> 16 places scored (20-17-16-15-14-13-12-11-9-7-6-5-4-3-2-1)</li>
+                          <li>• <strong>Relays:</strong> 8 places, A-relay only, double points (40-34-32-30-28-26-24-22)</li>
+                          <li>• <strong>B-relays</strong> are exhibition (non-scoring)</li>
+                          <li>• <strong>Heat Lock enabled:</strong> Consolation swimmers locked to places 9-16</li>
+                        </ul>
+                      </div>
+                      
+                      <div className={`p-4 rounded-lg mb-4 ${darkMode ? 'bg-teal-900/30 border border-teal-700/50' : 'bg-teal-50 border border-teal-200'}`}>
+                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-teal-400' : 'text-teal-700'}`}>Sectionals Template</h5>
+                        <ul className={`text-sm space-y-1 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                          <li>• <strong>Individual Events:</strong> 16 places scored (20-17-16-15-14-13-12-11-9-7-6-5-4-3-2-1)</li>
+                          <li>• <strong>Relays:</strong> A-relay only, places = number of teams, double points</li>
+                          <li>• <strong>Dynamic relay places:</strong> Since each team enters one A-relay, relay places automatically match team count (e.g., 11 teams = 11 relay places)</li>
+                          <li>• <strong>Heat Lock enabled:</strong> Consolation swimmers locked to places 9-16</li>
+                        </ul>
+                      </div>
+                      
+                      <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Key Difference: NLC vs Sectionals</h5>
+                        <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                          NLC scores relays to a fixed 8 places. Sectionals relay places dynamically match the number of teams (since only A-relays are allowed). Both use double points for relays compared to individual events.
+                        </p>
+                      </div>
+                    </section>
+
+                    {/* Heat Lock & A-Relay Settings */}
+                    <section className="mb-8">
+                      <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>🔒 Heat Lock & A-Relay Settings</h4>
+                      <p className="mb-3">
+                        Found in Settings under "NLC/Sectionals Options". These are visual reminders for championship meet scoring rules.
+                      </p>
+                      
+                      <div className={`p-4 rounded-lg mb-4 ${darkMode ? 'bg-amber-900/30 border border-amber-700/50' : 'bg-amber-50 border border-amber-200'}`}>
+                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-amber-400' : 'text-amber-700'}`}>🔒 Heat Lock (Prelims/Finals)</h5>
+                        <p className={`text-sm mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                          When enabled, displays a reminder on individual events that consolation heat swimmers are locked to places 9-16, while finals swimmers compete for places 1-8.
+                        </p>
+                        <p className={`text-xs ${darkMode ? 'text-amber-300' : 'text-amber-600'}`}>
+                          <strong>Note:</strong> This is a visual reminder - you still manually enter which places each team earned.
+                        </p>
+                      </div>
+                      
+                      <div className={`p-4 rounded-lg ${darkMode ? 'bg-teal-900/30 border border-teal-700/50' : 'bg-teal-50 border border-teal-200'}`}>
+                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-teal-400' : 'text-teal-700'}`}>🅰️ A-Relay Only Scoring</h5>
+                        <p className={`text-sm mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                          When enabled, displays a reminder on relay events that only A-relays score points. B-relays are exhibition and don't count toward team scores.
+                        </p>
+                        <p className={`text-xs ${darkMode ? 'text-teal-300' : 'text-teal-600'}`}>
+                          <strong>Note:</strong> This is a visual reminder - simply don't enter results for B-relays, or enter them for record-keeping knowing they won't affect your manual score calculations.
+                        </p>
+                      </div>
                     </section>
 
                     {/* Scoring Modes */}
@@ -3190,6 +3391,48 @@
                   </div>
 
                   <div className="mb-6">
+                    <h4 className={`font-semibold mb-2 ${darkMode ? 'text-white' : 'text-slate-800'}`}>NLC/Sectionals Options</h4>
+                    <p className={`text-sm mb-3 ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                      Special scoring rules for NLC meets and Sectionals.
+                    </p>
+                    <div className="space-y-3">
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={heatLockEnabled}
+                          onChange={(e) => setHeatLockEnabled(e.target.checked)}
+                          className="w-5 h-5 rounded accent-amber-500"
+                        />
+                        <div>
+                          <span className={`font-medium ${darkMode ? 'text-slate-200' : 'text-slate-700'}`}>Heat Lock (Prelims/Finals)</span>
+                          <p className={`text-xs ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                            Consolation swimmers locked to places 9-16; finals compete for 1-8
+                          </p>
+                        </div>
+                      </label>
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={aRelayOnly}
+                          onChange={(e) => setARelayOnly(e.target.checked)}
+                          className="w-5 h-5 rounded accent-amber-500"
+                        />
+                        <div>
+                          <span className={`font-medium ${darkMode ? 'text-slate-200' : 'text-slate-700'}`}>A-Relay Only Scoring</span>
+                          <p className={`text-xs ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                            Only A-relays score; B-relays are exhibition (non-scoring)
+                          </p>
+                        </div>
+                      </label>
+                    </div>
+                    {(heatLockEnabled || aRelayOnly) && (
+                      <div className={`mt-3 p-3 rounded-lg text-sm ${darkMode ? 'bg-amber-900/30 border border-amber-700/50 text-amber-200' : 'bg-amber-50 border border-amber-200 text-amber-800'}`}>
+                        <strong>Active:</strong> {heatLockEnabled && 'Heat Lock'}{heatLockEnabled && aRelayOnly && ', '}{aRelayOnly && 'A-Relay Only'}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mb-6">
                     <h4 className={`font-semibold mb-2 ${darkMode ? 'text-white' : 'text-slate-800'}`}>Data Management</h4>
                     <p className={`text-sm mb-3 ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
                       Your data will persist when you refresh the page until you clear it.
@@ -3216,21 +3459,33 @@
                     <div className="flex flex-wrap gap-3 mb-4">
                       <button
                         onClick={loadHighSchoolMeet}
-                        className={`px-4 py-2 rounded-lg ${darkMode ? 'bg-pink-600 hover:bg-pink-700' : 'bg-pink-500 hover:bg-pink-600'} text-white font-medium`}
+                        className={`px-4 py-2 rounded-lg ${darkMode ? 'bg-pink-600 hover:bg-pink-700 active:ring-4 active:ring-pink-400 active:scale-95' : 'bg-pink-500 hover:bg-pink-600 active:ring-4 active:ring-pink-300 active:scale-95'} text-white font-medium transition-all shadow-lg hover:shadow-xl`}
                       >
                         High School Dual Meet
                       </button>
                       <button
                         onClick={loadChampionshipMeet8}
-                        className={`px-4 py-2 rounded-lg ${darkMode ? 'bg-purple-600 hover:bg-purple-700' : 'bg-purple-500 hover:bg-purple-600'} text-white font-medium`}
+                        className={`px-4 py-2 rounded-lg ${darkMode ? 'bg-purple-600 hover:bg-purple-700 active:ring-4 active:ring-purple-400 active:scale-95' : 'bg-purple-500 hover:bg-purple-600 active:ring-4 active:ring-purple-300 active:scale-95'} text-white font-medium transition-all shadow-lg hover:shadow-xl`}
                       >
                         Championship Meet (Top 8)
                       </button>
                       <button
                         onClick={loadChampionshipMeet}
-                        className={`px-4 py-2 rounded-lg ${darkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'} text-white font-medium`}
+                        className={`px-4 py-2 rounded-lg ${darkMode ? 'bg-blue-600 hover:bg-blue-700 active:ring-4 active:ring-blue-400 active:scale-95' : 'bg-blue-500 hover:bg-blue-600 active:ring-4 active:ring-blue-300 active:scale-95'} text-white font-medium transition-all shadow-lg hover:shadow-xl`}
                       >
                         Championship Meet (Top 16)
+                      </button>
+                      <button
+                        onClick={loadNLCMeet}
+                        className={`px-4 py-2 rounded-lg ${darkMode ? 'bg-amber-600 hover:bg-amber-700 active:ring-4 active:ring-amber-400 active:scale-95' : 'bg-amber-500 hover:bg-amber-600 active:ring-4 active:ring-amber-300 active:scale-95'} text-white font-medium transition-all shadow-lg hover:shadow-xl`}
+                      >
+                        NLC Meet
+                      </button>
+                      <button
+                        onClick={loadSectionalsMeet}
+                        className={`px-4 py-2 rounded-lg ${darkMode ? 'bg-teal-600 hover:bg-teal-700 active:ring-4 active:ring-teal-400 active:scale-95' : 'bg-teal-500 hover:bg-teal-600 active:ring-4 active:ring-teal-300 active:scale-95'} text-white font-medium transition-all shadow-lg hover:shadow-xl`}
+                      >
+                        Sectionals
                       </button>
                     </div>
 
@@ -3498,21 +3753,21 @@
                     </button>
                   </div>
                 </div>
-                <div className="relative grid gap-3">
+                <div className="relative grid gap-2">
                   {sortedTeams.length === 0 ? (
                     <div className={`rounded-xl p-4 text-center ${darkMode ? 'bg-pool-deep/50 text-slate-400 border border-white/10' : 'bg-white/90 text-slate-500'}`}>
                       No teams added yet. Add teams in Settings.
                     </div>
                   ) : (
                     sortedTeams.map((team, index) => (
-                    <div key={team.id} className={`rounded-xl p-3 sm:p-4 transition-all ${
+                    <div key={team.id} className={`rounded-xl p-2 sm:p-3 transition-all ${
                       index === 0 
                         ? (darkMode ? 'bg-gradient-to-r from-lane-gold/20 to-transparent border-l-4 border-lane-gold' : 'bg-gradient-to-r from-amber-50 to-white border-l-4 border-amber-400')
                         : (darkMode ? 'bg-pool-deep/50 border border-white/5' : 'bg-white/90')
                     }`}>
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                        <div className="flex items-center gap-3 sm:gap-4">
-                          <span className={`text-xl sm:text-2xl font-bold ${
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2">
+                        <div className="flex items-center gap-2 sm:gap-4">
+                          <span className={`text-lg sm:text-2xl font-bold ${
                             index === 0 
                               ? (darkMode ? 'text-lane-gold' : 'text-amber-500')
                               : (darkMode ? 'text-slate-500' : 'text-slate-400')
@@ -3533,7 +3788,7 @@
                           ) : (
                             <span 
                               onClick={() => startEditingTeam(team)}
-                              className={`text-lg sm:text-xl font-semibold cursor-pointer hover:underline ${darkMode ? 'text-white' : 'text-gray-800'}`}
+                              className={`text-base sm:text-xl font-semibold cursor-pointer hover:underline ${darkMode ? 'text-white' : 'text-gray-800'}`}
                             >
                               {team.name}
                             </span>
@@ -3552,7 +3807,7 @@
                               </div>
                             </div>
                           )}
-                          <span className={`text-2xl sm:text-3xl font-bold ${darkMode ? 'text-cyan-400' : 'text-blue-600'}`}>
+                          <span className={`text-xl sm:text-3xl font-bold ${darkMode ? 'text-cyan-400' : 'text-blue-600'}`}>
                             {scoringMode === 'girls' ? team.girlsScore : scoringMode === 'boys' ? team.boysScore : team.score}
                           </span>
                         </div>
@@ -3620,6 +3875,8 @@
                             onRemove={() => removeEvent(event.id)}
                             canMoveUp={index > 0}
                             canMoveDown={index < events.length - 1}
+                            heatLockEnabled={heatLockEnabled}
+                            aRelayOnly={aRelayOnly}
                           />
                         );
                       }
@@ -3628,7 +3885,7 @@
                       return (
                         <div key={event.id} className={`rounded-xl p-4 ${darkMode ? 'bg-pool-mid/80 border border-white/10' : 'bg-white border border-slate-200 shadow-sm'}`}>
                           <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <h5 className={`font-semibold text-lg ${darkMode ? 'text-white' : 'text-slate-800'}`}>
                                 <span className={event.gender === 'girls' ? (darkMode ? 'text-pink-400' : 'text-pink-600') : (darkMode ? 'text-blue-400' : 'text-blue-600')}>
                                   {event.gender === 'girls' ? 'Girls' : 'Boys'}
@@ -3638,6 +3895,17 @@
                                   {event.name}
                                 </span>
                               </h5>
+                              {/* Visual indicators for NLC/Sectionals settings */}
+                              {heatLockEnabled && !isRelay && (
+                                <span className={`text-xs px-2 py-0.5 rounded-full ${darkMode ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-amber-100 text-amber-700 border border-amber-200'}`}>
+                                  🔒 1-8 Finals / 9-16 Consolation
+                                </span>
+                              )}
+                              {aRelayOnly && isRelay && (
+                                <span className={`text-xs px-2 py-0.5 rounded-full ${darkMode ? 'bg-teal-500/20 text-teal-400 border border-teal-500/30' : 'bg-teal-100 text-teal-700 border border-teal-200'}`}>
+                                  🅰️ A-Relay Only Scores
+                                </span>
+                              )}
                             </div>
                             <div className="flex items-center gap-2">
                               <button
@@ -3714,6 +3982,8 @@
                               onRemove={() => removeEvent(event.id)}
                               canMoveUp={actualIndex > 0}
                               canMoveDown={actualIndex < events.length - 1}
+                              heatLockEnabled={heatLockEnabled}
+                              aRelayOnly={aRelayOnly}
                             />
                           );
                         }
@@ -3722,8 +3992,19 @@
                         return (
                           <div key={event.id} className={`rounded-xl p-4 ${darkMode ? 'bg-pool-mid/80 border border-white/10' : 'bg-white border border-slate-200 shadow-sm'}`}>
                             <div className="flex items-center justify-between mb-3">
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2 flex-wrap">
                                 <h5 className={`font-semibold text-lg ${isDiving ? (darkMode ? 'text-orange-400' : 'text-orange-600') : (darkMode ? 'text-white' : 'text-slate-800')}`}>{event.name}</h5>
+                                {/* Visual indicators for NLC/Sectionals settings */}
+                                {heatLockEnabled && !isRelay && (
+                                  <span className={`text-xs px-2 py-0.5 rounded-full ${darkMode ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-amber-100 text-amber-700 border border-amber-200'}`}>
+                                    🔒 1-8 Finals / 9-16 Consolation
+                                  </span>
+                                )}
+                                {aRelayOnly && isRelay && (
+                                  <span className={`text-xs px-2 py-0.5 rounded-full ${darkMode ? 'bg-teal-500/20 text-teal-400 border border-teal-500/30' : 'bg-teal-100 text-teal-700 border border-teal-200'}`}>
+                                    🅰️ A-Relay Only Scores
+                                  </span>
+                                )}
                               </div>
                               <div className="flex items-center gap-2">
                                 <button
@@ -3881,8 +4162,9 @@
                   Swim Meet Score is not liable for any scoring errors or data loss.
                 </p>
                 <p>
-                  <strong>Privacy:</strong> All data is stored locally in your browser. We do not collect, store, or transmit your meet data to any servers. 
-                  No personal information is required to use this application.
+                  <strong>Privacy & Data:</strong> Your meet data is stored locally in your browser using localStorage and is never transmitted to our servers. 
+                  We use Google Analytics to collect anonymous usage statistics (pages visited, features used) to improve the app. 
+                  No personal information is required to use this application. By using SwimMeetScore, you consent to this data collection.
                 </p>
               </div>
             </div>

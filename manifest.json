@@ -1,20 +1,24 @@
 {
-  "name": "SwimMeetScore",
+  "name": "Swim Meet Score",
   "short_name": "SwimMeetScore",
-  "start_url": "/",
+  "description": "Free swim meet scoring tool - Track team scores in real-time",
+  "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#1e90ff",
+  "background_color": "#0f2942",
+  "theme_color": "#0f2942",
   "icons": [
     {
-      "src": "/icon-192.png",
+      "src": "./favicon192x192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "/icon-512.png",
+      "src": "./favicon512x512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
