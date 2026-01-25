@@ -3879,14 +3879,21 @@
                     <p className={`text-xs mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                       Templates save all point systems, number of places, and event lineup
                     </p>
-                  </div>
+                  </CollapsibleSection>
 
-                  <div className="mb-6">
-                    <h4 className={`font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>Number of Scoring Places</h4>
-                    
-                    <div className="mb-4">
-                      <label htmlFor="diving-places-input" className={`text-sm mb-2 block ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Diving Events</label>
-                      <div className="flex items-center gap-3 flex-wrap">
+                  {/* Number of Scoring Places Section */}
+                  <CollapsibleSection
+                    id="scoring-places"
+                    title="Number of Scoring Places"
+                    description={`Diving: ${numDivingPlaces}, Individual: ${numIndividualPlaces}, Relay: ${numRelayPlaces}`}
+                    isCollapsed={collapsedSections['scoring-places']}
+                    onToggle={toggleSection}
+                    darkMode={darkMode}
+                    accentColor="blue"
+                  >
+                    <div className="space-y-4">
+                      <div className={`flex items-center justify-between p-3 rounded-lg ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+                        <label htmlFor="diving-places-input" className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Diving Events</label>
                         <NumberInput
                           value={numDivingPlaces}
                           onChange={handleManualSettingChange(setNumDivingPlaces)}
@@ -3898,9 +3905,8 @@
                         />
                       </div>
 
-                    <div className="mb-4">
-                      <label htmlFor="individual-places-input" className={`text-sm mb-2 block ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Individual Events</label>
-                      <div className="flex items-center gap-3 flex-wrap">
+                      <div className={`flex items-center justify-between p-3 rounded-lg ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+                        <label htmlFor="individual-places-input" className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Individual Events</label>
                         <NumberInput
                           value={numIndividualPlaces}
                           onChange={handleManualSettingChange(setNumIndividualPlaces)}
@@ -3912,9 +3918,8 @@
                         />
                       </div>
 
-                    <div>
-                      <label htmlFor="relay-places-input" className={`text-sm mb-2 block ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Relay Events</label>
-                      <div className="flex items-center gap-3 flex-wrap">
+                      <div className={`flex items-center justify-between p-3 rounded-lg ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+                        <label htmlFor="relay-places-input" className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Relay Events</label>
                         <NumberInput
                           value={numRelayPlaces}
                           onChange={handleManualSettingChange(setNumRelayPlaces)}
