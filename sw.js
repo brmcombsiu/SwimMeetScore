@@ -1,5 +1,5 @@
 // SwimMeetScore Service Worker
-const CACHE_NAME = 'swimmeetscore-v5';
+const CACHE_NAME = 'swimmeetscore-v6';
 
 // Files to cache for offline use
 const CACHE_FILES = [
@@ -120,7 +120,9 @@ function fetchAndCache(request) {
   return fetch(request)
     .then((response) => {
       // Don't cache bad responses
-      if (!response || response.status !== 200 || response.type !== 'basic') {
+      // Allow 'basic' (same-origin) and 'cors' (CDN with CORS headers) responses
+      // Block 'opaque' responses since we can't verify their status
+      if (!response || response.status !== 200 || (response.type !== 'basic' && response.type !== 'cors')) {
         return response;
       }
 
