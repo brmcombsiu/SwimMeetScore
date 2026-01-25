@@ -2724,6 +2724,63 @@
         trackEvent('load_template', { template_name: 'sectionals_meet' });
       };
 
+      // USA Swimming Official Scoring by Number of Lanes (Multi-team Meet)
+      // Individual points follow USA Swimming standards, relay points are doubled
+      const usaSwimmingScoring = {
+        4: { individual: [5, 3, 2, 1], relay: [10, 6, 4, 2] },
+        5: { individual: [6, 4, 3, 2, 1], relay: [12, 8, 6, 4, 2] },
+        6: { individual: [7, 5, 4, 3, 2, 1], relay: [14, 10, 8, 6, 4, 2] },
+        7: { individual: [8, 6, 5, 4, 3, 2, 1], relay: [16, 12, 10, 8, 6, 4, 2] },
+        8: { individual: [9, 7, 6, 5, 4, 3, 2, 1], relay: [18, 14, 12, 10, 8, 6, 4, 2] },
+        9: { individual: [10, 8, 7, 6, 5, 4, 3, 2, 1], relay: [20, 16, 14, 12, 10, 8, 6, 4, 2] },
+        10: { individual: [11, 9, 8, 7, 6, 5, 4, 3, 2, 1], relay: [22, 18, 16, 14, 12, 10, 8, 6, 4, 2] }
+      };
+
+      const loadUSASwimmingMeet = (lanes) => {
+        const scoring = usaSwimmingScoring[lanes];
+        if (!scoring) return;
+
+        const numPlaces = lanes;
+        setNumIndividualPlaces(numPlaces);
+        setNumRelayPlaces(numPlaces);
+        setNumDivingPlaces(numPlaces);
+
+        // Build point systems from arrays, filling remaining places with 0
+        const buildPointSystem = (pointsArray) => {
+          const system = {};
+          for (let i = 1; i <= 20; i++) {
+            system[i] = pointsArray[i - 1] || 0;
+          }
+          return system;
+        };
+
+        setIndividualPointSystem(buildPointSystem(scoring.individual));
+        setRelayPointSystem(buildPointSystem(scoring.relay));
+        setDivingPointSystem(buildPointSystem(scoring.individual)); // Diving uses individual points
+
+        // Disable NLC/Sectionals-specific features
+        setHeatLockEnabled(false);
+        setARelayOnly(false);
+
+        // Set default teams equal to number of lanes
+        const usaTeams = [];
+        for (let i = 1; i <= lanes; i++) {
+          usaTeams.push({ id: utils.generateId(), name: `Team ${i}`, score: 0, girlsScore: 0, boysScore: 0 });
+        }
+        setTeams(usaTeams);
+
+        const newEvents = competitionEvents.map((e) => ({
+          id: utils.generateId(),
+          name: e.name,
+          gender: e.gender,
+          results: []
+        }));
+        setEvents(newEvents);
+        recalculateAllScores(usaTeams, newEvents);
+        setActiveTemplate(`usa_swimming_${lanes}`);
+        trackEvent('load_template', { template_name: `usa_swimming_${lanes}_lane` });
+      };
+
       // Generate shareable score text
       const generateShareText = () => {
         const modeLabel = scoringMode === 'combined' ? '' : scoringMode === 'girls' ? ' (Girls)' : ' (Boys)';
@@ -3524,6 +3581,26 @@
                       >
                         Sectionals
                       </button>
+                    </div>
+
+                    <div className="mb-4">
+                      <p className={`text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                        USA Swimming Multi-team Meet (by lane count):
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {[4, 5, 6, 7, 8, 9, 10].map(lanes => (
+                          <button
+                            key={lanes}
+                            onClick={() => loadUSASwimmingMeet(lanes)}
+                            className={`px-3 py-1.5 rounded-lg ${darkMode ? 'bg-indigo-600 hover:bg-indigo-700 active:ring-4 active:ring-indigo-400 active:scale-95' : 'bg-indigo-500 hover:bg-indigo-600 active:ring-4 active:ring-indigo-300 active:scale-95'} text-white text-sm font-medium transition-all shadow-md hover:shadow-lg ${activeTemplate === 'usa_swimming_' + lanes ? 'ring-4 ring-white ring-offset-2 ring-offset-transparent' : ''}`}
+                          >
+                            {lanes}-Lane
+                          </button>
+                        ))}
+                      </div>
+                      <p className={`text-xs mt-1.5 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        Relay points are doubled from individual points
+                      </p>
                     </div>
 
                     {savedTemplates.length > 0 && (
