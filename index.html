@@ -3797,14 +3797,14 @@
                       <p className={`text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                         USA Swimming Multi-team Meet (by lane count):
                       </p>
-                      <div className="grid grid-cols-4 sm:flex sm:flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-2">
                         {[4, 5, 6, 7, 8, 9, 10].map(lanes => (
                           <button
                             key={lanes}
                             onClick={() => loadUSASwimmingMeet(lanes)}
-                            className={`px-3 py-2 rounded-lg ${darkMode ? 'bg-indigo-600 hover:bg-indigo-700 active:ring-4 active:ring-indigo-400 active:scale-95' : 'bg-indigo-500 hover:bg-indigo-600 active:ring-4 active:ring-indigo-300 active:scale-95'} text-white text-sm font-medium transition-all shadow-md hover:shadow-lg ${activeTemplate === 'usa_swimming_' + lanes ? 'ring-4 ring-white ring-offset-2 ring-offset-transparent' : ''}`}
+                            className={`px-3 py-1.5 rounded-lg ${darkMode ? 'bg-indigo-600 hover:bg-indigo-700 active:ring-4 active:ring-indigo-400 active:scale-95' : 'bg-indigo-500 hover:bg-indigo-600 active:ring-4 active:ring-indigo-300 active:scale-95'} text-white text-sm font-medium transition-all shadow-md hover:shadow-lg ${activeTemplate === 'usa_swimming_' + lanes ? 'ring-4 ring-white ring-offset-2 ring-offset-transparent' : ''}`}
                           >
-                            {lanes}
+                            {lanes}-Lane
                           </button>
                         ))}
                       </div>
@@ -3879,21 +3879,14 @@
                     <p className={`text-xs mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                       Templates save all point systems, number of places, and event lineup
                     </p>
-                  </CollapsibleSection>
+                  </div>
 
-                  {/* Number of Scoring Places Section */}
-                  <CollapsibleSection
-                    id="scoring-places"
-                    title="Number of Scoring Places"
-                    description={`Diving: ${numDivingPlaces}, Individual: ${numIndividualPlaces}, Relay: ${numRelayPlaces}`}
-                    isCollapsed={collapsedSections['scoring-places']}
-                    onToggle={toggleSection}
-                    darkMode={darkMode}
-                    accentColor="blue"
-                  >
-                    <div className="space-y-4">
-                      <div className={`flex items-center justify-between p-3 rounded-lg ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
-                        <label htmlFor="diving-places-input" className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Diving Events</label>
+                  <div className="mb-6">
+                    <h4 className={`font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>Number of Scoring Places</h4>
+                    
+                    <div className="mb-4">
+                      <label htmlFor="diving-places-input" className={`text-sm mb-2 block ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Diving Events</label>
+                      <div className="flex items-center gap-3 flex-wrap">
                         <NumberInput
                           value={numDivingPlaces}
                           onChange={handleManualSettingChange(setNumDivingPlaces)}
@@ -3905,8 +3898,9 @@
                         />
                       </div>
 
-                      <div className={`flex items-center justify-between p-3 rounded-lg ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
-                        <label htmlFor="individual-places-input" className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Individual Events</label>
+                    <div className="mb-4">
+                      <label htmlFor="individual-places-input" className={`text-sm mb-2 block ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Individual Events</label>
+                      <div className="flex items-center gap-3 flex-wrap">
                         <NumberInput
                           value={numIndividualPlaces}
                           onChange={handleManualSettingChange(setNumIndividualPlaces)}
@@ -3918,8 +3912,9 @@
                         />
                       </div>
 
-                      <div className={`flex items-center justify-between p-3 rounded-lg ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
-                        <label htmlFor="relay-places-input" className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Relay Events</label>
+                    <div>
+                      <label htmlFor="relay-places-input" className={`text-sm mb-2 block ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Relay Events</label>
+                      <div className="flex items-center gap-3 flex-wrap">
                         <NumberInput
                           value={numRelayPlaces}
                           onChange={handleManualSettingChange(setNumRelayPlaces)}
@@ -3949,9 +3944,9 @@
                         value={newTeamName}
                         onChange={(e) => setNewTeamName(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && addTeam()}
-                        placeholder="Enter team name"
+                        placeholder="Team name"
                         aria-label="Team name"
-                        className={`w-full px-3 py-2.5 border rounded-lg ${darkMode ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400' : 'bg-white border-gray-300'}`}
+                        className={`flex-1 px-3 py-2 border rounded-lg ${darkMode ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400' : 'bg-white border-gray-300'}`}
                       />
                       <button
                         onClick={addTeam}
