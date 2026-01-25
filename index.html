@@ -931,13 +931,17 @@
     };
 
     // Place selector with dropdown multiselect for ties
-    const PlaceSelector = ({ event, place, teams, darkMode, pointSystem, numPlaces, onUpdate, consumedByTie }) => {
+    const PlaceSelector = ({ event, place, teams, darkMode, pointSystem, numPlaces, onUpdate, consumedByTie, onToggleDQ }) => {
       const [isOpen, setIsOpen] = useState(false);
       const dropdownRef = useRef(null);
-      
+
       const result = event.results.find(r => r.place === place);
       const selectedTeamIds = result?.teamIds || [];
+      const disqualifiedTeamIds = result?.disqualified || [];
       const placeLabel = place === 1 ? '1st' : place === 2 ? '2nd' : place === 3 ? '3rd' : `${place}th`;
+
+      // Check if a team is DQ'd at this place
+      const isTeamDQ = (teamId) => disqualifiedTeamIds.includes(String(teamId));
       
       // Calculate points display - if there's a tie, show split points
       const numTied = selectedTeamIds.length;
@@ -971,9 +975,19 @@
       // Get display text for selected teams
       const getDisplayText = () => {
         if (selectedTeamIds.length === 0) return '-';
+        const eligibleTeams = selectedTeamIds.filter(id => !disqualifiedTeamIds.includes(String(id)));
+        const dqCount = disqualifiedTeamIds.length;
+
         if (selectedTeamIds.length === 1) {
           const team = teams.find(t => String(t.id) === selectedTeamIds[0]);
-          return team ? team.name : '-';
+          const isDQ = isTeamDQ(selectedTeamIds[0]);
+          return team ? (isDQ ? `${team.name} (DQ)` : team.name) : '-';
+        }
+
+        if (dqCount > 0 && eligibleTeams.length === 0) {
+          return `All DQ (${dqCount})`;
+        } else if (dqCount > 0) {
+          return `Tie (${eligibleTeams.length}) +${dqCount} DQ`;
         }
         return `Tie (${selectedTeamIds.length})`;
       };
@@ -1026,25 +1040,47 @@
               }`} style={{ maxHeight: '400px', overflowY: 'auto' }}>
                 {teams.map(team => {
                   const isChecked = selectedTeamIds.includes(String(team.id));
+                  const isDQ = isTeamDQ(team.id);
                   return (
-                    <label 
-                      key={team.id} 
-                      className={`flex items-center gap-2 px-3 py-2 cursor-pointer transition-colors ${
-                        isChecked 
-                          ? (darkMode ? 'bg-cyan-700' : 'bg-blue-100') 
-                          : (darkMode ? 'hover:bg-gray-600' : 'hover:bg-gray-100')
+                    <div
+                      key={team.id}
+                      className={`flex items-center gap-2 px-3 py-2 transition-colors ${
+                        isDQ
+                          ? (darkMode ? 'bg-red-900/50' : 'bg-red-100')
+                          : isChecked
+                            ? (darkMode ? 'bg-cyan-700' : 'bg-blue-100')
+                            : (darkMode ? 'hover:bg-gray-600' : 'hover:bg-gray-100')
                       }`}
                     >
-                      <input
-                        type="checkbox"
-                        checked={isChecked}
-                        onChange={(e) => handleTeamToggle(team.id, e.target.checked)}
-                        className="w-4 h-4 rounded flex-shrink-0"
-                      />
-                      <span className={`text-sm ${darkMode ? 'text-white' : 'text-gray-800'}`}>
-                        {team.name}
-                      </span>
-                    </label>
+                      <label className="flex items-center gap-2 flex-1 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={(e) => handleTeamToggle(team.id, e.target.checked)}
+                          className="w-4 h-4 rounded flex-shrink-0"
+                        />
+                        <span className={`text-sm ${isDQ ? 'line-through text-red-500' : (darkMode ? 'text-white' : 'text-gray-800')}`}>
+                          {team.name}
+                          {isDQ && ' (DQ)'}
+                        </span>
+                      </label>
+                      {isChecked && onToggleDQ && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onToggleDQ(event.id, place, team.id);
+                          }}
+                          className={`px-2 py-0.5 rounded text-xs font-bold ${
+                            isDQ
+                              ? (darkMode ? 'bg-green-600 text-white hover:bg-green-500' : 'bg-green-600 text-white hover:bg-green-500')
+                              : (darkMode ? 'bg-red-600 text-white hover:bg-red-500' : 'bg-red-600 text-white hover:bg-red-500')
+                          }`}
+                          title={isDQ ? 'Remove DQ' : 'Mark as DQ'}
+                        >
+                          {isDQ ? 'Restore' : 'DQ'}
+                        </button>
+                      )}
+                    </div>
                   );
                 })}
               </div>
@@ -1055,6 +1091,12 @@
           {numTied > 1 && (
             <div className={`text-xs font-medium ${darkMode ? 'text-yellow-400' : 'text-yellow-600'}`}>
               🤝 TIE: {numTied} teams
+            </div>
+          )}
+          {/* DQ indicator */}
+          {disqualifiedTeamIds.length > 0 && (
+            <div className={`text-xs font-medium ${darkMode ? 'text-red-400' : 'text-red-600'}`}>
+              ❌ DQ: {disqualifiedTeamIds.length} {disqualifiedTeamIds.length === 1 ? 'team' : 'teams'}
             </div>
           )}
         </div>
@@ -1074,10 +1116,10 @@
     };
 
     // Quick Entry Event Card - Team-first entry mode (inline, not modal)
-    const QuickEntryEventCard = ({ event, teams, darkMode, numPlaces, pointSystem, onUpdate, onMoveUp, onMoveDown, onRemove, canMoveUp, canMoveDown, heatLockEnabled, aRelayOnly }) => {
+    const QuickEntryEventCard = ({ event, teams, darkMode, numPlaces, pointSystem, onUpdate, onMoveUp, onMoveDown, onRemove, canMoveUp, canMoveDown, heatLockEnabled, aRelayOnly, onToggleDQ }) => {
       const isDiving = event.name === 'Diving';
       const isRelay = event.name.includes('Relay');
-      
+
       // Get current selections from event results
       const getTeamPlaces = (teamId) => {
         const places = [];
@@ -1087,6 +1129,19 @@
           }
         });
         return places.sort((a, b) => a - b);
+      };
+
+      // Check if a team is disqualified at a specific place
+      const isTeamDQ = (teamId, place) => {
+        const result = event.results.find(r => r.place === place);
+        if (!result || !result.disqualified) return false;
+        return result.disqualified.includes(String(teamId));
+      };
+
+      // Check if any team is DQ'd at this place
+      const hasAnyDQAtPlace = (place) => {
+        const result = event.results.find(r => r.place === place);
+        return result && result.disqualified && result.disqualified.length > 0;
       };
       
       const getPlaceLabel = (place) => {
@@ -1191,7 +1246,8 @@
                       const hasOtherTeam = teamsAtPlace.some(id => id !== String(team.id));
                       const consumed = isPlaceConsumed(place) && !isSelected;
                       const points = pointSystem[place] || 0;
-                      
+                      const isDQ = isTeamDQ(team.id, place);
+
                       if (consumed) {
                         return (
                           <div
@@ -1203,72 +1259,103 @@
                           </div>
                         );
                       }
-                      
+
                       return (
-                        <button
-                          key={place}
-                          onClick={() => togglePlace(team.id, place)}
-                          className={`w-8 h-8 sm:w-9 sm:h-9 rounded font-medium text-xs transition-all ${
-                            isSelected
-                              ? (place === 1 
-                                  ? 'bg-gradient-to-br from-amber-400 to-amber-500 text-amber-900' 
-                                  : place === 2 
-                                    ? 'bg-gradient-to-br from-gray-300 to-gray-400 text-gray-800'
-                                    : place === 3 
-                                      ? 'bg-gradient-to-br from-orange-400 to-orange-500 text-orange-900'
-                                      : (darkMode ? 'bg-chlorine text-pool-deep' : 'bg-cyan-600 text-white'))
-                              : hasOtherTeam
-                                ? (darkMode ? 'bg-gray-600/50 text-gray-400 border border-dashed border-gray-500' : 'bg-gray-100 text-gray-400 border border-dashed border-gray-300')
-                                : (darkMode ? 'bg-gray-700/50 text-gray-400 hover:bg-gray-600 border border-gray-600' : 'bg-gray-50 text-gray-500 hover:bg-gray-100 border border-gray-200')
-                          } ${isTie && isSelected ? 'ring-2 ring-yellow-400' : ''}`}
-                          title={`${getPlaceLabel(place)} (${points}pts)${hasOtherTeam && !isSelected ? ' - taken' : ''}`}
-                        >
-                          {place}
-                        </button>
+                        <div key={place} className="relative">
+                          <button
+                            onClick={() => togglePlace(team.id, place)}
+                            className={`w-8 h-8 sm:w-9 sm:h-9 rounded font-medium text-xs transition-all ${
+                              isDQ
+                                ? 'bg-red-600 text-white line-through opacity-70'
+                                : isSelected
+                                  ? (place === 1
+                                      ? 'bg-gradient-to-br from-amber-400 to-amber-500 text-amber-900'
+                                      : place === 2
+                                        ? 'bg-gradient-to-br from-gray-300 to-gray-400 text-gray-800'
+                                        : place === 3
+                                          ? 'bg-gradient-to-br from-orange-400 to-orange-500 text-orange-900'
+                                          : (darkMode ? 'bg-chlorine text-pool-deep' : 'bg-cyan-600 text-white'))
+                                  : hasOtherTeam
+                                    ? (darkMode ? 'bg-gray-600/50 text-gray-400 border border-dashed border-gray-500' : 'bg-gray-100 text-gray-400 border border-dashed border-gray-300')
+                                    : (darkMode ? 'bg-gray-700/50 text-gray-400 hover:bg-gray-600 border border-gray-600' : 'bg-gray-50 text-gray-500 hover:bg-gray-100 border border-gray-200')
+                            } ${isTie && isSelected && !isDQ ? 'ring-2 ring-yellow-400' : ''}`}
+                            title={`${getPlaceLabel(place)} (${points}pts)${hasOtherTeam && !isSelected ? ' - taken' : ''}${isDQ ? ' - DISQUALIFIED' : ''}`}
+                          >
+                            {isDQ ? 'DQ' : place}
+                          </button>
+                          {/* DQ toggle button - appears when team is placed */}
+                          {isSelected && onToggleDQ && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onToggleDQ(event.id, place, team.id);
+                              }}
+                              className={`absolute -top-1 -right-1 w-4 h-4 rounded-full text-[8px] font-bold flex items-center justify-center ${
+                                isDQ
+                                  ? (darkMode ? 'bg-green-500 text-white hover:bg-green-400' : 'bg-green-600 text-white hover:bg-green-500')
+                                  : (darkMode ? 'bg-red-500 text-white hover:bg-red-400' : 'bg-red-600 text-white hover:bg-red-500')
+                              }`}
+                              title={isDQ ? 'Remove DQ (restore placement)' : 'Mark as Disqualified'}
+                            >
+                              {isDQ ? '✓' : 'X'}
+                            </button>
+                          )}
+                        </div>
                       );
                     })}
                   </div>
                   
-                  {/* Points earned indicator - accounts for ties and consumed places */}
+                  {/* Points earned indicator - accounts for ties, consumed places, and DQs */}
                   {teamPlaces.length > 0 && (
-                    <div className={`text-xs font-medium ml-auto ${darkMode ? 'text-chlorine' : 'text-cyan-600'}`}>
+                    <div className={`text-xs font-medium ml-auto ${
+                      teamPlaces.every(p => isTeamDQ(team.id, p))
+                        ? 'text-red-500 line-through'
+                        : (darkMode ? 'text-chlorine' : 'text-cyan-600')
+                    }`}>
                       {(() => {
+                        // Check if this team is DQ'd at all their places
+                        const allDQ = teamPlaces.every(p => isTeamDQ(team.id, p));
+                        if (allDQ) return 'DQ';
+
                         let totalPts = 0;
-                        
-                        // Build a map of place -> teamIds for this event
-                        const resultsByPlace = {};
-                        for (let p = 1; p <= numPlaces; p++) {
-                          const teamsAtP = getTeamsAtPlace(p);
-                          if (teamsAtP.length > 0) {
-                            resultsByPlace[p] = teamsAtP;
+
+                        // Sort results by place and build eligible teams list (excluding DQs)
+                        const sortedResults = [...event.results]
+                          .filter(r => r && r.place && r.teamIds && r.teamIds.length > 0)
+                          .sort((a, b) => a.place - b.place);
+
+                        // Build list of eligible teams in order
+                        const eligibleGroups = [];
+                        sortedResults.forEach(result => {
+                          const dqTeams = result.disqualified || [];
+                          const eligibleTeams = result.teamIds.filter(id => !dqTeams.includes(String(id)));
+                          if (eligibleTeams.length > 0) {
+                            eligibleGroups.push({
+                              originalPlace: result.place,
+                              teamIds: eligibleTeams
+                            });
                           }
-                        }
-                        
-                        // Process places sequentially, skipping consumed ones (same logic as recalculateAllScores)
-                        let currentPlace = 1;
-                        while (currentPlace <= numPlaces) {
-                          const teamsAtPlace = resultsByPlace[currentPlace];
-                          
-                          if (teamsAtPlace && teamsAtPlace.length > 0) {
-                            const numTied = teamsAtPlace.length;
-                            
-                            // Check if this team is at this place
-                            if (teamsAtPlace.includes(String(team.id))) {
-                              // Sum up points for all places consumed by this tie
-                              let tiedPoints = 0;
-                              for (let i = 0; i < numTied && (currentPlace + i) <= numPlaces; i++) {
-                                tiedPoints += (pointSystem[currentPlace + i]) || 0;
-                              }
-                              totalPts += tiedPoints / numTied;
+                        });
+
+                        // Calculate points with place shifting
+                        let currentAwardPlace = 1;
+                        eligibleGroups.forEach(group => {
+                          if (currentAwardPlace > numPlaces) return;
+
+                          const numTied = group.teamIds.length;
+
+                          // Check if this team is in this group
+                          if (group.teamIds.includes(String(team.id))) {
+                            let tiedPoints = 0;
+                            for (let i = 0; i < numTied && (currentAwardPlace + i) <= numPlaces; i++) {
+                              tiedPoints += (pointSystem[currentAwardPlace + i]) || 0;
                             }
-                            
-                            // Skip places consumed by this tie
-                            currentPlace += numTied;
-                          } else {
-                            currentPlace++;
+                            totalPts += tiedPoints / numTied;
                           }
-                        }
-                        
+
+                          currentAwardPlace += numTied;
+                        });
+
                         return Math.round(totalPts * 10) / 10;
                       })()}pt
                     </div>
@@ -1920,56 +2007,66 @@
 
           eventsList.forEach(event => {
             if (!event || !event.results || !Array.isArray(event.results)) return;
-            
+
             const isDiving = event.name === 'Diving';
             const isRelay = event.name && event.name.includes('Relay');
             const pointSystem = isDiving ? divingPointSystem : isRelay ? relayPointSystem : individualPointSystem;
             const numPlaces = isDiving ? numDivingPlaces : isRelay ? numRelayPlaces : numIndividualPlaces;
-            
-            // Group results by place to find ties
-            const resultsByPlace = {};
-            event.results.forEach(result => {
-              if (!result || !result.place || !result.teamIds || !Array.isArray(result.teamIds)) return;
-              resultsByPlace[result.place] = result.teamIds;
-            });
-            
-            // Calculate points with tie handling
-            // Places are consumed as we go - ties consume multiple places
-            let currentPlace = 1;
-            
-            while (currentPlace <= numPlaces) {
-              const teamsAtPlace = resultsByPlace[currentPlace];
-              
-              if (teamsAtPlace && teamsAtPlace.length > 0) {
-                const numTied = teamsAtPlace.length;
-                
-                // Sum up points for all places consumed by this tie
-                let totalPoints = 0;
-                for (let i = 0; i < numTied && (currentPlace + i) <= numPlaces; i++) {
-                  totalPoints += (pointSystem && pointSystem[currentPlace + i]) || 0;
-                }
-                
-                // Split points evenly among tied teams
-                const pointsPerTeam = totalPoints / numTied;
-                
-                teamsAtPlace.forEach(teamId => {
-                  if (teamId) {
-                    scores[teamId] = (scores[teamId] || 0) + pointsPerTeam;
-                    
-                    if (event.gender === 'girls') {
-                      girlsScores[teamId] = (girlsScores[teamId] || 0) + pointsPerTeam;
-                    } else if (event.gender === 'boys') {
-                      boysScores[teamId] = (boysScores[teamId] || 0) + pointsPerTeam;
-                    }
-                  }
+
+            // Sort results by place
+            const sortedResults = [...event.results]
+              .filter(r => r && r.place && r.teamIds && Array.isArray(r.teamIds) && r.teamIds.length > 0)
+              .sort((a, b) => a.place - b.place);
+
+            // Build list of eligible (non-DQ) teams in place order
+            // When a DQ happens, subsequent places shift up
+            const eligibleTeamsInOrder = [];
+
+            sortedResults.forEach(result => {
+              const disqualifiedTeams = result.disqualified || [];
+              const eligibleTeams = result.teamIds.filter(id => !disqualifiedTeams.includes(String(id)));
+
+              if (eligibleTeams.length > 0) {
+                eligibleTeamsInOrder.push({
+                  originalPlace: result.place,
+                  teamIds: eligibleTeams
                 });
-                
-                // Skip places consumed by this tie
-                currentPlace += numTied;
-              } else {
-                currentPlace++;
               }
-            }
+            });
+
+            // Calculate points with place shifting for DQs
+            // Eligible teams are awarded points based on their new shifted positions
+            let currentAwardPlace = 1;
+
+            eligibleTeamsInOrder.forEach(group => {
+              if (currentAwardPlace > numPlaces) return;
+
+              const numTied = group.teamIds.length;
+
+              // Sum up points for all places consumed by this tie
+              let totalPoints = 0;
+              for (let i = 0; i < numTied && (currentAwardPlace + i) <= numPlaces; i++) {
+                totalPoints += (pointSystem && pointSystem[currentAwardPlace + i]) || 0;
+              }
+
+              // Split points evenly among tied teams
+              const pointsPerTeam = numTied > 0 ? totalPoints / numTied : 0;
+
+              group.teamIds.forEach(teamId => {
+                if (teamId) {
+                  scores[teamId] = (scores[teamId] || 0) + pointsPerTeam;
+
+                  if (event.gender === 'girls') {
+                    girlsScores[teamId] = (girlsScores[teamId] || 0) + pointsPerTeam;
+                  } else if (event.gender === 'boys') {
+                    boysScores[teamId] = (boysScores[teamId] || 0) + pointsPerTeam;
+                  }
+                }
+              });
+
+              // Move to next available place (skip consumed places from ties)
+              currentAwardPlace += numTied;
+            });
           });
 
           setTeams(teamsList.map(team => ({
@@ -2312,6 +2409,50 @@
         } catch (e) {
           console.error('Error bulk updating event results:', e);
           setError('Failed to update results. Please try again.');
+        }
+      };
+
+      // Toggle disqualification status for a team at a specific place
+      // When a team is DQ'd, subsequent places shift up and points are awarded to new places
+      const toggleDisqualification = (eventId, place, teamId) => {
+        try {
+          if (!eventId || !place || !teamId) return;
+
+          const newEvents = events.map(event => {
+            if (event && event.id === eventId) {
+              const newResults = event.results.map(result => {
+                if (result && result.place === place) {
+                  const currentDQ = result.disqualified || [];
+                  const teamIdStr = String(teamId);
+                  const isCurrentlyDQ = currentDQ.includes(teamIdStr);
+
+                  if (isCurrentlyDQ) {
+                    // Remove DQ status
+                    return {
+                      ...result,
+                      disqualified: currentDQ.filter(id => id !== teamIdStr)
+                    };
+                  } else {
+                    // Add DQ status
+                    return {
+                      ...result,
+                      disqualified: [...currentDQ, teamIdStr]
+                    };
+                  }
+                }
+                return result;
+              });
+              return { ...event, results: newResults };
+            }
+            return event;
+          });
+
+          setEvents(newEvents);
+          recalculateAllScores(teams, newEvents);
+          triggerHaptic('medium');
+        } catch (e) {
+          console.error('Error toggling disqualification:', e);
+          setError('Failed to update disqualification. Please try again.');
         }
       };
 
@@ -2864,15 +3005,32 @@
               sortedResults.forEach((result) => {
                 const placeNum = result.place;
                 const placeStr = placeNum === 1 ? '1st' : placeNum === 2 ? '2nd' : placeNum === 3 ? '3rd' : placeNum + 'th';
-                const teamNames = result.teamIds.map(id => {
+                const dqTeams = result.disqualified || [];
+
+                // Show eligible teams (not DQ'd)
+                const eligibleTeamIds = result.teamIds.filter(id => !dqTeams.includes(String(id)));
+                const eligibleTeamNames = eligibleTeamIds.map(id => {
                   const team = teams.find(t => String(t.id) === String(id));
                   return team ? team.name : 'Unknown';
                 }).join(', ');
-                
-                if (result.teamIds.length > 1) {
-                  body += '  ' + placeStr + ' (TIE): ' + teamNames + '\n';
-                } else {
-                  body += '  ' + placeStr + ': ' + teamNames + '\n';
+
+                // Show DQ'd teams separately
+                const dqTeamNames = dqTeams.map(id => {
+                  const team = teams.find(t => String(t.id) === String(id));
+                  return team ? team.name : 'Unknown';
+                }).join(', ');
+
+                if (eligibleTeamIds.length > 0) {
+                  if (eligibleTeamIds.length > 1) {
+                    body += '  ' + placeStr + ' (TIE): ' + eligibleTeamNames + '\n';
+                  } else {
+                    body += '  ' + placeStr + ': ' + eligibleTeamNames + '\n';
+                  }
+                }
+
+                // Show DQ'd teams
+                if (dqTeams.length > 0) {
+                  body += '  ' + placeStr + ' (DQ): ' + dqTeamNames + '\n';
                 }
               });
             } else {
@@ -3877,6 +4035,7 @@
                             canMoveDown={index < events.length - 1}
                             heatLockEnabled={heatLockEnabled}
                             aRelayOnly={aRelayOnly}
+                            onToggleDQ={toggleDisqualification}
                           />
                         );
                       }
@@ -3944,6 +4103,7 @@
                                   numPlaces={numPlaces}
                                   onUpdate={updateEventResult}
                                   consumedByTie={consumedPlaces.has(place)}
+                                  onToggleDQ={toggleDisqualification}
                                 />
                               ));
                             })()}
@@ -3984,6 +4144,7 @@
                               canMoveDown={actualIndex < events.length - 1}
                               heatLockEnabled={heatLockEnabled}
                               aRelayOnly={aRelayOnly}
+                              onToggleDQ={toggleDisqualification}
                             />
                           );
                         }
@@ -4043,6 +4204,7 @@
                                     numPlaces={numPlaces}
                                     onUpdate={updateEventResult}
                                     consumedByTie={consumedPlaces.has(place)}
+                                    onToggleDQ={toggleDisqualification}
                                   />
                                 ));
                               })()}
