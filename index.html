@@ -1685,15 +1685,16 @@
       // Capture the PWA install prompt
       useEffect(() => {
         const handleBeforeInstallPrompt = (e) => {
-          // Prevent the mini-infobar from appearing on mobile
-          e.preventDefault();
-          // Save the event so it can be triggered later
+          // Save the event so it can be triggered later via manual install button
           setDeferredPrompt(e);
 
-          // Auto-show the install prompt after 3 seconds for first-time visitors
-          // This ensures prompt() is called after preventDefault()
+          // Only prevent default and auto-show for first-time visitors
+          // This ensures prompt() is always called after preventDefault()
           const hasSeenPrompt = utils.loadFromStorage('hasSeenInstallPrompt', false);
           if (!hasSeenPrompt) {
+            // Prevent the mini-infobar from appearing on mobile
+            e.preventDefault();
+            // Auto-show the install prompt after 3 seconds
             setTimeout(() => {
               e.prompt();
               e.userChoice.then((result) => {
@@ -1703,6 +1704,8 @@
               });
             }, 3000);
           }
+          // For returning visitors, let the browser handle the prompt naturally
+          // They can also use the manual install button if available
         };
 
         window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
