@@ -1599,28 +1599,10 @@
       useEffect(() => {
         const handleBeforeInstallPrompt = (e) => {
           // Save the event so it can be triggered later (for the install button in About section)
-          // Note: We don't call e.preventDefault() here so the browser can show its default install banner
+          // We don't call e.preventDefault() so the browser can show its default install banner
           // The saved event allows users to also install via our custom button if they missed the banner
+          // Note: We cannot auto-call prompt() because browsers require it to be triggered by a user gesture
           setDeferredPrompt(e);
-
-          // Only prevent default and auto-show for first-time visitors
-          // This ensures prompt() is always called after preventDefault()
-          const hasSeenPrompt = utils.loadFromStorage('hasSeenInstallPrompt', false);
-          if (!hasSeenPrompt) {
-            // Prevent the mini-infobar from appearing on mobile
-            e.preventDefault();
-            // Auto-show the install prompt after 3 seconds
-            setTimeout(() => {
-              e.prompt();
-              e.userChoice.then((result) => {
-                trackEvent('pwa_install_auto_prompt', { outcome: result.outcome });
-                utils.saveToStorage('hasSeenInstallPrompt', true);
-                setDeferredPrompt(null);
-              });
-            }, 3000);
-          }
-          // For returning visitors, let the browser handle the prompt naturally
-          // They can also use the manual install button if available
         };
 
         window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
