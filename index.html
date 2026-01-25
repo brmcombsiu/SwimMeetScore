@@ -778,7 +778,7 @@
     );
 
     // Mobile-friendly number input with +/- buttons
-    const NumberInput = ({ value, onChange, min = 1, max = 20, darkMode, className = "", label = "" }) => {
+    const NumberInput = ({ value, onChange, min = 1, max = 20, darkMode, className = "", label = "", id = "" }) => {
       const handleDecrement = () => {
         const newValue = Math.max(min, (parseInt(value, 10) || min) - 1);
         onChange(newValue);
@@ -824,11 +824,12 @@
             value={value}
             onChange={handleInputChange}
             className={`w-16 px-2 py-2 border-t border-b text-center font-medium ${
-              darkMode 
-                ? 'bg-gray-700 border-gray-500 text-white' 
+              darkMode
+                ? 'bg-gray-700 border-gray-500 text-white'
                 : 'bg-white border-gray-300 text-gray-800'
             }`}
             style={{ minHeight: '44px' }}
+            id={id || undefined}
             aria-label={label}
           />
           <button
@@ -3557,6 +3558,7 @@
                           onChange={(e) => setNewTemplateName(e.target.value)}
                           onKeyDown={(e) => e.key === 'Enter' && saveTemplate()}
                           placeholder="Template name"
+                          aria-label="Template name"
                           autoFocus
                           className={`flex-1 px-3 py-2 border rounded-lg ${darkMode ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400' : 'bg-white border-gray-300'}`}
                         />
@@ -3594,7 +3596,7 @@
                     <h4 className={`font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>Number of Scoring Places</h4>
                     
                     <div className="mb-4">
-                      <label className={`text-sm mb-2 block ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Diving Events</label>
+                      <label htmlFor="diving-places-input" className={`text-sm mb-2 block ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Diving Events</label>
                       <div className="flex items-center gap-3 flex-wrap">
                         <NumberInput
                           value={numDivingPlaces}
@@ -3603,13 +3605,14 @@
                           max={20}
                           darkMode={darkMode}
                           label="diving places"
+                          id="diving-places-input"
                         />
                         <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>(1-20)</span>
                       </div>
                     </div>
 
                     <div className="mb-4">
-                      <label className={`text-sm mb-2 block ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Individual Events</label>
+                      <label htmlFor="individual-places-input" className={`text-sm mb-2 block ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Individual Events</label>
                       <div className="flex items-center gap-3 flex-wrap">
                         <NumberInput
                           value={numIndividualPlaces}
@@ -3618,13 +3621,14 @@
                           max={20}
                           darkMode={darkMode}
                           label="individual places"
+                          id="individual-places-input"
                         />
                         <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>(1-20)</span>
                       </div>
                     </div>
 
                     <div>
-                      <label className={`text-sm mb-2 block ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Relay Events</label>
+                      <label htmlFor="relay-places-input" className={`text-sm mb-2 block ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Relay Events</label>
                       <div className="flex items-center gap-3 flex-wrap">
                         <NumberInput
                           value={numRelayPlaces}
@@ -3633,6 +3637,7 @@
                           max={20}
                           darkMode={darkMode}
                           label="relay places"
+                          id="relay-places-input"
                         />
                         <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>(1-20)</span>
                       </div>
@@ -3648,6 +3653,7 @@
                         onChange={(e) => setNewTeamName(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && addTeam()}
                         placeholder="Team name"
+                        aria-label="Team name"
                         className={`flex-1 px-3 py-2 border rounded-lg ${darkMode ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400' : 'bg-white border-gray-300'}`}
                       />
                       <button
@@ -3822,6 +3828,7 @@
                                 if (e.key === 'Escape') cancelEditingTeam();
                               }}
                               autoFocus
+                              aria-label="Edit team name"
                               className={`text-lg sm:text-xl font-semibold px-2 py-1 border rounded ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}`}
                             />
                           ) : (
@@ -4103,6 +4110,7 @@
                       onKeyDown={(e) => e.key === 'Enter' && addEvent()}
                       placeholder={newEventType === 'diving' ? 'Diving (name auto-filled)' : newEventType === 'relay' ? 'e.g., 200 Medley' : 'e.g., 100 Backstroke'}
                       disabled={newEventType === 'diving'}
+                      aria-label="Event name"
                       className={`flex-1 px-3 py-2 border rounded-lg ${darkMode ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400' : 'bg-white border-gray-300'} ${newEventType === 'diving' ? 'opacity-50' : ''}`}
                     />
                     <div className="flex gap-2 flex-wrap">
@@ -4113,6 +4121,7 @@
                           if (e.target.value === 'diving') setNewEventName('Diving');
                           else if (newEventName === 'Diving') setNewEventName('');
                         }}
+                        aria-label="Event type"
                         className={`flex-1 sm:flex-none px-3 py-2 border rounded-lg ${darkMode ? 'bg-gray-600 border-gray-500 text-white' : 'bg-white border-gray-300'}`}
                       >
                         <option value="individual">Individual</option>
@@ -4122,6 +4131,7 @@
                       <select
                         value={newEventGender}
                         onChange={(e) => setNewEventGender(e.target.value)}
+                        aria-label="Event gender"
                         className={`flex-1 sm:flex-none px-3 py-2 border rounded-lg ${darkMode ? 'bg-gray-600 border-gray-500 text-white' : 'bg-white border-gray-300'}`}
                       >
                         <option value="girls">Girls</option>
