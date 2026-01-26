@@ -1946,6 +1946,9 @@
       });
       const [editingTeamId, setEditingTeamId] = useState(null);
       const [editingTeamName, setEditingTeamName] = useState('');
+      // Separate editing state for settings panel to avoid conflicts with scoreboard
+      const [settingsEditingTeamId, setSettingsEditingTeamId] = useState(null);
+      const [settingsEditingTeamName, setSettingsEditingTeamName] = useState('');
       const [newEventName, setNewEventName] = useState('');
       const [newEventGender, setNewEventGender] = useState('girls');
       const [newEventType, setNewEventType] = useState('individual');
@@ -2301,6 +2304,42 @@
       const cancelEditingTeam = () => {
         setEditingTeamId(null);
         setEditingTeamName('');
+      };
+
+      // Settings panel team editing functions (separate from scoreboard)
+      const startEditingTeamInSettings = (team) => {
+        setSettingsEditingTeamId(team.id);
+        setSettingsEditingTeamName(team.name);
+      };
+
+      const saveTeamNameInSettings = (teamId) => {
+        const validation = utils.validateTeamName(settingsEditingTeamName);
+        if (!validation.valid) {
+          setError(validation.error);
+          return;
+        }
+
+        // Check for duplicate names
+        const duplicate = teams.find(t => t.id !== teamId && t.name.toLowerCase() === settingsEditingTeamName.trim().toLowerCase());
+        if (duplicate) {
+          setError('A team with this name already exists.');
+          return;
+        }
+
+        try {
+          setTeams(teams.map(t => t.id === teamId ? { ...t, name: settingsEditingTeamName.trim() } : t));
+          setSettingsEditingTeamId(null);
+          setSettingsEditingTeamName('');
+          setError(null);
+        } catch (e) {
+          console.error('Error saving team name:', e);
+          setError('Failed to save team name. Please try again.');
+        }
+      };
+
+      const cancelEditingTeamInSettings = () => {
+        setSettingsEditingTeamId(null);
+        setSettingsEditingTeamName('');
       };
 
       const addEvent = () => {
@@ -3764,6 +3803,9 @@
                       if (!showSettings) {
                         setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100);
                         trackEvent('open_settings');
+                      } else {
+                        // Clear any ongoing settings edit when closing
+                        cancelEditingTeamInSettings();
                       }
                     }}
                     className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition text-sm font-medium ${darkMode ? 'bg-chlorine/20 hover:bg-chlorine/30 text-chlorine border border-chlorine/30' : 'bg-cyan-600 hover:bg-cyan-700 text-white'}`}
@@ -3788,7 +3830,7 @@
                       <h3 className={`text-xl font-bold ${darkMode ? 'text-chlorine' : 'text-white'}`}>Settings</h3>
                     </div>
                     <button
-                      onClick={() => setShowSettings(false)}
+                      onClick={() => { setShowSettings(false); cancelEditingTeamInSettings(); }}
                       className={`p-2 rounded-lg transition ${darkMode ? 'bg-white/10 hover:bg-white/20' : 'bg-white/20 hover:bg-white/30'}`}
                     >
                       <X className={`w-5 h-5 ${darkMode ? 'text-white' : 'text-white'}`} />
@@ -3848,15 +3890,15 @@
                       <div className="flex flex-wrap gap-2">
                         {teams.map(team => (
                           <div key={team.id} className={`flex items-center gap-2 px-3 py-2 rounded-lg ${darkMode ? 'bg-gray-600 text-white' : 'bg-white border border-gray-200'}`}>
-                            {editingTeamId === team.id ? (
+                            {settingsEditingTeamId === team.id ? (
                               <input
                                 type="text"
-                                value={editingTeamName}
-                                onChange={(e) => setEditingTeamName(e.target.value)}
-                                onBlur={() => saveTeamName(team.id)}
+                                value={settingsEditingTeamName}
+                                onChange={(e) => setSettingsEditingTeamName(e.target.value)}
+                                onBlur={() => saveTeamNameInSettings(team.id)}
                                 onKeyDown={(e) => {
-                                  if (e.key === 'Enter') saveTeamName(team.id);
-                                  if (e.key === 'Escape') cancelEditingTeam();
+                                  if (e.key === 'Enter') saveTeamNameInSettings(team.id);
+                                  if (e.key === 'Escape') cancelEditingTeamInSettings();
                                 }}
                                 autoFocus
                                 aria-label="Edit team name"
@@ -3864,7 +3906,7 @@
                               />
                             ) : (
                               <span
-                                onClick={() => startEditingTeam(team)}
+                                onClick={() => startEditingTeamInSettings(team)}
                                 className="text-sm cursor-pointer hover:underline"
                               >
                                 {team.name}
@@ -4263,7 +4305,7 @@
                   {/* Settings Footer */}
                   <div className={`px-4 sm:px-6 py-4 border-t ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
                     <button
-                      onClick={() => setShowSettings(false)}
+                      onClick={() => { setShowSettings(false); cancelEditingTeamInSettings(); }}
                       className={`w-full py-3 rounded-lg font-semibold text-white transition ${darkMode ? 'bg-cyan-600 hover:bg-cyan-700' : 'bg-blue-600 hover:bg-blue-700'}`}
                     >
                       Close Settings
