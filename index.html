@@ -576,13 +576,13 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0.875rem 1rem;
+      padding: 0.625rem 0.875rem;
       cursor: pointer;
       user-select: none;
       -webkit-user-select: none;
       -webkit-tap-highlight-color: transparent;
       touch-action: manipulation;
-      min-height: 52px;
+      min-height: 44px;
       transition: background-color 0.15s ease;
     }
 
@@ -618,12 +618,12 @@
     /* Mobile settings improvements */
     @media screen and (max-width: 640px) {
       .settings-section-header {
-        padding: 1rem;
+        padding: 0.625rem 0.875rem;
       }
 
       .settings-section-content {
-        padding-left: 1rem;
-        padding-right: 1rem;
+        padding-left: 0.875rem;
+        padding-right: 0.875rem;
       }
     }
   </style>
@@ -891,7 +891,7 @@
       const colors = colorClasses[accentColor] || colorClasses.cyan;
 
       return (
-        <div className={`settings-section mb-3 border ${colors.border} ${darkMode ? 'bg-gray-800/50' : 'bg-white'}`}>
+        <div className={`settings-section mb-2 border ${colors.border} ${darkMode ? 'bg-gray-800/50' : 'bg-white'}`}>
           <button
             type="button"
             onClick={() => onToggle(id)}
@@ -913,7 +913,7 @@
           <div
             id={`section-content-${id}`}
             ref={contentRef}
-            className={`settings-section-content px-4 py-4 ${isCollapsed ? 'collapsed' : 'expanded'}`}
+            className={`settings-section-content px-4 py-3 ${isCollapsed ? 'collapsed' : 'expanded'}`}
             style={{ maxHeight: isCollapsed ? '0px' : maxHeight }}
           >
             {children}
@@ -2408,7 +2408,8 @@
             heatLockEnabled,
             aRelayOnly,
             teamPlaceLimitEnabled,
-            events: events.map(e => e ? { name: e.name, gender: e.gender } : null).filter(Boolean)
+            events: events.map(e => e ? { name: e.name, gender: e.gender } : null).filter(Boolean),
+            teams: teams.map(t => t ? { name: t.name } : null).filter(Boolean)
           };
           setSavedTemplates([...savedTemplates, template]);
           setNewTemplateName('');
@@ -2452,6 +2453,20 @@
             setTeamPlaceLimitEnabled(template.teamPlaceLimitEnabled);
           }
 
+          let newTeams = teams;
+          if (template.teams && Array.isArray(template.teams)) {
+            newTeams = template.teams
+              .filter(t => t && t.name)
+              .map((t) => ({
+                id: utils.generateId(),
+                name: t.name,
+                score: 0,
+                girlsScore: 0,
+                boysScore: 0
+              }));
+            setTeams(newTeams);
+          }
+
           if (template.events && Array.isArray(template.events)) {
             const newEvents = template.events
               .filter(e => e && e.name && e.gender)
@@ -2462,9 +2477,9 @@
                 results: []
               }));
             setEvents(newEvents);
-            recalculateAllScores(teams, newEvents);
+            recalculateAllScores(newTeams, newEvents);
           } else {
-            recalculateAllScores(teams, events);
+            recalculateAllScores(newTeams, events);
           }
           // Set active template to custom template id
           setActiveTemplate('custom_' + template.id);
@@ -2588,40 +2603,27 @@
 
       const clearAllDataKeepTemplates = () => {
         setShowConfirmDialog({
-          message: 'Clear all data (teams, events, scores) but keep your saved templates?',
+          message: 'Clear all scores but keep your teams, events, and saved templates?',
           onConfirm: () => {
             try {
-              setTeams(defaultTeams);
-              setEvents(defaultEvents);
-              setIndividualPointSystem(defaultIndividualPoints);
-              setRelayPointSystem(defaultRelayPoints);
-              setDivingPointSystem(defaultDivingPoints);
-              setNumIndividualPlaces(5);
-              setNumRelayPlaces(3);
-              setNumDivingPlaces(3);
-              // Reset Heat Lock and A-Relay settings to defaults (off)
-              setHeatLockEnabled(false);
-              setARelayOnly(false);
-              // Reset team place limit to default (on for high school meets)
-              setTeamPlaceLimitEnabled(true);
-              // Reset active template to default (High School)
-              setActiveTemplate('high_school');
+              // Clear only the scores from events, keep teams and event structure
+              const clearedEvents = events.map(event => event ? { ...event, results: [] } : null);
+              setEvents(clearedEvents);
 
-              utils.saveToStorage('teams', defaultTeams);
-              utils.saveToStorage('events', defaultEvents);
-              utils.saveToStorage('individualPointSystem', defaultIndividualPoints);
-              utils.saveToStorage('relayPointSystem', defaultRelayPoints);
-              utils.saveToStorage('divingPointSystem', defaultDivingPoints);
-              utils.saveToStorage('numIndividualPlaces', 5);
-              utils.saveToStorage('numRelayPlaces', 3);
-              utils.saveToStorage('numDivingPlaces', 3);
-              utils.saveToStorage('heatLockEnabled', false);
-              utils.saveToStorage('aRelayOnly', false);
-              utils.saveToStorage('teamPlaceLimitEnabled', true);
-              utils.saveToStorage('activeTemplate', 'high_school');
+              // Reset team scores to 0
+              const clearedTeams = teams.map(team => team ? {
+                ...team,
+                score: 0,
+                girlsScore: 0,
+                boysScore: 0
+              } : null);
+              setTeams(clearedTeams);
+
+              utils.saveToStorage('teams', clearedTeams);
+              utils.saveToStorage('events', clearedEvents);
               utils.saveToStorage('version', CURRENT_VERSION);
 
-              recalculateAllScores(defaultTeams, defaultEvents);
+              recalculateAllScores(clearedTeams, clearedEvents);
               setShowConfirmDialog(null);
             } catch (e) {
               console.error('Error clearing data:', e);
@@ -3803,15 +3805,15 @@
                     <button
                       onClick={() => {
                         const allSections = ['manage-teams', 'scoring-templates', 'special-scoring', 'scoring-places', 'data-management', 'point-systems', 'appearance'];
-                        const allCollapsed = allSections.every(s => collapsedSections[s]);
+                        const anyCollapsed = allSections.some(s => collapsedSections[s]);
                         const newState = {};
-                        allSections.forEach(s => { newState[s] = !allCollapsed; });
+                        allSections.forEach(s => { newState[s] = !anyCollapsed; });
                         setCollapsedSections(newState);
                         utils.saveToStorage('collapsedSections', newState);
                       }}
                       className={`text-xs font-medium px-3 py-1.5 rounded-lg transition ${darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
                     >
-                      {Object.values(collapsedSections).filter(Boolean).length >= 4 ? 'Expand All' : 'Collapse All'}
+                      {Object.values(collapsedSections).some(Boolean) ? 'Expand All' : 'Collapse All'}
                     </button>
                   </div>
 
@@ -3846,7 +3848,28 @@
                       <div className="flex flex-wrap gap-2">
                         {teams.map(team => (
                           <div key={team.id} className={`flex items-center gap-2 px-3 py-2 rounded-lg ${darkMode ? 'bg-gray-600 text-white' : 'bg-white border border-gray-200'}`}>
-                            <span className="text-sm">{team.name}</span>
+                            {editingTeamId === team.id ? (
+                              <input
+                                type="text"
+                                value={editingTeamName}
+                                onChange={(e) => setEditingTeamName(e.target.value)}
+                                onBlur={() => saveTeamName(team.id)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') saveTeamName(team.id);
+                                  if (e.key === 'Escape') cancelEditingTeam();
+                                }}
+                                autoFocus
+                                aria-label="Edit team name"
+                                className={`text-sm px-2 py-1 border rounded min-w-[80px] ${darkMode ? 'bg-gray-700 border-gray-500 text-white' : 'bg-white border-gray-300'}`}
+                              />
+                            ) : (
+                              <span
+                                onClick={() => startEditingTeam(team)}
+                                className="text-sm cursor-pointer hover:underline"
+                              >
+                                {team.name}
+                              </span>
+                            )}
                             <button
                               onClick={() => removeTeam(team.id)}
                               className="text-red-500 hover:text-red-700 p-1"
@@ -3986,7 +4009,7 @@
                     )}
 
                     <p className={`text-xs mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                      Templates save all point systems, number of places, and event lineup
+                      Templates save team names, point systems, number of places, and event lineup
                     </p>
                   </CollapsibleSection>
 
@@ -4131,7 +4154,7 @@
                         onClick={clearAllDataKeepTemplates}
                         className={`w-full px-4 py-3 rounded-xl font-medium transition text-left ${darkMode ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30 hover:bg-orange-500/30' : 'bg-orange-500 hover:bg-orange-600 text-white'}`}
                       >
-                        Clear Data (Keep Templates)
+                        Clear Scores Only
                       </button>
                       <button
                         onClick={clearAllDataAndTemplates}
