@@ -1077,7 +1077,7 @@
     };
 
     // Place selector with dropdown multiselect for ties
-    const PlaceSelector = ({ event, place, teams, darkMode, pointSystem, numPlaces, onUpdate, consumedByTie, excludedByTeamLimit, excludedTeamName }) => {
+    const PlaceSelector = ({ event, place, teams, darkMode, pointSystem, numPlaces, onUpdate, consumedByTie }) => {
       const [isOpen, setIsOpen] = useState(false);
       const dropdownRef = useRef(null);
 
@@ -1138,11 +1138,8 @@
         );
       }
 
-      // Check if this place has a team excluded due to team place limit
-      const hasExclusion = excludedByTeamLimit && excludedTeamName;
-
       return (
-        <div className={`p-1 rounded ${darkMode ? 'bg-gray-600' : 'bg-white'} ${numTied > 1 ? (darkMode ? 'ring-2 ring-yellow-500' : 'ring-2 ring-yellow-400') : ''} ${hasExclusion ? (darkMode ? 'ring-2 ring-red-500/50' : 'ring-2 ring-red-400/50') : ''}`} ref={dropdownRef}>
+        <div className={`p-1 rounded ${darkMode ? 'bg-gray-600' : 'bg-white'} ${numTied > 1 ? (darkMode ? 'ring-2 ring-yellow-500' : 'ring-2 ring-yellow-400') : ''}`} ref={dropdownRef}>
           <label className={`text-xs font-medium block ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
             {placeLabel}
             <span className={`ml-0.5 ${numTied > 1 ? (darkMode ? 'text-yellow-400' : 'text-yellow-600') : ''}`}>
@@ -1204,13 +1201,6 @@
           {numTied > 1 && (
             <div className={`text-xs font-medium ${darkMode ? 'text-yellow-400' : 'text-yellow-600'}`}>
               🤝 TIE: {numTied} teams
-            </div>
-          )}
-
-          {/* Team place limit exclusion indicator */}
-          {hasExclusion && (
-            <div className={`text-xs font-medium ${darkMode ? 'text-red-400' : 'text-red-600'}`} title={`${excludedTeamName} exceeded team place limit - this place does not score for them`}>
-              🚫 {excludedTeamName} (limit)
             </div>
           )}
         </div>
@@ -1277,50 +1267,6 @@
         return false;
       };
 
-      // Calculate which teams have exceeded the team place limit at each place
-      const getTeamExcludedAtPlace = (place, forTeamId) => {
-        if (!teamPlaceLimitEnabled) return null;
-
-        const maxTeamPlaces = Math.max(1, numPlaces - 1);
-        const teamPlaceCount = {};
-
-        // Build results by place map
-        const resultsByPlace = {};
-        event.results.forEach(result => {
-          if (!result || !result.place || !result.teamIds) return;
-          resultsByPlace[result.place] = result.teamIds;
-        });
-
-        // Process places in order up to and including the requested place
-        let currentPlace = 1;
-        while (currentPlace <= place) {
-          const teamsAtCurrentPlace = resultsByPlace[currentPlace];
-
-          if (teamsAtCurrentPlace && teamsAtCurrentPlace.length > 0) {
-            const numTied = teamsAtCurrentPlace.length;
-
-            // Check each team at this place
-            for (const teamId of teamsAtCurrentPlace) {
-              const currentCount = teamPlaceCount[teamId] || 0;
-              if (currentCount >= maxTeamPlaces) {
-                // This team exceeded limit at this place
-                if (currentPlace === place && String(teamId) === String(forTeamId)) {
-                  return true; // This specific team is excluded at this specific place
-                }
-              } else {
-                teamPlaceCount[teamId] = currentCount + 1;
-              }
-            }
-
-            // Skip places consumed by tie
-            currentPlace += numTied;
-          } else {
-            currentPlace++;
-          }
-        }
-        return false;
-      };
-
       return (
         <div className={`rounded-xl p-3 ${darkMode ? 'bg-pool-mid/80 border border-white/10' : 'bg-white border border-slate-200 shadow-sm'}`}>
           {/* Event Header */}
@@ -1344,11 +1290,6 @@
               {aRelayOnly && isRelay && (
                 <span className={`text-xs px-1.5 py-0.5 rounded ${darkMode ? 'bg-teal-500/20 text-teal-400' : 'bg-teal-100 text-teal-700'}`}>
                   🅰️ A-Only
-                </span>
-              )}
-              {teamPlaceLimitEnabled && (
-                <span className={`text-xs px-1.5 py-0.5 rounded ${darkMode ? 'bg-red-500/20 text-red-400' : 'bg-red-100 text-red-700'}`} title={`Team limit: max ${Math.max(1, numPlaces - 1)} of ${numPlaces} places`}>
-                  🚫 Limit
                 </span>
               )}
             </div>
@@ -1396,7 +1337,6 @@
                       const hasOtherTeam = teamsAtPlace.some(id => id !== String(team.id));
                       const consumed = isPlaceConsumed(place) && !isSelected;
                       const points = pointSystem[place] || 0;
-                      const isExcludedByLimit = isSelected && getTeamExcludedAtPlace(place, team.id);
 
                       if (consumed) {
                         return (
@@ -1416,22 +1356,20 @@
                           onClick={() => togglePlace(team.id, place)}
                           className={`w-8 h-8 sm:w-9 sm:h-9 rounded font-medium text-xs transition-all ${
                             isSelected
-                              ? isExcludedByLimit
-                                ? (darkMode ? 'bg-red-900/50 text-red-400 border-2 border-red-500' : 'bg-red-100 text-red-600 border-2 border-red-400')
-                                : (place === 1
-                                    ? 'bg-gradient-to-br from-amber-400 to-amber-500 text-amber-900'
-                                    : place === 2
-                                      ? 'bg-gradient-to-br from-gray-300 to-gray-400 text-gray-800'
-                                      : place === 3
-                                        ? 'bg-gradient-to-br from-orange-400 to-orange-500 text-orange-900'
-                                        : (darkMode ? 'bg-chlorine text-pool-deep' : 'bg-cyan-600 text-white'))
+                              ? (place === 1
+                                  ? 'bg-gradient-to-br from-amber-400 to-amber-500 text-amber-900'
+                                  : place === 2
+                                    ? 'bg-gradient-to-br from-gray-300 to-gray-400 text-gray-800'
+                                    : place === 3
+                                      ? 'bg-gradient-to-br from-orange-400 to-orange-500 text-orange-900'
+                                      : (darkMode ? 'bg-chlorine text-pool-deep' : 'bg-cyan-600 text-white'))
                               : hasOtherTeam
                                 ? (darkMode ? 'bg-gray-600/50 text-gray-400 border border-dashed border-gray-500' : 'bg-gray-100 text-gray-400 border border-dashed border-gray-300')
                                 : (darkMode ? 'bg-gray-700/50 text-gray-400 hover:bg-gray-600 border border-gray-600' : 'bg-gray-50 text-gray-500 hover:bg-gray-100 border border-gray-200')
-                          } ${isTie && isSelected && !isExcludedByLimit ? 'ring-2 ring-yellow-400' : ''}`}
-                          title={`${getPlaceLabel(place)} (${points}pts)${hasOtherTeam && !isSelected ? ' - taken' : ''}${isExcludedByLimit ? ' - LIMIT EXCEEDED (no points)' : ''}`}
+                          } ${isTie && isSelected ? 'ring-2 ring-yellow-400' : ''}`}
+                          title={`${getPlaceLabel(place)} (${points}pts)${hasOtherTeam && !isSelected ? ' - taken' : ''}`}
                         >
-                          {isExcludedByLimit ? '🚫' : place}
+                          {place}
                         </button>
                       );
                     })}
@@ -1443,8 +1381,9 @@
                       {(() => {
                         let totalPts = 0;
 
-                        // Calculate max team places for the limit
-                        const maxTeamPlaces = teamPlaceLimitEnabled ? Math.max(1, numPlaces - 1) : numPlaces;
+                        // Calculate max team places for the limit (relays only)
+                        const applyTeamLimit = teamPlaceLimitEnabled && isRelay;
+                        const maxTeamPlaces = applyTeamLimit ? Math.max(1, numPlaces - 1) : numPlaces;
                         const teamPlaceCount = {};
 
                         // Build a map of place -> teamIds for this event
@@ -1464,9 +1403,9 @@
                           if (teamsAtCurrentPlace && teamsAtCurrentPlace.length > 0) {
                             const numTied = teamsAtCurrentPlace.length;
 
-                            // Filter eligible teams based on team place limit
+                            // Filter eligible teams based on team place limit (relays only)
                             const eligibleTeams = teamsAtCurrentPlace.filter(teamId => {
-                              if (!teamPlaceLimitEnabled) return true;
+                              if (!applyTeamLimit) return true;
                               const currentCount = teamPlaceCount[teamId] || 0;
                               return currentCount < maxTeamPlaces;
                             });
@@ -2192,9 +2131,10 @@
             const pointSystem = isDiving ? divingPointSystem : isRelay ? relayPointSystem : individualPointSystem;
             const numPlaces = isDiving ? numDivingPlaces : isRelay ? numRelayPlaces : numIndividualPlaces;
 
-            // Calculate max scoring places per team when limit is enabled
+            // Calculate max scoring places per team when limit is enabled (relays only)
             // A team can score at most (numPlaces - 1) places to prevent sweeping all places
-            const maxTeamPlaces = teamPlaceLimitEnabled ? Math.max(1, numPlaces - 1) : numPlaces;
+            const applyTeamLimit = teamPlaceLimitEnabled && isRelay;
+            const maxTeamPlaces = applyTeamLimit ? Math.max(1, numPlaces - 1) : numPlaces;
 
             // Track how many scoring places each team has occupied in this event
             const teamScoringPlaceCount = {};
@@ -2216,9 +2156,9 @@
               if (teamsAtPlace && teamsAtPlace.length > 0) {
                 const numTied = teamsAtPlace.length;
 
-                // Filter teams that haven't exceeded their place limit
+                // Filter teams that haven't exceeded their place limit (relays only)
                 const eligibleTeams = teamsAtPlace.filter(teamId => {
-                  if (!teamPlaceLimitEnabled) return true;
+                  if (!applyTeamLimit) return true;
                   const currentCount = teamScoringPlaceCount[teamId] || 0;
                   return currentCount < maxTeamPlaces;
                 });
@@ -2550,16 +2490,40 @@
           // Validate inputs
           if (!eventId || !place || place < 1) return;
           if (teamId && !teams.some(t => t && t.id == teamId)) return; // Validate team exists
-          
+
+          // Find the event to check if it's a relay
+          const targetEvent = events.find(e => e && e.id === eventId);
+          if (!targetEvent) return;
+
+          const isRelay = targetEvent.name && targetEvent.name.includes('Relay');
+
+          // Check team place limit for relays before adding
+          if (isChecked && teamId && teamPlaceLimitEnabled && isRelay) {
+            const maxTeamPlaces = Math.max(1, numRelayPlaces - 1);
+            // Count how many places this team already has in this event
+            let teamPlaceCount = 0;
+            (targetEvent.results || []).forEach(result => {
+              if (result && result.teamIds && result.teamIds.includes(String(teamId)) && result.place !== place) {
+                teamPlaceCount++;
+              }
+            });
+            if (teamPlaceCount >= maxTeamPlaces) {
+              // Show error and prevent addition
+              setError(`Team limit reached: A team can only occupy ${maxTeamPlaces} of ${numRelayPlaces} relay places.`);
+              triggerHaptic('heavy');
+              return;
+            }
+          }
+
           const newEvents = events.map(event => {
             if (event && event.id === eventId) {
               const newResults = [...(event.results || [])];
               const existingIndex = newResults.findIndex(r => r && r.place === place);
-              
+
               if (existingIndex >= 0) {
                 // Place already has entries
                 const currentTeamIds = [...(newResults[existingIndex].teamIds || [])];
-                
+
                 if (isChecked && teamId) {
                   // Add team to this place if not already there
                   if (!currentTeamIds.includes(String(teamId))) {
@@ -2572,7 +2536,7 @@
                     currentTeamIds.splice(teamIndex, 1);
                   }
                 }
-                
+
                 if (currentTeamIds.length === 0) {
                   // Remove the place entry if no teams left
                   newResults.splice(existingIndex, 1);
@@ -2583,12 +2547,12 @@
                 // Create new place entry
                 newResults.push({ place, teamIds: [String(teamId)] });
               }
-              
+
               return { ...event, results: newResults };
             }
             return event;
           });
-          
+
           setEvents(newEvents);
           recalculateAllScores(teams, newEvents);
           // Track result recording and provide haptic feedback (only when adding, not removing)
@@ -2758,66 +2722,8 @@
             }
           }
         });
-        
+
         return consumed;
-      };
-
-      // Calculate which places are excluded due to team place limit rule
-      // Returns an object with: excludedPlaces (Set of place numbers) and excludedTeamAtPlace (Map of place -> teamId)
-      const getTeamPlaceLimitExclusions = (event) => {
-        const excludedPlaces = new Set();
-        const excludedTeamAtPlace = {};
-
-        if (!event || !event.results || !teamPlaceLimitEnabled) {
-          return { excludedPlaces, excludedTeamAtPlace };
-        }
-
-        const isDiving = event.name === 'Diving';
-        const isRelay = event.name.includes('Relay');
-        const numPlaces = isDiving ? numDivingPlaces : isRelay ? numRelayPlaces : numIndividualPlaces;
-
-        // Max places a team can occupy = numPlaces - 1 (so they can't sweep all places)
-        const maxTeamPlaces = Math.max(1, numPlaces - 1);
-
-        // Track how many places each team has scored
-        const teamPlaceCount = {};
-
-        // Build results by place map
-        const resultsByPlace = {};
-        event.results.forEach(result => {
-          if (!result || !result.place || !result.teamIds || !Array.isArray(result.teamIds)) return;
-          resultsByPlace[result.place] = result.teamIds;
-        });
-
-        // Process places in order, accounting for ties (same logic as recalculateAllScores)
-        let currentPlace = 1;
-        while (currentPlace <= numPlaces) {
-          const teamsAtPlace = resultsByPlace[currentPlace];
-
-          if (teamsAtPlace && teamsAtPlace.length > 0) {
-            const numTied = teamsAtPlace.length;
-
-            // Check each team at this place
-            teamsAtPlace.forEach(teamId => {
-              const currentCount = teamPlaceCount[teamId] || 0;
-              if (currentCount >= maxTeamPlaces) {
-                // This team has exceeded limit - mark this place as excluded for them
-                excludedPlaces.add(currentPlace);
-                excludedTeamAtPlace[currentPlace] = teamId;
-              } else {
-                // Team still eligible, increment their count
-                teamPlaceCount[teamId] = currentCount + 1;
-              }
-            });
-
-            // Skip places consumed by tie
-            currentPlace += numTied;
-          } else {
-            currentPlace++;
-          }
-        }
-
-        return { excludedPlaces, excludedTeamAtPlace };
       };
 
       const highSchoolEvents = [
@@ -3722,37 +3628,22 @@
 
                     {/* Team Place Limit */}
                     <section className="mb-8">
-                      <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>🚫 Team Place Limit (Dual Meets)</h4>
+                      <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>🚫 Team Place Limit (relays)</h4>
                       <p className="mb-3">
-                        Found in Settings under "Special Scoring Rules". This rule prevents a single team from occupying all scoring places in any event.
+                        Found in Settings under "Special Scoring Rules". This rule prevents a single team from occupying all scoring places in relay events.
                       </p>
 
-                      <div className={`p-4 rounded-lg mb-4 ${darkMode ? 'bg-red-900/30 border border-red-700/50' : 'bg-red-50 border border-red-200'}`}>
+                      <div className={`p-4 rounded-lg ${darkMode ? 'bg-red-900/30 border border-red-700/50' : 'bg-red-50 border border-red-200'}`}>
                         <h5 className={`font-semibold mb-2 ${darkMode ? 'text-red-400' : 'text-red-700'}`}>📋 How It Works</h5>
                         <p className={`text-sm mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                          When enabled (default for high school dual meets), a team can score at most <strong>(number of places - 1)</strong> positions in any event.
+                          When enabled (default for high school dual meets), a team can score at most <strong>(number of places - 1)</strong> positions in any relay event.
                         </p>
                         <div className={`text-sm p-3 rounded ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
                           <p className="font-medium mb-1">Example - 3-place relay (8-4-2 scoring):</p>
-                          <p>• Team A takes 1st (8 pts), 2nd (4 pts), and 3rd</p>
-                          <p>• Since max = 2 places, 3rd place does NOT score for Team A</p>
-                          <p>• You'll see a 🚫 indicator showing that placement is excluded</p>
-                          <p className="mt-2 font-medium mb-1">Example - 5-place individual (6-4-3-2-1 scoring):</p>
-                          <p>• A team can score at most 4 of the 5 places</p>
-                          <p>• If a team takes 1st through 5th, their 5th place finish doesn't score</p>
+                          <p>• Team A takes 1st (8 pts) and 2nd (4 pts)</p>
+                          <p>• Since max = 2 places, Team A cannot be added to 3rd place</p>
+                          <p>• An error message will appear if you try to add Team A to a 3rd place</p>
                         </div>
-                      </div>
-
-                      <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
-                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>💡 Visual Indicators</h5>
-                        <ul className={`text-sm space-y-1 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                          <li>• <span className={darkMode ? 'text-red-400' : 'text-red-600'}>🚫</span> <strong>Red highlighted place:</strong> Place doesn't score due to team limit</li>
-                          <li>• Badge on each event shows the limit (e.g., "🚫 Team Limit (2/3)" for 3-place events)</li>
-                          <li>• Points display updates in real-time to reflect actual scoring</li>
-                        </ul>
-                        <p className={`text-xs mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                          <strong>Note:</strong> This setting is enabled by default for High School Dual Meet template and disabled for championship/conference templates.
-                        </p>
                       </div>
                     </section>
 
@@ -3780,19 +3671,10 @@
                       </div>
 
                       <div className={`p-4 rounded-lg ${darkMode ? 'bg-purple-900/30 border border-purple-700/50' : 'bg-purple-50 border border-purple-200'}`}>
-                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-purple-400' : 'text-purple-700'}`}>🔄 DQ + Team Place Limit</h5>
+                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-purple-400' : 'text-purple-700'}`}>🔄 DQ + Team Place Limit (relays)</h5>
                         <p className={`text-sm mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                          When Team Place Limit is enabled, after advancing places due to a DQ, the team limit rule is re-applied:
+                          When Team Place Limit is enabled, after advancing places due to a DQ in a relay, the team limit rule still applies.
                         </p>
-                        <div className={`text-sm p-3 rounded ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-                          <p className="font-medium mb-1">Example - 3-place relay with team limit:</p>
-                          <p>• Original: Team A (1st), Team A (2nd), Team B (3rd)</p>
-                          <p>• Team A's 1st place is DQ'd</p>
-                          <p>• After advancement: Team A (1st - was 2nd), Team B (2nd - was 3rd)</p>
-                          <p>• If Team A had another swimmer originally in 4th: they become 3rd</p>
-                          <p>• Team limit check: Team A already has 1st, so if they now have 3rd, check limit</p>
-                          <p>• If Team A would have 1st & 3rd (2 places), this is allowed (limit = 2 for 3-place event)</p>
-                        </div>
                         <p className={`text-xs mt-2 ${darkMode ? 'text-purple-300' : 'text-purple-600'}`}>
                           <strong>Key point:</strong> The app automatically recalculates scoring whenever you change place assignments. Just update the placements after the DQ and the limit rules will be applied automatically.
                         </p>
@@ -4124,9 +4006,6 @@
                     darkMode={darkMode}
                     accentColor="amber"
                   >
-                    <p className={`text-sm mb-3 ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                      Special scoring rules for dual meets and championship meets.
-                    </p>
                     <div className="space-y-2">
                       <label className={`flex items-center gap-3 cursor-pointer p-3 rounded-lg transition ${darkMode ? 'hover:bg-gray-700/50' : 'hover:bg-amber-50'}`}>
                         <input
@@ -4136,9 +4015,9 @@
                           className="w-5 h-5 rounded accent-amber-500 flex-shrink-0"
                         />
                         <div>
-                          <span className={`font-medium ${darkMode ? 'text-slate-200' : 'text-slate-700'}`}>Team Place Limit (Dual Meets)</span>
+                          <span className={`font-medium ${darkMode ? 'text-slate-200' : 'text-slate-700'}`}>Team Place Limit (relays)</span>
                           <p className={`text-xs ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                            A team cannot occupy all scoring places in any event (e.g., max 2 of 3 relay places)
+                            A team cannot occupy all scoring places in any relay event (e.g., max 2 of 3 relay places)
                           </p>
                         </div>
                       </label>
@@ -4579,11 +4458,6 @@
                                   🅰️ A-Relay Only Scores
                                 </span>
                               )}
-                              {teamPlaceLimitEnabled && (
-                                <span className={`text-xs px-2 py-0.5 rounded-full ${darkMode ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-red-100 text-red-700 border border-red-200'}`} title={`Team limit: max ${Math.max(1, numPlaces - 1)} of ${numPlaces} places`}>
-                                  🚫 Team Limit ({numPlaces - 1}/{numPlaces})
-                                </span>
-                              )}
                             </div>
                             <div className="flex items-center gap-2">
                               <button
@@ -4611,26 +4485,19 @@
                           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-1">
                             {(() => {
                               const consumedPlaces = getConsumedPlaces(event);
-                              const { excludedPlaces, excludedTeamAtPlace } = getTeamPlaceLimitExclusions(event);
-                              return getPlacesArray(event).map(place => {
-                                const excludedTeamId = excludedTeamAtPlace[place];
-                                const excludedTeam = excludedTeamId ? teams.find(t => String(t.id) === String(excludedTeamId)) : null;
-                                return (
-                                  <PlaceSelector
-                                    key={place}
-                                    event={event}
-                                    place={place}
-                                    teams={teams}
-                                    darkMode={darkMode}
-                                    pointSystem={pointSystem}
-                                    numPlaces={numPlaces}
-                                    onUpdate={updateEventResult}
-                                    consumedByTie={consumedPlaces.has(place)}
-                                    excludedByTeamLimit={excludedPlaces.has(place)}
-                                    excludedTeamName={excludedTeam?.name}
-                                  />
-                                );
-                              });
+                              return getPlacesArray(event).map(place => (
+                                <PlaceSelector
+                                  key={place}
+                                  event={event}
+                                  place={place}
+                                  teams={teams}
+                                  darkMode={darkMode}
+                                  pointSystem={pointSystem}
+                                  numPlaces={numPlaces}
+                                  onUpdate={updateEventResult}
+                                  consumedByTie={consumedPlaces.has(place)}
+                                />
+                              ));
                             })()}
                           </div>
                         </div>
@@ -4691,11 +4558,6 @@
                                     🅰️ A-Relay Only Scores
                                   </span>
                                 )}
-                                {teamPlaceLimitEnabled && (
-                                  <span className={`text-xs px-2 py-0.5 rounded-full ${darkMode ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-red-100 text-red-700 border border-red-200'}`} title={`Team limit: max ${Math.max(1, numPlaces - 1)} of ${numPlaces} places`}>
-                                    🚫 Team Limit ({numPlaces - 1}/{numPlaces})
-                                  </span>
-                                )}
                               </div>
                               <div className="flex items-center gap-2">
                                 <button
@@ -4723,26 +4585,19 @@
                             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-1">
                               {(() => {
                                 const consumedPlaces = getConsumedPlaces(event);
-                                const { excludedPlaces, excludedTeamAtPlace } = getTeamPlaceLimitExclusions(event);
-                                return getPlacesArray(event).map(place => {
-                                  const excludedTeamId = excludedTeamAtPlace[place];
-                                  const excludedTeam = excludedTeamId ? teams.find(t => String(t.id) === String(excludedTeamId)) : null;
-                                  return (
-                                    <PlaceSelector
-                                      key={place}
-                                      event={event}
-                                      place={place}
-                                      teams={teams}
-                                      darkMode={darkMode}
-                                      pointSystem={pointSystem}
-                                      numPlaces={numPlaces}
-                                      onUpdate={updateEventResult}
-                                      consumedByTie={consumedPlaces.has(place)}
-                                      excludedByTeamLimit={excludedPlaces.has(place)}
-                                      excludedTeamName={excludedTeam?.name}
-                                    />
-                                  );
-                                });
+                                return getPlacesArray(event).map(place => (
+                                  <PlaceSelector
+                                    key={place}
+                                    event={event}
+                                    place={place}
+                                    teams={teams}
+                                    darkMode={darkMode}
+                                    pointSystem={pointSystem}
+                                    numPlaces={numPlaces}
+                                    onUpdate={updateEventResult}
+                                    consumedByTie={consumedPlaces.has(place)}
+                                  />
+                                ));
                               })()}
                             </div>
                           </div>
