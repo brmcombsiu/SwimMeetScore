@@ -3797,14 +3797,14 @@
                       <p className={`text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                         USA Swimming Multi-team Meet (by lane count):
                       </p>
-                      <div className="grid grid-cols-4 sm:flex sm:flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-2">
                         {[4, 5, 6, 7, 8, 9, 10].map(lanes => (
                           <button
                             key={lanes}
                             onClick={() => loadUSASwimmingMeet(lanes)}
-                            className={`px-3 py-2 rounded-lg ${darkMode ? 'bg-indigo-600 hover:bg-indigo-700 active:ring-4 active:ring-indigo-400 active:scale-95' : 'bg-indigo-500 hover:bg-indigo-600 active:ring-4 active:ring-indigo-300 active:scale-95'} text-white text-sm font-medium transition-all shadow-md hover:shadow-lg ${activeTemplate === 'usa_swimming_' + lanes ? 'ring-4 ring-white ring-offset-2 ring-offset-transparent' : ''}`}
+                            className={`px-3 py-1.5 rounded-lg ${darkMode ? 'bg-indigo-600 hover:bg-indigo-700 active:ring-4 active:ring-indigo-400 active:scale-95' : 'bg-indigo-500 hover:bg-indigo-600 active:ring-4 active:ring-indigo-300 active:scale-95'} text-white text-sm font-medium transition-all shadow-md hover:shadow-lg ${activeTemplate === 'usa_swimming_' + lanes ? 'ring-4 ring-white ring-offset-2 ring-offset-transparent' : ''}`}
                           >
-                            {lanes}
+                            {lanes}-Lane
                           </button>
                         ))}
                       </div>
@@ -3949,9 +3949,9 @@
                         value={newTeamName}
                         onChange={(e) => setNewTeamName(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && addTeam()}
-                        placeholder="Enter team name"
+                        placeholder="Team name"
                         aria-label="Team name"
-                        className={`w-full px-3 py-2.5 border rounded-lg ${darkMode ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400' : 'bg-white border-gray-300'}`}
+                        className={`flex-1 px-3 py-2 border rounded-lg ${darkMode ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400' : 'bg-white border-gray-300'}`}
                       />
                       <button
                         onClick={addTeam}
@@ -4126,10 +4126,10 @@
                         ? (darkMode ? 'bg-gradient-to-r from-lane-gold/20 to-transparent border-l-4 border-lane-gold' : 'bg-gradient-to-r from-amber-50 to-white border-l-4 border-amber-400')
                         : (darkMode ? 'bg-pool-deep/50 border border-white/5' : 'bg-white/90')
                     }`}>
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2">
-                        <div className="flex items-center gap-2 sm:gap-4">
-                          <span className={`text-lg sm:text-2xl font-bold ${
-                            index === 0 
+                      <div className="flex flex-row items-center justify-between gap-1 sm:gap-2">
+                        <div className="flex items-center gap-1.5 sm:gap-4 min-w-0 flex-shrink">
+                          <span className={`text-base sm:text-2xl font-bold flex-shrink-0 ${
+                            index === 0
                               ? (darkMode ? 'text-lane-gold' : 'text-amber-500')
                               : (darkMode ? 'text-slate-500' : 'text-slate-400')
                           }`}>#{index + 1}</span>
@@ -4145,31 +4145,34 @@
                               }}
                               autoFocus
                               aria-label="Edit team name"
-                              className={`text-lg sm:text-xl font-semibold px-2 py-1 border rounded ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}`}
+                              className={`text-sm sm:text-xl font-semibold px-2 py-1 border rounded min-w-0 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}`}
                             />
                           ) : (
-                            <span 
+                            <span
                               onClick={() => startEditingTeam(team)}
-                              className={`text-base sm:text-xl font-semibold cursor-pointer hover:underline ${darkMode ? 'text-white' : 'text-gray-800'}`}
+                              className={`text-sm sm:text-xl font-semibold cursor-pointer hover:underline truncate ${darkMode ? 'text-white' : 'text-gray-800'}`}
                             >
                               {team.name}
                             </span>
                           )}
                         </div>
-                        <div className="flex items-center justify-between sm:justify-end gap-4 sm:gap-6 ml-8 sm:ml-0">
+                        <div className="flex items-center gap-2 sm:gap-6 flex-shrink-0">
                           {scoringMode === 'combined' && (
-                            <div className="flex gap-4 text-sm">
-                              <div className="text-center">
-                                <div className={`font-medium ${darkMode ? 'text-pink-400' : 'text-pink-600'}`}>Girls</div>
-                                <div className={`text-lg font-bold ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>{team.girlsScore}</div>
+                            <>
+                              <div className="flex gap-2 sm:gap-4 text-xs sm:text-sm">
+                                <div className="text-center">
+                                  <div className={`font-medium hidden sm:block ${darkMode ? 'text-pink-400' : 'text-pink-600'}`}>Girls</div>
+                                  <div className={`text-sm sm:text-lg font-bold ${darkMode ? 'text-pink-400' : 'text-pink-600'}`}>{team.girlsScore}</div>
+                                </div>
+                                <div className="text-center">
+                                  <div className={`font-medium hidden sm:block ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>Boys</div>
+                                  <div className={`text-sm sm:text-lg font-bold ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>{team.boysScore}</div>
+                                </div>
                               </div>
-                              <div className="text-center">
-                                <div className={`font-medium ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>Boys</div>
-                                <div className={`text-lg font-bold ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>{team.boysScore}</div>
-                              </div>
-                            </div>
+                              <div className={`w-px h-6 sm:h-8 ${darkMode ? 'bg-white/20' : 'bg-gray-300'}`}></div>
+                            </>
                           )}
-                          <span className={`text-xl sm:text-3xl font-bold ${darkMode ? 'text-cyan-400' : 'text-blue-600'}`}>
+                          <span className={`text-lg sm:text-3xl font-bold ${darkMode ? 'text-cyan-400' : 'text-blue-600'}`}>
                             {scoringMode === 'girls' ? team.girlsScore : scoringMode === 'boys' ? team.boysScore : team.score}
                           </span>
                         </div>
