@@ -1386,7 +1386,7 @@
                           {isBFinals ? (
                             <span className="flex flex-col items-center leading-none">
                               <span>{place}</span>
-                              <span className={`text-[8px] ${isSelected ? '' : (darkMode ? 'text-amber-400' : 'text-amber-600')}`}>H1:{heatPosition}</span>
+                              <span className={`text-[9px] leading-none ${isSelected ? '' : (darkMode ? 'text-amber-400' : 'text-amber-600')}`}>H1:{heatPosition}</span>
                             </span>
                           ) : place}
                         </button>
@@ -1675,16 +1675,16 @@
                           </div>
                         )}
                         {isTie && (
-                          <div className="absolute -top-1 -left-1 w-3.5 h-3.5 bg-yellow-500 rounded-full flex items-center justify-center text-[8px] font-bold text-yellow-900">
+                          <div className="absolute -top-1 -left-1 w-3.5 h-3.5 bg-yellow-500 rounded-full flex items-center justify-center text-[9px] font-bold text-yellow-900">
                             {teamsAtPlace.length}
                           </div>
                         )}
                         <div className="text-sm font-bold">{getPlaceLabel(place)}</div>
-                        <div className={`text-[10px] ${isSelected ? 'opacity-80' : (darkMode ? 'text-gray-500' : 'text-gray-400')}`}>
+                        <div className={`text-xs ${isSelected ? 'text-white/80' : (darkMode ? 'text-gray-500' : 'text-gray-400')}`}>
                           {points}pt
                         </div>
                         {hasOtherTeam && !isSelected && (
-                          <div className={`text-[8px] truncate ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                          <div className={`text-[9px] leading-tight truncate ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                             {teams.find(t => teamsAtPlace.includes(String(t.id)) && t.id !== selectedTeam)?.name?.slice(0, 6)}
                           </div>
                         )}
@@ -3958,89 +3958,105 @@
                   <CollapsibleSection
                     id="scoring-templates"
                     title="Scoring Templates"
-                    description={activeTemplate ? `Using: ${activeTemplate.replace(/_/g, ' ').replace('usa swimming', 'USA Swimming')}` : "Quick presets for common meets"}
+                    description={activeTemplate ? `Using: ${{high_school:'HS Dual Meet',championship_8:'Champs (Top 8)',championship_16:'Champs (Top 16)',conference:'Conference',sectionals:'Sectionals'}[activeTemplate] || (activeTemplate.startsWith('usa_swimming_') ? 'USA Swimming ' + activeTemplate.split('_')[2] + '-Lane' : activeTemplate.startsWith('custom_') ? (savedTemplates.find(t => 'custom_' + t.id === activeTemplate) || {}).name || 'Custom' : activeTemplate.replace(/_/g, ' '))}` : "Quick presets for common meets"}
                     isCollapsed={collapsedSections['scoring-templates']}
                     onToggle={toggleSection}
                     darkMode={darkMode}
                     accentColor="purple"
                   >
-                    <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-3 mb-4">
-                      <button
-                        onClick={loadHighSchoolMeet}
-                        className={`px-3 py-2.5 sm:px-4 sm:py-2 rounded-lg ${darkMode ? 'bg-pink-600 hover:bg-pink-700 active:ring-4 active:ring-pink-400 active:scale-95' : 'bg-pink-500 hover:bg-pink-600 active:ring-4 active:ring-pink-300 active:scale-95'} text-white text-sm sm:text-base font-medium transition-all shadow-lg hover:shadow-xl ${activeTemplate === 'high_school' ? 'ring-4 ring-white ring-offset-2 ring-offset-transparent' : ''}`}
-                      >
-                        HS Dual Meet
-                      </button>
-                      <button
-                        onClick={loadChampionshipMeet8}
-                        className={`px-3 py-2.5 sm:px-4 sm:py-2 rounded-lg ${darkMode ? 'bg-purple-600 hover:bg-purple-700 active:ring-4 active:ring-purple-400 active:scale-95' : 'bg-purple-500 hover:bg-purple-600 active:ring-4 active:ring-purple-300 active:scale-95'} text-white text-sm sm:text-base font-medium transition-all shadow-lg hover:shadow-xl ${activeTemplate === 'championship_8' ? 'ring-4 ring-white ring-offset-2 ring-offset-transparent' : ''}`}
-                      >
-                        Champs (Top 8)
-                      </button>
-                      <button
-                        onClick={loadChampionshipMeet}
-                        className={`px-3 py-2.5 sm:px-4 sm:py-2 rounded-lg ${darkMode ? 'bg-blue-600 hover:bg-blue-700 active:ring-4 active:ring-blue-400 active:scale-95' : 'bg-blue-500 hover:bg-blue-600 active:ring-4 active:ring-blue-300 active:scale-95'} text-white text-sm sm:text-base font-medium transition-all shadow-lg hover:shadow-xl ${activeTemplate === 'championship_16' ? 'ring-4 ring-white ring-offset-2 ring-offset-transparent' : ''}`}
-                      >
-                        Champs (Top 16)
-                      </button>
-                      <button
-                        onClick={loadConferenceMeet}
-                        className={`px-3 py-2.5 sm:px-4 sm:py-2 rounded-lg ${darkMode ? 'bg-amber-600 hover:bg-amber-700 active:ring-4 active:ring-amber-400 active:scale-95' : 'bg-amber-500 hover:bg-amber-600 active:ring-4 active:ring-amber-300 active:scale-95'} text-white text-sm sm:text-base font-medium transition-all shadow-lg hover:shadow-xl ${activeTemplate === 'conference' ? 'ring-4 ring-white ring-offset-2 ring-offset-transparent' : ''}`}
-                      >
-                        Conference Meet
-                      </button>
-                      <button
-                        onClick={loadSectionalsMeet}
-                        className={`px-3 py-2.5 sm:px-4 sm:py-2 rounded-lg col-span-2 sm:col-span-1 ${darkMode ? 'bg-teal-600 hover:bg-teal-700 active:ring-4 active:ring-teal-400 active:scale-95' : 'bg-teal-500 hover:bg-teal-600 active:ring-4 active:ring-teal-300 active:scale-95'} text-white text-sm sm:text-base font-medium transition-all shadow-lg hover:shadow-xl ${activeTemplate === 'sectionals' ? 'ring-4 ring-white ring-offset-2 ring-offset-transparent' : ''}`}
-                      >
-                        Sectionals
-                      </button>
-                    </div>
-
-                    <div className="mb-4">
-                      <p className={`text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                        USA Swimming Multi-team Meet (by lane count):
+                    {/* Standard Meet Templates */}
+                    <div className="mb-5">
+                      <p className={`text-xs font-semibold uppercase tracking-wider mb-2.5 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        Standard Meets
                       </p>
-                      <div className="flex flex-wrap gap-2">
-                        {[4, 5, 6, 7, 8, 9, 10].map(lanes => (
-                          <button
-                            key={lanes}
-                            onClick={() => loadUSASwimmingMeet(lanes)}
-                            className={`px-3 py-1.5 rounded-lg ${darkMode ? 'bg-indigo-600 hover:bg-indigo-700 active:ring-4 active:ring-indigo-400 active:scale-95' : 'bg-indigo-500 hover:bg-indigo-600 active:ring-4 active:ring-indigo-300 active:scale-95'} text-white text-sm font-medium transition-all shadow-md hover:shadow-lg ${activeTemplate === 'usa_swimming_' + lanes ? 'ring-4 ring-white ring-offset-2 ring-offset-transparent' : ''}`}
-                          >
-                            {lanes}-Lane
-                          </button>
-                        ))}
+                      <div className="grid grid-cols-2 gap-2.5">
+                        {[
+                          { label: 'HS Dual Meet', key: 'high_school', onClick: loadHighSchoolMeet, desc: '2 teams · 5 places', color: 'pink' },
+                          { label: 'Champs (Top 8)', key: 'championship_8', onClick: loadChampionshipMeet8, desc: '8 teams · 8 places', color: 'purple' },
+                          { label: 'Champs (Top 16)', key: 'championship_16', onClick: loadChampionshipMeet, desc: '8 teams · 16 places', color: 'blue' },
+                          { label: 'Conference', key: 'conference', onClick: loadConferenceMeet, desc: '8 teams · 16 places', color: 'amber' },
+                          { label: 'Sectionals', key: 'sectionals', onClick: loadSectionalsMeet, desc: '10 teams · 16 places', color: 'teal' },
+                        ].map(tmpl => {
+                          const isActive = activeTemplate === tmpl.key;
+                          const colorMap = {
+                            pink: darkMode ? 'bg-pink-600 hover:bg-pink-700' : 'bg-pink-500 hover:bg-pink-600',
+                            purple: darkMode ? 'bg-purple-600 hover:bg-purple-700' : 'bg-purple-500 hover:bg-purple-600',
+                            blue: darkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600',
+                            amber: darkMode ? 'bg-amber-600 hover:bg-amber-700' : 'bg-amber-500 hover:bg-amber-600',
+                            teal: darkMode ? 'bg-teal-600 hover:bg-teal-700' : 'bg-teal-500 hover:bg-teal-600',
+                          };
+                          return (
+                            <button
+                              key={tmpl.key}
+                              onClick={tmpl.onClick}
+                              className={`flex flex-col items-center justify-center px-3 py-3 rounded-xl ${colorMap[tmpl.color]} text-white font-medium transition-all shadow-md hover:shadow-lg active:scale-95 ${isActive ? 'ring-[3px] ring-white shadow-lg scale-[1.02]' : ''}`}
+                            >
+                              <span className="text-sm leading-tight">{tmpl.label}</span>
+                              <span className="text-xs text-white/80 mt-0.5 leading-tight">{tmpl.desc}</span>
+                            </button>
+                          );
+                        })}
                       </div>
-                      <p className={`text-xs mt-1.5 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                        Relay points are doubled from individual points
-                      </p>
                     </div>
 
+                    {/* USA Swimming Templates */}
+                    <div className={`mb-5 p-3 rounded-xl ${darkMode ? 'bg-gray-700/50' : 'bg-indigo-50'}`}>
+                      <p className={`text-xs font-semibold uppercase tracking-wider mb-1 ${darkMode ? 'text-gray-400' : 'text-indigo-600'}`}>
+                        USA Swimming Multi-team
+                      </p>
+                      <p className={`text-xs mb-2.5 ${darkMode ? 'text-gray-500' : 'text-indigo-400'}`}>
+                        Select by lane count · Relay points doubled
+                      </p>
+                      <div className="grid grid-cols-4 gap-2">
+                        {[4, 5, 6, 7, 8, 9, 10].map(lanes => {
+                          const isActive = activeTemplate === 'usa_swimming_' + lanes;
+                          return (
+                            <button
+                              key={lanes}
+                              onClick={() => loadUSASwimmingMeet(lanes)}
+                              className={`flex flex-col items-center py-2 rounded-lg ${darkMode ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-indigo-500 hover:bg-indigo-600'} text-white text-sm font-medium transition-all shadow-md hover:shadow-lg active:scale-95 ${isActive ? 'ring-[3px] ring-white shadow-lg scale-[1.02]' : ''}`}
+                            >
+                              <span className="font-bold">{lanes}</span>
+                              <span className="text-xs text-white/80">lanes</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Custom Templates */}
                     {savedTemplates.length > 0 && (
                       <div className="mb-4">
-                        <p className={`text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Your Custom Templates:</p>
-                        <div className="flex flex-wrap gap-2">
-                          {savedTemplates.map(template => (
-                            <div key={template.id} className={`flex items-center gap-2 px-3 py-2 rounded-lg ${darkMode ? 'bg-gray-600' : 'bg-white border border-gray-300'} ${activeTemplate === 'custom_' + template.id ? 'ring-4 ring-white ring-offset-2 ring-offset-transparent' : ''}`}>
+                        <p className={`text-xs font-semibold uppercase tracking-wider mb-2.5 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                          Your Custom Templates
+                        </p>
+                        <div className="grid grid-cols-2 gap-2">
+                          {savedTemplates.map(template => {
+                            const isActive = activeTemplate === 'custom_' + template.id;
+                            return (
                               <button
+                                key={template.id}
                                 onClick={() => loadTemplate(template)}
-                                className={`font-medium ${darkMode ? 'text-cyan-400 hover:text-cyan-300' : 'text-blue-600 hover:text-blue-700'}`}
+                                className={`flex items-center justify-between w-full px-3 py-2.5 rounded-xl ${darkMode ? 'bg-gray-600 hover:bg-gray-550' : 'bg-white border border-gray-200 hover:border-gray-300'} transition-all cursor-pointer ${isActive ? 'ring-[3px] ring-purple-400 shadow-md' : 'shadow-sm'}`}
                               >
-                                {template.name}
+                                <span className={`font-medium text-sm truncate ${darkMode ? 'text-cyan-400' : 'text-blue-600'}`}>
+                                  {template.name}
+                                </span>
+                                <span
+                                  role="button"
+                                  onClick={(e) => { e.stopPropagation(); deleteTemplate(template.id); }}
+                                  className="text-red-400 hover:text-red-500 p-0.5 ml-1 flex-shrink-0"
+                                >
+                                  <X className="w-3.5 h-3.5" />
+                                </span>
                               </button>
-                              <button
-                                onClick={() => deleteTemplate(template.id)}
-                                className="text-red-500 hover:text-red-700 p-1"
-                              >
-                                <X className="w-4 h-4" />
-                              </button>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       </div>
                     )}
 
+                    {/* Save Template */}
                     {showSaveTemplate ? (
                       <div className="flex flex-col gap-2">
                         <input
@@ -4051,12 +4067,12 @@
                           placeholder="Template name"
                           aria-label="Template name"
                           autoFocus
-                          className={`w-full px-3 py-2.5 border rounded-lg ${darkMode ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400' : 'bg-white border-gray-300'}`}
+                          className={`w-full px-3 py-2.5 border rounded-xl ${darkMode ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400' : 'bg-white border-gray-300'}`}
                         />
                         <div className="flex gap-2">
                           <button
                             onClick={saveTemplate}
-                            className={`flex-1 px-4 py-2.5 rounded-lg ${darkMode ? 'bg-green-600 hover:bg-green-700' : 'bg-green-500 hover:bg-green-600'} text-white font-medium`}
+                            className={`flex-1 px-4 py-2.5 rounded-xl ${darkMode ? 'bg-green-600 hover:bg-green-700' : 'bg-green-500 hover:bg-green-600'} text-white font-medium transition-all`}
                           >
                             Save
                           </button>
@@ -4065,7 +4081,7 @@
                               setShowSaveTemplate(false);
                               setNewTemplateName('');
                             }}
-                            className={`flex-1 px-4 py-2.5 rounded-lg ${darkMode ? 'bg-gray-600 hover:bg-gray-500 text-white' : 'bg-gray-300 hover:bg-gray-400 text-gray-800'} font-medium`}
+                            className={`flex-1 px-4 py-2.5 rounded-xl ${darkMode ? 'bg-gray-600 hover:bg-gray-500 text-white' : 'bg-gray-300 hover:bg-gray-400 text-gray-800'} font-medium transition-all`}
                           >
                             Cancel
                           </button>
@@ -4074,14 +4090,14 @@
                     ) : (
                       <button
                         onClick={() => setShowSaveTemplate(true)}
-                        className={`w-full px-4 py-2.5 rounded-lg ${darkMode ? 'bg-gray-600 hover:bg-gray-500 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-800'} font-medium`}
+                        className={`w-full px-4 py-2.5 rounded-xl border-2 border-dashed ${darkMode ? 'border-gray-500 hover:border-gray-400 text-gray-300 hover:text-white' : 'border-gray-300 hover:border-gray-400 text-gray-500 hover:text-gray-700'} font-medium transition-all`}
                       >
                         + Save Current Settings as Template
                       </button>
                     )}
 
-                    <p className={`text-xs mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                      Templates save team names, point systems, number of places, and event lineup
+                    <p className={`text-xs mt-3 text-center ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                      Templates save team names, point systems, places, and event lineup
                     </p>
                   </CollapsibleSection>
 
