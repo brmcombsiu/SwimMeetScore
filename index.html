@@ -187,11 +187,6 @@
       "@type": "Person",
       "name": "Kaden Co"
     },
-    "aggregateRating": {
-      "@type": "AggregateRating",
-      "ratingValue": "4.8",
-      "ratingCount": "50"
-    },
     "featureList": [
       "Team score tracking",
       "Individual event scoring",
@@ -2698,8 +2693,15 @@
           message: 'Clear ALL data including saved templates? This cannot be undone.',
           onConfirm: () => {
             try {
-              // Clear everything including templates
-              localStorage.clear();
+              // Clear only swimMeetScore-prefixed keys (preserve analytics queue and other data)
+              const keysToRemove = [];
+              for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith('swimMeetScore_')) {
+                  keysToRemove.push(key);
+                }
+              }
+              keysToRemove.forEach(key => localStorage.removeItem(key));
 
               setTeams(defaultTeams);
               setEvents(defaultEvents);
