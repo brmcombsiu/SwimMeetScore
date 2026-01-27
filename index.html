@@ -1077,12 +1077,15 @@
     };
 
     // Place selector with dropdown multiselect for ties
-    const PlaceSelector = ({ event, place, teams, darkMode, pointSystem, numPlaces, onUpdate, consumedByTie }) => {
+    const PlaceSelector = ({ event, place, teams, darkMode, pointSystem, numPlaces, onUpdate, consumedByTie, heatLockEnabled }) => {
       const [isOpen, setIsOpen] = useState(false);
       const dropdownRef = useRef(null);
 
       const result = event.results.find(r => r.place === place);
       const selectedTeamIds = result?.teamIds || [];
+      const isRelay = event.name.includes('Relay');
+      const isBFinals = heatLockEnabled && !isRelay && numPlaces > 10 && place >= 9 && place <= 16;
+      const heatPosition = isBFinals ? place - 8 : null;
       const placeLabel = place === 1 ? '1st' : place === 2 ? '2nd' : place === 3 ? '3rd' : `${place}th`;
 
       // Calculate points display - if there's a tie, show split points
@@ -1130,6 +1133,9 @@
           <div className={`p-1 rounded opacity-50 ${darkMode ? 'bg-gray-800' : 'bg-gray-200'}`}>
             <label className={`text-xs font-medium block ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
               {placeLabel}
+              {isBFinals && (
+                <span className={`ml-0.5 ${darkMode ? 'text-amber-400/50' : 'text-amber-600/50'}`}>H1:{heatPosition}</span>
+              )}
             </label>
             <div className={`w-full px-1 py-1 border rounded text-xs italic ${darkMode ? 'bg-gray-700 border-gray-600 text-gray-500' : 'bg-gray-100 border-gray-300 text-gray-400'}`}>
               (tied above)
@@ -1142,6 +1148,9 @@
         <div className={`p-1 rounded ${darkMode ? 'bg-gray-600' : 'bg-white'} ${numTied > 1 ? (darkMode ? 'ring-2 ring-yellow-500' : 'ring-2 ring-yellow-400') : ''}`} ref={dropdownRef}>
           <label className={`text-xs font-medium block ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
             {placeLabel}
+            {isBFinals && (
+              <span className={`ml-0.5 ${darkMode ? 'text-amber-400' : 'text-amber-600'}`}>H1:{heatPosition}</span>
+            )}
             <span className={`ml-0.5 ${numTied > 1 ? (darkMode ? 'text-yellow-400' : 'text-yellow-600') : ''}`}>
               ({numTied > 1 ? `${splitPointsDisplay} ea` : `${pointsDisplay} pts`})
             </span>
@@ -1284,7 +1293,7 @@
               {/* Visual indicators for Conference/Sectionals settings */}
               {heatLockEnabled && !isRelay && (
                 <span className={`text-xs px-1.5 py-0.5 rounded ${darkMode ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-700'}`}>
-                  🔒 Heat Lock
+                  🔒 1-8=A Finals / 9-16=B Finals (1st-8th h1)
                 </span>
               )}
               {aRelayOnly && isRelay && (
@@ -1321,13 +1330,14 @@
           <div className="space-y-2">
             {teams.map(team => {
               const teamPlaces = getTeamPlaces(team.id);
+              const showHeatLabels = heatLockEnabled && !isRelay && numPlaces > 10;
               return (
                 <div key={team.id} className={`flex items-center gap-2 ${darkMode ? '' : ''}`}>
                   {/* Team name - fixed width */}
                   <div className={`w-20 sm:w-24 flex-shrink-0 text-xs font-medium truncate ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                     {team.name}
                   </div>
-                  
+
                   {/* Place buttons - scrollable on mobile */}
                   <div className="flex gap-1 flex-wrap">
                     {Array.from({ length: numPlaces }, (_, i) => i + 1).map(place => {
@@ -1337,6 +1347,10 @@
                       const hasOtherTeam = teamsAtPlace.some(id => id !== String(team.id));
                       const consumed = isPlaceConsumed(place) && !isSelected;
                       const points = pointSystem[place] || 0;
+
+                      // For B Finals places (9-16), show heat position label
+                      const isBFinals = showHeatLabels && place >= 9 && place <= 16;
+                      const heatPosition = isBFinals ? place - 8 : null;
 
                       if (consumed) {
                         return (
@@ -1354,7 +1368,7 @@
                         <button
                           key={place}
                           onClick={() => togglePlace(team.id, place)}
-                          className={`w-8 h-8 sm:w-9 sm:h-9 rounded font-medium text-xs transition-all ${
+                          className={`${isBFinals ? 'w-10 h-8 sm:w-11 sm:h-9' : 'w-8 h-8 sm:w-9 sm:h-9'} rounded font-medium text-xs transition-all ${
                             isSelected
                               ? (place === 1
                                   ? 'bg-gradient-to-br from-amber-400 to-amber-500 text-amber-900'
@@ -1367,9 +1381,14 @@
                                 ? (darkMode ? 'bg-gray-600/50 text-gray-400 border border-dashed border-gray-500' : 'bg-gray-100 text-gray-400 border border-dashed border-gray-300')
                                 : (darkMode ? 'bg-gray-700/50 text-gray-400 hover:bg-gray-600 border border-gray-600' : 'bg-gray-50 text-gray-500 hover:bg-gray-100 border border-gray-200')
                           } ${isTie && isSelected ? 'ring-2 ring-yellow-400' : ''}`}
-                          title={`${getPlaceLabel(place)} (${points}pts)${hasOtherTeam && !isSelected ? ' - taken' : ''}`}
+                          title={`${getPlaceLabel(place)} (${points}pts)${isBFinals ? ` - B Finals ${heatPosition}${heatPosition === 1 ? 'st' : heatPosition === 2 ? 'nd' : heatPosition === 3 ? 'rd' : 'th'}` : ''}${hasOtherTeam && !isSelected ? ' - taken' : ''}`}
                         >
-                          {place}
+                          {isBFinals ? (
+                            <span className="flex flex-col items-center leading-none">
+                              <span>{place}</span>
+                              <span className={`text-[8px] ${isSelected ? '' : (darkMode ? 'text-amber-400' : 'text-amber-600')}`}>H1:{heatPosition}</span>
+                            </span>
+                          ) : place}
                         </button>
                       );
                     })}
@@ -3628,7 +3647,7 @@
                           <li>• <strong>Individual Events:</strong> 16 places scored (20-17-16-15-14-13-12-11-9-7-6-5-4-3-2-1)</li>
                           <li>• <strong>Relays:</strong> 8 places, A-relay only, double points (40-34-32-30-28-26-24-22)</li>
                           <li>• <strong>B-relays</strong> are exhibition (non-scoring)</li>
-                          <li>• <strong>Heat Lock enabled:</strong> Consolation swimmers locked to places 9-16</li>
+                          <li>• <strong>Heat Lock enabled:</strong> B Finals swimmers locked to places 9-16</li>
                         </ul>
                       </div>
                       
@@ -3638,7 +3657,7 @@
                           <li>• <strong>Individual Events:</strong> 16 places scored (20-17-16-15-14-13-12-11-9-7-6-5-4-3-2-1)</li>
                           <li>• <strong>Relays:</strong> A-relay only, places = number of teams, double points</li>
                           <li>• <strong>Dynamic relay places:</strong> Since each team enters one A-relay, relay places automatically match team count (e.g., 11 teams = 11 relay places)</li>
-                          <li>• <strong>Heat Lock enabled:</strong> Consolation swimmers locked to places 9-16</li>
+                          <li>• <strong>Heat Lock enabled:</strong> B Finals swimmers locked to places 9-16</li>
                         </ul>
                       </div>
                       
@@ -3658,9 +3677,9 @@
                       </p>
                       
                       <div className={`p-4 rounded-lg mb-4 ${darkMode ? 'bg-amber-900/30 border border-amber-700/50' : 'bg-amber-50 border border-amber-200'}`}>
-                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-amber-400' : 'text-amber-700'}`}>🔒 Heat Lock (Prelims/Finals)</h5>
+                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-amber-400' : 'text-amber-700'}`}>🔒 Heat Lock (B Finals/A Finals)</h5>
                         <p className={`text-sm mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                          When enabled, displays a reminder on individual events that consolation heat swimmers are locked to places 9-16, while finals swimmers compete for places 1-8.
+                          When enabled, displays a reminder on individual events that B Finals swimmers are locked to places 9-16, while A Finals swimmers compete for places 1-8.
                         </p>
                         <p className={`text-xs ${darkMode ? 'text-amber-300' : 'text-amber-600'}`}>
                           <strong>Note:</strong> This is a visual reminder - you still manually enter which places each team earned.
@@ -4105,9 +4124,9 @@
                           className="w-5 h-5 rounded accent-amber-500 flex-shrink-0"
                         />
                         <div>
-                          <span className={`font-medium ${darkMode ? 'text-slate-200' : 'text-slate-700'}`}>Heat Lock (Prelims/Finals)</span>
+                          <span className={`font-medium ${darkMode ? 'text-slate-200' : 'text-slate-700'}`}>Heat Lock (B Finals/A Finals)</span>
                           <p className={`text-xs ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                            Consolation swimmers locked to places 9-16; finals compete for 1-8
+                            B Finals swimmers locked to places 9-16; A Finals compete for 1-8
                           </p>
                         </div>
                       </label>
@@ -4526,7 +4545,7 @@
                               {/* Visual indicators for Conference/Sectionals settings */}
                               {heatLockEnabled && !isRelay && (
                                 <span className={`text-xs px-2 py-0.5 rounded-full ${darkMode ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-amber-100 text-amber-700 border border-amber-200'}`}>
-                                  🔒 1-8 Finals / 9-16 Consolation
+                                  🔒 1-8=A Finals / 9-16=B Finals (1st-8th h1)
                                 </span>
                               )}
                               {aRelayOnly && isRelay && (
@@ -4572,6 +4591,7 @@
                                   numPlaces={numPlaces}
                                   onUpdate={updateEventResult}
                                   consumedByTie={consumedPlaces.has(place)}
+                                  heatLockEnabled={heatLockEnabled}
                                 />
                               ));
                             })()}
@@ -4626,7 +4646,7 @@
                                 {/* Visual indicators for Conference/Sectionals settings */}
                                 {heatLockEnabled && !isRelay && (
                                   <span className={`text-xs px-2 py-0.5 rounded-full ${darkMode ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-amber-100 text-amber-700 border border-amber-200'}`}>
-                                    🔒 1-8 Finals / 9-16 Consolation
+                                    🔒 1-8=A Finals / 9-16=B Finals (1st-8th h1)
                                   </span>
                                 )}
                                 {aRelayOnly && isRelay && (
