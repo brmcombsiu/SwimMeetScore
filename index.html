@@ -1386,7 +1386,7 @@
                           {isBFinals ? (
                             <span className="flex flex-col items-center leading-none">
                               <span>{place}</span>
-                              <span className={`text-[8px] ${isSelected ? '' : (darkMode ? 'text-amber-400' : 'text-amber-600')}`}>H1:{heatPosition}</span>
+                              <span className={`text-[9px] leading-none ${isSelected ? '' : (darkMode ? 'text-amber-400' : 'text-amber-600')}`}>H1:{heatPosition}</span>
                             </span>
                           ) : place}
                         </button>
@@ -1675,16 +1675,16 @@
                           </div>
                         )}
                         {isTie && (
-                          <div className="absolute -top-1 -left-1 w-3.5 h-3.5 bg-yellow-500 rounded-full flex items-center justify-center text-[8px] font-bold text-yellow-900">
+                          <div className="absolute -top-1 -left-1 w-3.5 h-3.5 bg-yellow-500 rounded-full flex items-center justify-center text-[9px] font-bold text-yellow-900">
                             {teamsAtPlace.length}
                           </div>
                         )}
                         <div className="text-sm font-bold">{getPlaceLabel(place)}</div>
-                        <div className={`text-[10px] ${isSelected ? 'opacity-80' : (darkMode ? 'text-gray-500' : 'text-gray-400')}`}>
+                        <div className={`text-xs ${isSelected ? 'text-white/80' : (darkMode ? 'text-gray-500' : 'text-gray-400')}`}>
                           {points}pt
                         </div>
                         {hasOtherTeam && !isSelected && (
-                          <div className={`text-[8px] truncate ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                          <div className={`text-[9px] leading-tight truncate ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                             {teams.find(t => teamsAtPlace.includes(String(t.id)) && t.id !== selectedTeam)?.name?.slice(0, 6)}
                           </div>
                         )}
@@ -4004,7 +4004,7 @@
                       <p className={`text-xs font-semibold uppercase tracking-wider mb-1 ${darkMode ? 'text-gray-400' : 'text-indigo-600'}`}>
                         USA Swimming Multi-team
                       </p>
-                      <p className={`text-[10px] mb-2.5 ${darkMode ? 'text-gray-500' : 'text-indigo-400'}`}>
+                      <p className={`text-xs mb-2.5 ${darkMode ? 'text-gray-500' : 'text-indigo-400'}`}>
                         Select by lane count · Relay points doubled
                       </p>
                       <div className="grid grid-cols-4 gap-2">
@@ -4017,7 +4017,7 @@
                               className={`flex flex-col items-center py-2 rounded-lg ${darkMode ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-indigo-500 hover:bg-indigo-600'} text-white text-sm font-medium transition-all shadow-md hover:shadow-lg active:scale-95 ${isActive ? 'ring-[3px] ring-white shadow-lg scale-[1.02]' : ''}`}
                             >
                               <span className="font-bold">{lanes}</span>
-                              <span className="text-[10px] opacity-75">lanes</span>
+                              <span className="text-xs text-white/80">lanes</span>
                             </button>
                           );
                         })}
