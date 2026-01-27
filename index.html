@@ -2877,91 +2877,6 @@
         trackEvent('load_template', { template_name: 'high_school_meet' });
       };
 
-      const loadChampionshipMeet = () => {
-        setNumIndividualPlaces(16);
-        setNumRelayPlaces(16);
-        setNumDivingPlaces(16);
-        setIndividualPointSystem({
-          1: 20, 2: 17, 3: 16, 4: 15, 5: 14, 6: 13, 7: 12, 8: 11, 9: 9, 10: 7, 11: 6, 12: 5, 13: 4, 14: 3, 15: 2, 16: 1, 17: 0, 18: 0, 19: 0, 20: 0
-        });
-        setRelayPointSystem({
-          1: 40, 2: 34, 3: 32, 4: 30, 5: 28, 6: 26, 7: 24, 8: 22, 9: 18, 10: 14, 11: 12, 12: 10, 13: 8, 14: 6, 15: 4, 16: 2, 17: 0, 18: 0, 19: 0, 20: 0
-        });
-        setDivingPointSystem({
-          1: 20, 2: 17, 3: 16, 4: 15, 5: 14, 6: 13, 7: 12, 8: 11, 9: 9, 10: 7, 11: 6, 12: 5, 13: 4, 14: 3, 15: 2, 16: 1, 17: 0, 18: 0, 19: 0, 20: 0
-        });
-        // Disable Conference/Sectionals-specific features
-        setHeatLockEnabled(false);
-        setARelayOnly(false);
-        // Disable team place limit for championship meets (many teams competing)
-        setTeamPlaceLimitEnabled(false);
-        // Set 8 default teams for championship meet
-        const championshipTeams = [
-          { id: utils.generateId(), name: 'Team 1', score: 0, girlsScore: 0, boysScore: 0 },
-          { id: utils.generateId(), name: 'Team 2', score: 0, girlsScore: 0, boysScore: 0 },
-          { id: utils.generateId(), name: 'Team 3', score: 0, girlsScore: 0, boysScore: 0 },
-          { id: utils.generateId(), name: 'Team 4', score: 0, girlsScore: 0, boysScore: 0 },
-          { id: utils.generateId(), name: 'Team 5', score: 0, girlsScore: 0, boysScore: 0 },
-          { id: utils.generateId(), name: 'Team 6', score: 0, girlsScore: 0, boysScore: 0 },
-          { id: utils.generateId(), name: 'Team 7', score: 0, girlsScore: 0, boysScore: 0 },
-          { id: utils.generateId(), name: 'Team 8', score: 0, girlsScore: 0, boysScore: 0 }
-        ];
-        setTeams(championshipTeams);
-        const newEvents = competitionEvents.map((e) => ({
-          id: utils.generateId(),
-          name: e.name,
-          gender: e.gender,
-          results: []
-        }));
-        setEvents(newEvents);
-        recalculateAllScores(championshipTeams, newEvents);
-        setActiveTemplate('championship_16');
-        // Track event
-        trackEvent('load_template', { template_name: 'championship_meet' });
-      };
-
-      const loadChampionshipMeet8 = () => {
-        setNumIndividualPlaces(8);
-        setNumRelayPlaces(8);
-        setNumDivingPlaces(8);
-        setIndividualPointSystem({
-          1: 11, 2: 9, 3: 8, 4: 7, 5: 6, 6: 5, 7: 4, 8: 3, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0, 15: 0, 16: 0, 17: 0, 18: 0, 19: 0, 20: 0
-        });
-        setRelayPointSystem({
-          1: 22, 2: 18, 3: 16, 4: 14, 5: 12, 6: 10, 7: 8, 8: 6, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0, 15: 0, 16: 0, 17: 0, 18: 0, 19: 0, 20: 0
-        });
-        setDivingPointSystem({
-          1: 11, 2: 9, 3: 8, 4: 7, 5: 6, 6: 5, 7: 4, 8: 3, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0, 15: 0, 16: 0, 17: 0, 18: 0, 19: 0, 20: 0
-        });
-        // Disable Conference/Sectionals-specific features
-        setHeatLockEnabled(false);
-        setARelayOnly(false);
-        // Disable team place limit for championship meets (many teams competing)
-        setTeamPlaceLimitEnabled(false);
-        // Set 8 default teams for championship meet
-        const championshipTeams = [
-          { id: utils.generateId(), name: 'Team 1', score: 0, girlsScore: 0, boysScore: 0 },
-          { id: utils.generateId(), name: 'Team 2', score: 0, girlsScore: 0, boysScore: 0 },
-          { id: utils.generateId(), name: 'Team 3', score: 0, girlsScore: 0, boysScore: 0 },
-          { id: utils.generateId(), name: 'Team 4', score: 0, girlsScore: 0, boysScore: 0 },
-          { id: utils.generateId(), name: 'Team 5', score: 0, girlsScore: 0, boysScore: 0 },
-          { id: utils.generateId(), name: 'Team 6', score: 0, girlsScore: 0, boysScore: 0 },
-          { id: utils.generateId(), name: 'Team 7', score: 0, girlsScore: 0, boysScore: 0 },
-          { id: utils.generateId(), name: 'Team 8', score: 0, girlsScore: 0, boysScore: 0 }
-        ];
-        setTeams(championshipTeams);
-        const newEvents = competitionEvents.map((e) => ({
-          id: utils.generateId(),
-          name: e.name,
-          gender: e.gender,
-          results: []
-        }));
-        setEvents(newEvents);
-        recalculateAllScores(championshipTeams, newEvents);
-        setActiveTemplate('championship_8');
-        // Track event
-        trackEvent('load_template', { template_name: 'championship_meet_8' });
-      };
 
       // Conference Meet - 16 places individual, 8 places relay (A-relay only), heat lock enabled
       const loadConferenceMeet = () => {
@@ -3958,7 +3873,7 @@
                   <CollapsibleSection
                     id="scoring-templates"
                     title="Scoring Templates"
-                    description={activeTemplate ? `Using: ${{high_school:'HS Dual Meet',championship_8:'Champs (Top 8)',championship_16:'Champs (Top 16)',conference:'Conference',sectionals:'Sectionals'}[activeTemplate] || (activeTemplate.startsWith('usa_swimming_') ? 'USA Swimming ' + activeTemplate.split('_')[2] + '-Lane' : activeTemplate.startsWith('custom_') ? (savedTemplates.find(t => 'custom_' + t.id === activeTemplate) || {}).name || 'Custom' : activeTemplate.replace(/_/g, ' '))}` : "Quick presets for common meets"}
+                    description={activeTemplate ? `Using: ${{high_school:'HS Dual Meet',conference:'Conference',sectionals:'Sectionals'}[activeTemplate] || (activeTemplate.startsWith('usa_swimming_') ? 'USA Swimming ' + activeTemplate.split('_')[2] + '-Lane' : activeTemplate.startsWith('custom_') ? (savedTemplates.find(t => 'custom_' + t.id === activeTemplate) || {}).name || 'Custom' : activeTemplate.replace(/_/g, ' '))}` : "Quick presets for common meets"}
                     isCollapsed={collapsedSections['scoring-templates']}
                     onToggle={toggleSection}
                     darkMode={darkMode}
@@ -3972,16 +3887,12 @@
                       <div className="grid grid-cols-2 gap-2.5">
                         {[
                           { label: 'HS Dual Meet', key: 'high_school', onClick: loadHighSchoolMeet, desc: '2 teams · 5 places', color: 'pink' },
-                          { label: 'Champs (Top 8)', key: 'championship_8', onClick: loadChampionshipMeet8, desc: '8 teams · 8 places', color: 'purple' },
-                          { label: 'Champs (Top 16)', key: 'championship_16', onClick: loadChampionshipMeet, desc: '8 teams · 16 places', color: 'blue' },
                           { label: 'Conference', key: 'conference', onClick: loadConferenceMeet, desc: '8 teams · 16 places', color: 'amber' },
                           { label: 'Sectionals', key: 'sectionals', onClick: loadSectionalsMeet, desc: '10 teams · 16 places', color: 'teal' },
                         ].map(tmpl => {
                           const isActive = activeTemplate === tmpl.key;
                           const colorMap = {
                             pink: darkMode ? 'bg-pink-600 hover:bg-pink-700' : 'bg-pink-500 hover:bg-pink-600',
-                            purple: darkMode ? 'bg-purple-600 hover:bg-purple-700' : 'bg-purple-500 hover:bg-purple-600',
-                            blue: darkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600',
                             amber: darkMode ? 'bg-amber-600 hover:bg-amber-700' : 'bg-amber-500 hover:bg-amber-600',
                             teal: darkMode ? 'bg-teal-600 hover:bg-teal-700' : 'bg-teal-500 hover:bg-teal-600',
                           };
