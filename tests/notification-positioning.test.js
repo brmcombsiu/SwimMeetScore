@@ -28,15 +28,16 @@ console.log('=== Notification Positioning Tests ===\n');
 
 // Test 1: Error notification uses fixed positioning
 console.log('--- Error Notification Positioning ---');
-const errorNotificationRegex = /{error\s*&&[^}]*}[^<]*<div\s+className="([^"]+)"/;
 const errorMatch = htmlContent.match(/\{error\s*&&\s*\(\s*<div\s+className="([^"]+)"/);
 if (errorMatch) {
   const errorClasses = errorMatch[1];
   assert(errorClasses.includes('fixed'), 'Error notification should have "fixed" class');
   assert(errorClasses.includes('top-4'), 'Error notification should have "top-4" class for top positioning');
   assert(errorClasses.includes('z-50'), 'Error notification should have "z-50" class for proper stacking');
-  assert(errorClasses.includes('left-1/2'), 'Error notification should have "left-1/2" for centering');
-  assert(errorClasses.includes('-translate-x-1/2'), 'Error notification should have "-translate-x-1/2" for centering');
+  assert(errorClasses.includes('left-4'), 'Error notification should have "left-4" for left margin');
+  assert(errorClasses.includes('right-4'), 'Error notification should have "right-4" for right margin');
+  assert(errorClasses.includes('flex'), 'Error notification should have "flex" class');
+  assert(errorClasses.includes('justify-center'), 'Error notification should have "justify-center" for centering');
 } else {
   console.error('FAIL: Could not find error notification in HTML');
   process.exitCode = 1;
@@ -50,8 +51,10 @@ if (successMatch) {
   assert(successClasses.includes('fixed'), 'Success notification should have "fixed" class');
   assert(successClasses.includes('top-4'), 'Success notification should have "top-4" class for top positioning');
   assert(successClasses.includes('z-50'), 'Success notification should have "z-50" class for proper stacking');
-  assert(successClasses.includes('left-1/2'), 'Success notification should have "left-1/2" for centering');
-  assert(successClasses.includes('-translate-x-1/2'), 'Success notification should have "-translate-x-1/2" for centering');
+  assert(successClasses.includes('left-4'), 'Success notification should have "left-4" for left margin');
+  assert(successClasses.includes('right-4'), 'Success notification should have "right-4" for right margin');
+  assert(successClasses.includes('flex'), 'Success notification should have "flex" class');
+  assert(successClasses.includes('justify-center'), 'Success notification should have "justify-center" for centering');
 } else {
   console.error('FAIL: Could not find success notification in HTML');
   process.exitCode = 1;
@@ -65,8 +68,10 @@ if (offlineMatch) {
   assert(offlineClasses.includes('fixed'), 'Offline notification should have "fixed" class');
   assert(offlineClasses.includes('top-4'), 'Offline notification should have "top-4" class for top positioning');
   assert(offlineClasses.includes('z-50'), 'Offline notification should have "z-50" class for proper stacking');
-  assert(offlineClasses.includes('left-1/2'), 'Offline notification should have "left-1/2" for centering');
-  assert(offlineClasses.includes('-translate-x-1/2'), 'Offline notification should have "-translate-x-1/2" for centering');
+  assert(offlineClasses.includes('left-4'), 'Offline notification should have "left-4" for left margin');
+  assert(offlineClasses.includes('right-4'), 'Offline notification should have "right-4" for right margin');
+  assert(offlineClasses.includes('flex'), 'Offline notification should have "flex" class');
+  assert(offlineClasses.includes('justify-center'), 'Offline notification should have "justify-center" for centering');
 } else {
   console.error('FAIL: Could not find offline notification in HTML');
   process.exitCode = 1;
