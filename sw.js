@@ -1,5 +1,5 @@
 // SwimMeetScore Service Worker
-const CACHE_NAME = 'swimmeetscore-v9';
+const CACHE_NAME = 'swimmeetscore-v10';
 
 // Files to cache for offline use
 const CACHE_FILES = [
@@ -90,27 +90,35 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // For CDN resources and local files, try cache first
+  // Navigation requests (index.html): network-first so deploys reach users immediately
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetchAndCache(event.request)
+        .catch(() => {
+          // Offline — serve cached index.html
+          return caches.match('./index.html')
+            .then((cached) => cached || caches.match('./'));
+        })
+    );
+    return;
+  }
+
+  // All other resources (CDN scripts, icons, manifest): cache-first for speed
   event.respondWith(
     caches.match(event.request)
       .then((cachedResponse) => {
-        // Return cached version if available
         if (cachedResponse) {
-          // Also fetch from network to update cache in background (for local files only)
+          // Update cache in background for local files (stale-while-revalidate)
           if (url.origin === location.origin) {
             fetchAndCache(event.request);
           }
           return cachedResponse;
         }
-
         // Not in cache - fetch from network
         return fetchAndCache(event.request);
       })
       .catch(() => {
-        // If both cache and network fail, show offline page for navigation requests
-        if (event.request.mode === 'navigate') {
-          return caches.match('./');
-        }
+        // Nothing we can do — let the browser handle the error
       })
   );
 });
