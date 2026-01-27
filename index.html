@@ -1284,7 +1284,7 @@
               {/* Visual indicators for Conference/Sectionals settings */}
               {heatLockEnabled && !isRelay && (
                 <span className={`text-xs px-1.5 py-0.5 rounded ${darkMode ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-700'}`}>
-                  🔒 1-8 A Finals / 9-16 B Finals
+                  🔒 1-8=A Finals / 9-16=B Finals (1st-8th h1)
                 </span>
               )}
               {aRelayOnly && isRelay && (
@@ -1317,27 +1317,11 @@
             </div>
           </div>
 
-          {/* Heat labels when heat lock enabled */}
-          {heatLockEnabled && !isRelay && numPlaces > 10 && (
-            <div className="flex items-center gap-2 mb-1">
-              <div className="w-20 sm:w-24 flex-shrink-0"></div>
-              <div className="flex items-center">
-                <div className={`text-xs font-semibold px-1 ${darkMode ? 'text-amber-400' : 'text-amber-700'}`} style={{ width: `${8 * 36 + 7 * 4}px` }}>
-                  A Finals (1-8)
-                </div>
-                <div className={`mx-2 w-px h-4 ${darkMode ? 'bg-amber-500/50' : 'bg-amber-400'}`}></div>
-                <div className={`text-xs font-semibold px-1 ${darkMode ? 'text-cyan-400' : 'text-cyan-700'}`}>
-                  B Finals (9-16)
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Team rows with place buttons */}
           <div className="space-y-2">
             {teams.map(team => {
               const teamPlaces = getTeamPlaces(team.id);
-              const showHeatDivider = heatLockEnabled && !isRelay && numPlaces > 10;
+              const showHeatLabels = heatLockEnabled && !isRelay && numPlaces > 10;
               return (
                 <div key={team.id} className={`flex items-center gap-2 ${darkMode ? '' : ''}`}>
                   {/* Team name - fixed width */}
@@ -1346,7 +1330,7 @@
                   </div>
 
                   {/* Place buttons - scrollable on mobile */}
-                  <div className="flex gap-1 flex-wrap items-center">
+                  <div className="flex gap-1 flex-wrap">
                     {Array.from({ length: numPlaces }, (_, i) => i + 1).map(place => {
                       const isSelected = teamPlaces.includes(place);
                       const teamsAtPlace = getTeamsAtPlace(place);
@@ -1355,47 +1339,48 @@
                       const consumed = isPlaceConsumed(place) && !isSelected;
                       const points = pointSystem[place] || 0;
 
+                      // For B Finals places (9-16), show heat position label
+                      const isBFinals = showHeatLabels && place >= 9 && place <= 16;
+                      const heatPosition = isBFinals ? place - 8 : null;
+
                       if (consumed) {
                         return (
-                          <React.Fragment key={place}>
-                            <div
-                              className={`w-8 h-8 sm:w-9 sm:h-9 rounded flex items-center justify-center text-xs opacity-30 ${darkMode ? 'bg-gray-700 text-gray-500' : 'bg-gray-200 text-gray-400'}`}
-                              title="Consumed by tie above"
-                            >
-                              -
-                            </div>
-                            {showHeatDivider && place === 8 && (
-                              <div className={`mx-1.5 w-px h-8 sm:h-9 ${darkMode ? 'bg-amber-500/50' : 'bg-amber-400'}`}></div>
-                            )}
-                          </React.Fragment>
+                          <div
+                            key={place}
+                            className={`w-8 h-8 sm:w-9 sm:h-9 rounded flex items-center justify-center text-xs opacity-30 ${darkMode ? 'bg-gray-700 text-gray-500' : 'bg-gray-200 text-gray-400'}`}
+                            title="Consumed by tie above"
+                          >
+                            -
+                          </div>
                         );
                       }
 
                       return (
-                        <React.Fragment key={place}>
-                          <button
-                            onClick={() => togglePlace(team.id, place)}
-                            className={`w-8 h-8 sm:w-9 sm:h-9 rounded font-medium text-xs transition-all ${
-                              isSelected
-                                ? (place === 1
-                                    ? 'bg-gradient-to-br from-amber-400 to-amber-500 text-amber-900'
-                                    : place === 2
-                                      ? 'bg-gradient-to-br from-gray-300 to-gray-400 text-gray-800'
-                                      : place === 3
-                                        ? 'bg-gradient-to-br from-orange-400 to-orange-500 text-orange-900'
-                                        : (darkMode ? 'bg-chlorine text-pool-deep' : 'bg-cyan-600 text-white'))
-                                : hasOtherTeam
-                                  ? (darkMode ? 'bg-gray-600/50 text-gray-400 border border-dashed border-gray-500' : 'bg-gray-100 text-gray-400 border border-dashed border-gray-300')
-                                  : (darkMode ? 'bg-gray-700/50 text-gray-400 hover:bg-gray-600 border border-gray-600' : 'bg-gray-50 text-gray-500 hover:bg-gray-100 border border-gray-200')
-                            } ${isTie && isSelected ? 'ring-2 ring-yellow-400' : ''}`}
-                            title={`${getPlaceLabel(place)} (${points}pts)${hasOtherTeam && !isSelected ? ' - taken' : ''}`}
-                          >
-                            {place}
-                          </button>
-                          {showHeatDivider && place === 8 && (
-                            <div className={`mx-1.5 w-px h-8 sm:h-9 ${darkMode ? 'bg-amber-500/50' : 'bg-amber-400'}`}></div>
-                          )}
-                        </React.Fragment>
+                        <button
+                          key={place}
+                          onClick={() => togglePlace(team.id, place)}
+                          className={`${isBFinals ? 'w-10 h-8 sm:w-11 sm:h-9' : 'w-8 h-8 sm:w-9 sm:h-9'} rounded font-medium text-xs transition-all ${
+                            isSelected
+                              ? (place === 1
+                                  ? 'bg-gradient-to-br from-amber-400 to-amber-500 text-amber-900'
+                                  : place === 2
+                                    ? 'bg-gradient-to-br from-gray-300 to-gray-400 text-gray-800'
+                                    : place === 3
+                                      ? 'bg-gradient-to-br from-orange-400 to-orange-500 text-orange-900'
+                                      : (darkMode ? 'bg-chlorine text-pool-deep' : 'bg-cyan-600 text-white'))
+                              : hasOtherTeam
+                                ? (darkMode ? 'bg-gray-600/50 text-gray-400 border border-dashed border-gray-500' : 'bg-gray-100 text-gray-400 border border-dashed border-gray-300')
+                                : (darkMode ? 'bg-gray-700/50 text-gray-400 hover:bg-gray-600 border border-gray-600' : 'bg-gray-50 text-gray-500 hover:bg-gray-100 border border-gray-200')
+                          } ${isTie && isSelected ? 'ring-2 ring-yellow-400' : ''}`}
+                          title={`${getPlaceLabel(place)} (${points}pts)${isBFinals ? ` - B Finals ${heatPosition}${heatPosition === 1 ? 'st' : heatPosition === 2 ? 'nd' : heatPosition === 3 ? 'rd' : 'th'}` : ''}${hasOtherTeam && !isSelected ? ' - taken' : ''}`}
+                        >
+                          {isBFinals ? (
+                            <span className="flex flex-col items-center leading-none">
+                              <span>{place}</span>
+                              <span className={`text-[8px] ${isSelected ? '' : (darkMode ? 'text-amber-400' : 'text-amber-600')}`}>H1:{heatPosition}</span>
+                            </span>
+                          ) : place}
+                        </button>
                       );
                     })}
                   </div>
@@ -4551,7 +4536,7 @@
                               {/* Visual indicators for Conference/Sectionals settings */}
                               {heatLockEnabled && !isRelay && (
                                 <span className={`text-xs px-2 py-0.5 rounded-full ${darkMode ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-amber-100 text-amber-700 border border-amber-200'}`}>
-                                  🔒 1-8 A Finals / 9-16 B Finals
+                                  🔒 1-8=A Finals / 9-16=B Finals (1st-8th h1)
                                 </span>
                               )}
                               {aRelayOnly && isRelay && (
@@ -4651,7 +4636,7 @@
                                 {/* Visual indicators for Conference/Sectionals settings */}
                                 {heatLockEnabled && !isRelay && (
                                   <span className={`text-xs px-2 py-0.5 rounded-full ${darkMode ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-amber-100 text-amber-700 border border-amber-200'}`}>
-                                    🔒 1-8 A Finals / 9-16 B Finals
+                                    🔒 1-8=A Finals / 9-16=B Finals (1st-8th h1)
                                   </span>
                                 )}
                                 {aRelayOnly && isRelay && (
