@@ -3958,7 +3958,7 @@
                   <CollapsibleSection
                     id="scoring-templates"
                     title="Scoring Templates"
-                    description={activeTemplate ? `Using: ${activeTemplate.replace(/_/g, ' ').replace('usa swimming', 'USA Swimming')}` : "Quick presets for common meets"}
+                    description={activeTemplate ? `Using: ${{high_school:'HS Dual Meet',championship_8:'Champs (Top 8)',championship_16:'Champs (Top 16)',conference:'Conference',sectionals:'Sectionals'}[activeTemplate] || (activeTemplate.startsWith('usa_swimming_') ? 'USA Swimming ' + activeTemplate.split('_')[2] + '-Lane' : activeTemplate.startsWith('custom_') ? (savedTemplates.find(t => 'custom_' + t.id === activeTemplate) || {}).name || 'Custom' : activeTemplate.replace(/_/g, ' '))}` : "Quick presets for common meets"}
                     isCollapsed={collapsedSections['scoring-templates']}
                     onToggle={toggleSection}
                     darkMode={darkMode}
@@ -3971,11 +3971,11 @@
                       </p>
                       <div className="grid grid-cols-2 gap-2.5">
                         {[
-                          { label: 'HS Dual Meet', key: 'high_school', onClick: loadHighSchoolMeet, desc: '2 teams \u00b7 5 places', color: 'pink' },
-                          { label: 'Champs (Top 8)', key: 'championship_8', onClick: loadChampionshipMeet8, desc: '8 teams \u00b7 8 places', color: 'purple' },
-                          { label: 'Champs (Top 16)', key: 'championship_16', onClick: loadChampionshipMeet, desc: '8 teams \u00b7 16 places', color: 'blue' },
-                          { label: 'Conference', key: 'conference', onClick: loadConferenceMeet, desc: '8 teams \u00b7 16 places', color: 'amber' },
-                          { label: 'Sectionals', key: 'sectionals', onClick: loadSectionalsMeet, desc: '10 teams \u00b7 16 places', color: 'teal' },
+                          { label: 'HS Dual Meet', key: 'high_school', onClick: loadHighSchoolMeet, desc: '2 teams · 5 places', color: 'pink' },
+                          { label: 'Champs (Top 8)', key: 'championship_8', onClick: loadChampionshipMeet8, desc: '8 teams · 8 places', color: 'purple' },
+                          { label: 'Champs (Top 16)', key: 'championship_16', onClick: loadChampionshipMeet, desc: '8 teams · 16 places', color: 'blue' },
+                          { label: 'Conference', key: 'conference', onClick: loadConferenceMeet, desc: '8 teams · 16 places', color: 'amber' },
+                          { label: 'Sectionals', key: 'sectionals', onClick: loadSectionalsMeet, desc: '10 teams · 16 places', color: 'teal' },
                         ].map(tmpl => {
                           const isActive = activeTemplate === tmpl.key;
                           const colorMap = {
@@ -4005,7 +4005,7 @@
                         USA Swimming Multi-team
                       </p>
                       <p className={`text-[10px] mb-2.5 ${darkMode ? 'text-gray-500' : 'text-indigo-400'}`}>
-                        Select by lane count \u00b7 Relay points doubled
+                        Select by lane count · Relay points doubled
                       </p>
                       <div className="grid grid-cols-4 gap-2">
                         {[4, 5, 6, 7, 8, 9, 10].map(lanes => {
@@ -4034,20 +4034,22 @@
                           {savedTemplates.map(template => {
                             const isActive = activeTemplate === 'custom_' + template.id;
                             return (
-                              <div key={template.id} className={`flex items-center justify-between px-3 py-2.5 rounded-xl ${darkMode ? 'bg-gray-600 hover:bg-gray-550' : 'bg-white border border-gray-200 hover:border-gray-300'} transition-all ${isActive ? 'ring-[3px] ring-purple-400 shadow-md' : 'shadow-sm'}`}>
-                                <button
-                                  onClick={() => loadTemplate(template)}
-                                  className={`font-medium text-sm truncate ${darkMode ? 'text-cyan-400 hover:text-cyan-300' : 'text-blue-600 hover:text-blue-700'}`}
-                                >
+                              <button
+                                key={template.id}
+                                onClick={() => loadTemplate(template)}
+                                className={`flex items-center justify-between w-full px-3 py-2.5 rounded-xl ${darkMode ? 'bg-gray-600 hover:bg-gray-550' : 'bg-white border border-gray-200 hover:border-gray-300'} transition-all cursor-pointer ${isActive ? 'ring-[3px] ring-purple-400 shadow-md' : 'shadow-sm'}`}
+                              >
+                                <span className={`font-medium text-sm truncate ${darkMode ? 'text-cyan-400' : 'text-blue-600'}`}>
                                   {template.name}
-                                </button>
-                                <button
-                                  onClick={() => deleteTemplate(template.id)}
+                                </span>
+                                <span
+                                  role="button"
+                                  onClick={(e) => { e.stopPropagation(); deleteTemplate(template.id); }}
                                   className="text-red-400 hover:text-red-500 p-0.5 ml-1 flex-shrink-0"
                                 >
                                   <X className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
+                                </span>
+                              </button>
                             );
                           })}
                         </div>
