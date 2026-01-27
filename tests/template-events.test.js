@@ -63,8 +63,6 @@ const competitionEvents = [
 // Templates that should include diving
 const templatesWithDiving = [
   'high_school',
-  'championship_16',
-  'championship_8',
   'conference',
   'sectionals'
 ];
