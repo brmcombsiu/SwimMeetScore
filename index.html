@@ -187,11 +187,6 @@
       "@type": "Person",
       "name": "Kaden Co"
     },
-    "aggregateRating": {
-      "@type": "AggregateRating",
-      "ratingValue": "4.8",
-      "ratingCount": "50"
-    },
     "featureList": [
       "Team score tracking",
       "Individual event scoring",
@@ -1077,12 +1072,15 @@
     };
 
     // Place selector with dropdown multiselect for ties
-    const PlaceSelector = ({ event, place, teams, darkMode, pointSystem, numPlaces, onUpdate, consumedByTie }) => {
+    const PlaceSelector = ({ event, place, teams, darkMode, pointSystem, numPlaces, onUpdate, consumedByTie, heatLockEnabled }) => {
       const [isOpen, setIsOpen] = useState(false);
       const dropdownRef = useRef(null);
 
       const result = event.results.find(r => r.place === place);
       const selectedTeamIds = result?.teamIds || [];
+      const isRelay = event.name.includes('Relay');
+      const isBFinals = heatLockEnabled && !isRelay && numPlaces > 10 && place >= 9 && place <= 16;
+      const heatPosition = isBFinals ? place - 8 : null;
       const placeLabel = place === 1 ? '1st' : place === 2 ? '2nd' : place === 3 ? '3rd' : `${place}th`;
 
       // Calculate points display - if there's a tie, show split points
@@ -1130,6 +1128,9 @@
           <div className={`p-1 rounded opacity-50 ${darkMode ? 'bg-gray-800' : 'bg-gray-200'}`}>
             <label className={`text-xs font-medium block ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
               {placeLabel}
+              {isBFinals && (
+                <span className={`ml-0.5 ${darkMode ? 'text-amber-400/50' : 'text-amber-600/50'}`}>H1:{heatPosition}</span>
+              )}
             </label>
             <div className={`w-full px-1 py-1 border rounded text-xs italic ${darkMode ? 'bg-gray-700 border-gray-600 text-gray-500' : 'bg-gray-100 border-gray-300 text-gray-400'}`}>
               (tied above)
@@ -1142,6 +1143,9 @@
         <div className={`p-1 rounded ${darkMode ? 'bg-gray-600' : 'bg-white'} ${numTied > 1 ? (darkMode ? 'ring-2 ring-yellow-500' : 'ring-2 ring-yellow-400') : ''}`} ref={dropdownRef}>
           <label className={`text-xs font-medium block ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
             {placeLabel}
+            {isBFinals && (
+              <span className={`ml-0.5 ${darkMode ? 'text-amber-400' : 'text-amber-600'}`}>H1:{heatPosition}</span>
+            )}
             <span className={`ml-0.5 ${numTied > 1 ? (darkMode ? 'text-yellow-400' : 'text-yellow-600') : ''}`}>
               ({numTied > 1 ? `${splitPointsDisplay} ea` : `${pointsDisplay} pts`})
             </span>
@@ -1284,7 +1288,7 @@
               {/* Visual indicators for Conference/Sectionals settings */}
               {heatLockEnabled && !isRelay && (
                 <span className={`text-xs px-1.5 py-0.5 rounded ${darkMode ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-700'}`}>
-                  🔒 Heat Lock
+                  🔒 1-8=A Finals / 9-16=B Finals (1st-8th h1)
                 </span>
               )}
               {aRelayOnly && isRelay && (
@@ -1321,13 +1325,14 @@
           <div className="space-y-2">
             {teams.map(team => {
               const teamPlaces = getTeamPlaces(team.id);
+              const showHeatLabels = heatLockEnabled && !isRelay && numPlaces > 10;
               return (
                 <div key={team.id} className={`flex items-center gap-2 ${darkMode ? '' : ''}`}>
                   {/* Team name - fixed width */}
                   <div className={`w-20 sm:w-24 flex-shrink-0 text-xs font-medium truncate ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                     {team.name}
                   </div>
-                  
+
                   {/* Place buttons - scrollable on mobile */}
                   <div className="flex gap-1 flex-wrap">
                     {Array.from({ length: numPlaces }, (_, i) => i + 1).map(place => {
@@ -1337,6 +1342,10 @@
                       const hasOtherTeam = teamsAtPlace.some(id => id !== String(team.id));
                       const consumed = isPlaceConsumed(place) && !isSelected;
                       const points = pointSystem[place] || 0;
+
+                      // For B Finals places (9-16), show heat position label
+                      const isBFinals = showHeatLabels && place >= 9 && place <= 16;
+                      const heatPosition = isBFinals ? place - 8 : null;
 
                       if (consumed) {
                         return (
@@ -1354,7 +1363,7 @@
                         <button
                           key={place}
                           onClick={() => togglePlace(team.id, place)}
-                          className={`w-8 h-8 sm:w-9 sm:h-9 rounded font-medium text-xs transition-all ${
+                          className={`${isBFinals ? 'w-10 h-8 sm:w-11 sm:h-9' : 'w-8 h-8 sm:w-9 sm:h-9'} rounded font-medium text-xs transition-all ${
                             isSelected
                               ? (place === 1
                                   ? 'bg-gradient-to-br from-amber-400 to-amber-500 text-amber-900'
@@ -1367,9 +1376,14 @@
                                 ? (darkMode ? 'bg-gray-600/50 text-gray-400 border border-dashed border-gray-500' : 'bg-gray-100 text-gray-400 border border-dashed border-gray-300')
                                 : (darkMode ? 'bg-gray-700/50 text-gray-400 hover:bg-gray-600 border border-gray-600' : 'bg-gray-50 text-gray-500 hover:bg-gray-100 border border-gray-200')
                           } ${isTie && isSelected ? 'ring-2 ring-yellow-400' : ''}`}
-                          title={`${getPlaceLabel(place)} (${points}pts)${hasOtherTeam && !isSelected ? ' - taken' : ''}`}
+                          title={`${getPlaceLabel(place)} (${points}pts)${isBFinals ? ` - B Finals ${heatPosition}${heatPosition === 1 ? 'st' : heatPosition === 2 ? 'nd' : heatPosition === 3 ? 'rd' : 'th'}` : ''}${hasOtherTeam && !isSelected ? ' - taken' : ''}`}
                         >
-                          {place}
+                          {isBFinals ? (
+                            <span className="flex flex-col items-center leading-none">
+                              <span>{place}</span>
+                              <span className={`text-[9px] leading-none ${isSelected ? '' : (darkMode ? 'text-amber-400' : 'text-amber-600')}`}>H1:{heatPosition}</span>
+                            </span>
+                          ) : place}
                         </button>
                       );
                     })}
@@ -1656,16 +1670,16 @@
                           </div>
                         )}
                         {isTie && (
-                          <div className="absolute -top-1 -left-1 w-3.5 h-3.5 bg-yellow-500 rounded-full flex items-center justify-center text-[8px] font-bold text-yellow-900">
+                          <div className="absolute -top-1 -left-1 w-3.5 h-3.5 bg-yellow-500 rounded-full flex items-center justify-center text-[9px] font-bold text-yellow-900">
                             {teamsAtPlace.length}
                           </div>
                         )}
                         <div className="text-sm font-bold">{getPlaceLabel(place)}</div>
-                        <div className={`text-[10px] ${isSelected ? 'opacity-80' : (darkMode ? 'text-gray-500' : 'text-gray-400')}`}>
+                        <div className={`text-xs ${isSelected ? 'text-white/80' : (darkMode ? 'text-gray-500' : 'text-gray-400')}`}>
                           {points}pt
                         </div>
                         {hasOtherTeam && !isSelected && (
-                          <div className={`text-[8px] truncate ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                          <div className={`text-[9px] leading-tight truncate ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                             {teams.find(t => teamsAtPlace.includes(String(t.id)) && t.id !== selectedTeam)?.name?.slice(0, 6)}
                           </div>
                         )}
@@ -2679,8 +2693,15 @@
           message: 'Clear ALL data including saved templates? This cannot be undone.',
           onConfirm: () => {
             try {
-              // Clear everything including templates
-              localStorage.clear();
+              // Clear only swimMeetScore-prefixed keys (preserve analytics queue and other data)
+              const keysToRemove = [];
+              for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith('swimMeetScore_')) {
+                  keysToRemove.push(key);
+                }
+              }
+              keysToRemove.forEach(key => localStorage.removeItem(key));
 
               setTeams(defaultTeams);
               setEvents(defaultEvents);
@@ -2858,91 +2879,6 @@
         trackEvent('load_template', { template_name: 'high_school_meet' });
       };
 
-      const loadChampionshipMeet = () => {
-        setNumIndividualPlaces(16);
-        setNumRelayPlaces(16);
-        setNumDivingPlaces(16);
-        setIndividualPointSystem({
-          1: 20, 2: 17, 3: 16, 4: 15, 5: 14, 6: 13, 7: 12, 8: 11, 9: 9, 10: 7, 11: 6, 12: 5, 13: 4, 14: 3, 15: 2, 16: 1, 17: 0, 18: 0, 19: 0, 20: 0
-        });
-        setRelayPointSystem({
-          1: 40, 2: 34, 3: 32, 4: 30, 5: 28, 6: 26, 7: 24, 8: 22, 9: 18, 10: 14, 11: 12, 12: 10, 13: 8, 14: 6, 15: 4, 16: 2, 17: 0, 18: 0, 19: 0, 20: 0
-        });
-        setDivingPointSystem({
-          1: 20, 2: 17, 3: 16, 4: 15, 5: 14, 6: 13, 7: 12, 8: 11, 9: 9, 10: 7, 11: 6, 12: 5, 13: 4, 14: 3, 15: 2, 16: 1, 17: 0, 18: 0, 19: 0, 20: 0
-        });
-        // Disable Conference/Sectionals-specific features
-        setHeatLockEnabled(false);
-        setARelayOnly(false);
-        // Disable team place limit for championship meets (many teams competing)
-        setTeamPlaceLimitEnabled(false);
-        // Set 8 default teams for championship meet
-        const championshipTeams = [
-          { id: utils.generateId(), name: 'Team 1', score: 0, girlsScore: 0, boysScore: 0 },
-          { id: utils.generateId(), name: 'Team 2', score: 0, girlsScore: 0, boysScore: 0 },
-          { id: utils.generateId(), name: 'Team 3', score: 0, girlsScore: 0, boysScore: 0 },
-          { id: utils.generateId(), name: 'Team 4', score: 0, girlsScore: 0, boysScore: 0 },
-          { id: utils.generateId(), name: 'Team 5', score: 0, girlsScore: 0, boysScore: 0 },
-          { id: utils.generateId(), name: 'Team 6', score: 0, girlsScore: 0, boysScore: 0 },
-          { id: utils.generateId(), name: 'Team 7', score: 0, girlsScore: 0, boysScore: 0 },
-          { id: utils.generateId(), name: 'Team 8', score: 0, girlsScore: 0, boysScore: 0 }
-        ];
-        setTeams(championshipTeams);
-        const newEvents = competitionEvents.map((e) => ({
-          id: utils.generateId(),
-          name: e.name,
-          gender: e.gender,
-          results: []
-        }));
-        setEvents(newEvents);
-        recalculateAllScores(championshipTeams, newEvents);
-        setActiveTemplate('championship_16');
-        // Track event
-        trackEvent('load_template', { template_name: 'championship_meet' });
-      };
-
-      const loadChampionshipMeet8 = () => {
-        setNumIndividualPlaces(8);
-        setNumRelayPlaces(8);
-        setNumDivingPlaces(8);
-        setIndividualPointSystem({
-          1: 11, 2: 9, 3: 8, 4: 7, 5: 6, 6: 5, 7: 4, 8: 3, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0, 15: 0, 16: 0, 17: 0, 18: 0, 19: 0, 20: 0
-        });
-        setRelayPointSystem({
-          1: 22, 2: 18, 3: 16, 4: 14, 5: 12, 6: 10, 7: 8, 8: 6, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0, 15: 0, 16: 0, 17: 0, 18: 0, 19: 0, 20: 0
-        });
-        setDivingPointSystem({
-          1: 11, 2: 9, 3: 8, 4: 7, 5: 6, 6: 5, 7: 4, 8: 3, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0, 15: 0, 16: 0, 17: 0, 18: 0, 19: 0, 20: 0
-        });
-        // Disable Conference/Sectionals-specific features
-        setHeatLockEnabled(false);
-        setARelayOnly(false);
-        // Disable team place limit for championship meets (many teams competing)
-        setTeamPlaceLimitEnabled(false);
-        // Set 8 default teams for championship meet
-        const championshipTeams = [
-          { id: utils.generateId(), name: 'Team 1', score: 0, girlsScore: 0, boysScore: 0 },
-          { id: utils.generateId(), name: 'Team 2', score: 0, girlsScore: 0, boysScore: 0 },
-          { id: utils.generateId(), name: 'Team 3', score: 0, girlsScore: 0, boysScore: 0 },
-          { id: utils.generateId(), name: 'Team 4', score: 0, girlsScore: 0, boysScore: 0 },
-          { id: utils.generateId(), name: 'Team 5', score: 0, girlsScore: 0, boysScore: 0 },
-          { id: utils.generateId(), name: 'Team 6', score: 0, girlsScore: 0, boysScore: 0 },
-          { id: utils.generateId(), name: 'Team 7', score: 0, girlsScore: 0, boysScore: 0 },
-          { id: utils.generateId(), name: 'Team 8', score: 0, girlsScore: 0, boysScore: 0 }
-        ];
-        setTeams(championshipTeams);
-        const newEvents = competitionEvents.map((e) => ({
-          id: utils.generateId(),
-          name: e.name,
-          gender: e.gender,
-          results: []
-        }));
-        setEvents(newEvents);
-        recalculateAllScores(championshipTeams, newEvents);
-        setActiveTemplate('championship_8');
-        // Track event
-        trackEvent('load_template', { template_name: 'championship_meet_8' });
-      };
 
       // Conference Meet - 16 places individual, 8 places relay (A-relay only), heat lock enabled
       const loadConferenceMeet = () => {
@@ -3628,7 +3564,7 @@
                           <li>• <strong>Individual Events:</strong> 16 places scored (20-17-16-15-14-13-12-11-9-7-6-5-4-3-2-1)</li>
                           <li>• <strong>Relays:</strong> 8 places, A-relay only, double points (40-34-32-30-28-26-24-22)</li>
                           <li>• <strong>B-relays</strong> are exhibition (non-scoring)</li>
-                          <li>• <strong>Heat Lock enabled:</strong> Consolation swimmers locked to places 9-16</li>
+                          <li>• <strong>Heat Lock enabled:</strong> B Finals swimmers locked to places 9-16</li>
                         </ul>
                       </div>
                       
@@ -3638,7 +3574,7 @@
                           <li>• <strong>Individual Events:</strong> 16 places scored (20-17-16-15-14-13-12-11-9-7-6-5-4-3-2-1)</li>
                           <li>• <strong>Relays:</strong> A-relay only, places = number of teams, double points</li>
                           <li>• <strong>Dynamic relay places:</strong> Since each team enters one A-relay, relay places automatically match team count (e.g., 11 teams = 11 relay places)</li>
-                          <li>• <strong>Heat Lock enabled:</strong> Consolation swimmers locked to places 9-16</li>
+                          <li>• <strong>Heat Lock enabled:</strong> B Finals swimmers locked to places 9-16</li>
                         </ul>
                       </div>
                       
@@ -3658,9 +3594,9 @@
                       </p>
                       
                       <div className={`p-4 rounded-lg mb-4 ${darkMode ? 'bg-amber-900/30 border border-amber-700/50' : 'bg-amber-50 border border-amber-200'}`}>
-                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-amber-400' : 'text-amber-700'}`}>🔒 Heat Lock (Prelims/Finals)</h5>
+                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-amber-400' : 'text-amber-700'}`}>🔒 Heat Lock (B Finals/A Finals)</h5>
                         <p className={`text-sm mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                          When enabled, displays a reminder on individual events that consolation heat swimmers are locked to places 9-16, while finals swimmers compete for places 1-8.
+                          When enabled, displays a reminder on individual events that B Finals swimmers are locked to places 9-16, while A Finals swimmers compete for places 1-8.
                         </p>
                         <p className={`text-xs ${darkMode ? 'text-amber-300' : 'text-amber-600'}`}>
                           <strong>Note:</strong> This is a visual reminder - you still manually enter which places each team earned.
@@ -3870,6 +3806,148 @@
                     </button>
                   </div>
 
+                  {/* Scoring Templates Section */}
+                  <CollapsibleSection
+                    id="scoring-templates"
+                    title="Scoring Templates"
+                    description={activeTemplate ? `Using: ${{high_school:'HS Dual Meet',conference:'Conference',sectionals:'Sectionals'}[activeTemplate] || (activeTemplate.startsWith('usa_swimming_') ? 'USA Swimming ' + activeTemplate.split('_')[2] + '-Lane' : activeTemplate.startsWith('custom_') ? (savedTemplates.find(t => 'custom_' + t.id === activeTemplate) || {}).name || 'Custom' : activeTemplate.replace(/_/g, ' '))}` : "Quick presets for common meets"}
+                    isCollapsed={collapsedSections['scoring-templates']}
+                    onToggle={toggleSection}
+                    darkMode={darkMode}
+                    accentColor="purple"
+                  >
+                    {/* Standard Meet Templates */}
+                    <div className="mb-5">
+                      <p className={`text-xs font-semibold uppercase tracking-wider mb-2.5 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        Standard Meets
+                      </p>
+                      <div className="grid grid-cols-1 gap-2.5">
+                        {[
+                          { label: 'HS Dual Meet', key: 'high_school', onClick: loadHighSchoolMeet, desc: '2 teams · 5 places', color: 'pink' },
+                          { label: 'Conference', key: 'conference', onClick: loadConferenceMeet, desc: '8 teams · 16 places', color: 'amber' },
+                          { label: 'Sectionals', key: 'sectionals', onClick: loadSectionalsMeet, desc: '10 teams · 16 places', color: 'teal' },
+                        ].map(tmpl => {
+                          const isActive = activeTemplate === tmpl.key;
+                          const colorMap = {
+                            pink: darkMode ? 'bg-pink-600 hover:bg-pink-700' : 'bg-pink-500 hover:bg-pink-600',
+                            amber: darkMode ? 'bg-amber-600 hover:bg-amber-700' : 'bg-amber-500 hover:bg-amber-600',
+                            teal: darkMode ? 'bg-teal-600 hover:bg-teal-700' : 'bg-teal-500 hover:bg-teal-600',
+                          };
+                          return (
+                            <button
+                              key={tmpl.key}
+                              onClick={tmpl.onClick}
+                              className={`flex items-center justify-between px-4 py-3 rounded-xl ${colorMap[tmpl.color]} text-white font-medium transition-all shadow-md hover:shadow-lg active:scale-95 ${isActive ? 'ring-[3px] ring-white shadow-lg scale-[1.02]' : ''}`}
+                            >
+                              <span className="text-sm">{tmpl.label}</span>
+                              <span className="text-xs text-white/80">{tmpl.desc}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* USA Swimming Templates */}
+                    <div className={`mb-5 p-3 rounded-xl ${darkMode ? 'bg-gray-700/50' : 'bg-indigo-50'}`}>
+                      <p className={`text-xs font-semibold uppercase tracking-wider mb-1 ${darkMode ? 'text-gray-400' : 'text-indigo-600'}`}>
+                        USA Swimming Multi-team
+                      </p>
+                      <p className={`text-xs mb-2.5 ${darkMode ? 'text-gray-500' : 'text-indigo-400'}`}>
+                        Select by lane count · Relay points doubled
+                      </p>
+                      <div className="grid grid-cols-4 gap-2">
+                        {[4, 5, 6, 7, 8, 9, 10].map(lanes => {
+                          const isActive = activeTemplate === 'usa_swimming_' + lanes;
+                          return (
+                            <button
+                              key={lanes}
+                              onClick={() => loadUSASwimmingMeet(lanes)}
+                              className={`flex flex-col items-center py-2 rounded-lg ${darkMode ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-indigo-500 hover:bg-indigo-600'} text-white text-sm font-medium transition-all shadow-md hover:shadow-lg active:scale-95 ${isActive ? 'ring-[3px] ring-white shadow-lg scale-[1.02]' : ''}`}
+                            >
+                              <span className="font-bold">{lanes}</span>
+                              <span className="text-xs text-white/80">lanes</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Custom Templates */}
+                    {savedTemplates.length > 0 && (
+                      <div className="mb-4">
+                        <p className={`text-xs font-semibold uppercase tracking-wider mb-2.5 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                          Your Custom Templates
+                        </p>
+                        <div className="grid grid-cols-2 gap-2">
+                          {savedTemplates.map(template => {
+                            const isActive = activeTemplate === 'custom_' + template.id;
+                            return (
+                              <button
+                                key={template.id}
+                                onClick={() => loadTemplate(template)}
+                                className={`flex items-center justify-between w-full px-3 py-2.5 rounded-xl ${darkMode ? 'bg-gray-600 hover:bg-gray-550' : 'bg-white border border-gray-200 hover:border-gray-300'} transition-all cursor-pointer ${isActive ? 'ring-[3px] ring-purple-400 shadow-md' : 'shadow-sm'}`}
+                              >
+                                <span className={`font-medium text-sm truncate ${darkMode ? 'text-cyan-400' : 'text-blue-600'}`}>
+                                  {template.name}
+                                </span>
+                                <span
+                                  role="button"
+                                  onClick={(e) => { e.stopPropagation(); deleteTemplate(template.id); }}
+                                  className="text-red-400 hover:text-red-500 p-0.5 ml-1 flex-shrink-0"
+                                >
+                                  <X className="w-3.5 h-3.5" />
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Save Template */}
+                    {showSaveTemplate ? (
+                      <div className="flex flex-col gap-2">
+                        <input
+                          type="text"
+                          value={newTemplateName}
+                          onChange={(e) => setNewTemplateName(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && saveTemplate()}
+                          placeholder="Template name"
+                          aria-label="Template name"
+                          autoFocus
+                          className={`w-full px-3 py-2.5 border rounded-xl ${darkMode ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400' : 'bg-white border-gray-300'}`}
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            onClick={saveTemplate}
+                            className={`flex-1 px-4 py-2.5 rounded-xl ${darkMode ? 'bg-green-600 hover:bg-green-700' : 'bg-green-500 hover:bg-green-600'} text-white font-medium transition-all`}
+                          >
+                            Save
+                          </button>
+                          <button
+                            onClick={() => {
+                              setShowSaveTemplate(false);
+                              setNewTemplateName('');
+                            }}
+                            className={`flex-1 px-4 py-2.5 rounded-xl ${darkMode ? 'bg-gray-600 hover:bg-gray-500 text-white' : 'bg-gray-300 hover:bg-gray-400 text-gray-800'} font-medium transition-all`}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setShowSaveTemplate(true)}
+                        className={`w-full px-4 py-2.5 rounded-xl border-2 border-dashed ${darkMode ? 'border-gray-500 hover:border-gray-400 text-gray-300 hover:text-white' : 'border-gray-300 hover:border-gray-400 text-gray-500 hover:text-gray-700'} font-medium transition-all`}
+                      >
+                        + Save Current Settings as Template
+                      </button>
+                    )}
+
+                    <p className={`text-xs mt-3 text-center ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                      Templates save team names, point systems, places, and event lineup
+                    </p>
+                  </CollapsibleSection>
                   {/* Manage Teams Section */}
                   <CollapsibleSection
                     id="manage-teams"
@@ -3935,137 +4013,6 @@
                     )}
                   </CollapsibleSection>
 
-                  {/* Scoring Templates Section */}
-                  <CollapsibleSection
-                    id="scoring-templates"
-                    title="Scoring Templates"
-                    description={activeTemplate ? `Using: ${activeTemplate.replace(/_/g, ' ').replace('usa swimming', 'USA Swimming')}` : "Quick presets for common meets"}
-                    isCollapsed={collapsedSections['scoring-templates']}
-                    onToggle={toggleSection}
-                    darkMode={darkMode}
-                    accentColor="purple"
-                  >
-                    <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-3 mb-4">
-                      <button
-                        onClick={loadHighSchoolMeet}
-                        className={`px-3 py-2.5 sm:px-4 sm:py-2 rounded-lg ${darkMode ? 'bg-pink-600 hover:bg-pink-700 active:ring-4 active:ring-pink-400 active:scale-95' : 'bg-pink-500 hover:bg-pink-600 active:ring-4 active:ring-pink-300 active:scale-95'} text-white text-sm sm:text-base font-medium transition-all shadow-lg hover:shadow-xl ${activeTemplate === 'high_school' ? 'ring-4 ring-white ring-offset-2 ring-offset-transparent' : ''}`}
-                      >
-                        HS Dual Meet
-                      </button>
-                      <button
-                        onClick={loadChampionshipMeet8}
-                        className={`px-3 py-2.5 sm:px-4 sm:py-2 rounded-lg ${darkMode ? 'bg-purple-600 hover:bg-purple-700 active:ring-4 active:ring-purple-400 active:scale-95' : 'bg-purple-500 hover:bg-purple-600 active:ring-4 active:ring-purple-300 active:scale-95'} text-white text-sm sm:text-base font-medium transition-all shadow-lg hover:shadow-xl ${activeTemplate === 'championship_8' ? 'ring-4 ring-white ring-offset-2 ring-offset-transparent' : ''}`}
-                      >
-                        Champs (Top 8)
-                      </button>
-                      <button
-                        onClick={loadChampionshipMeet}
-                        className={`px-3 py-2.5 sm:px-4 sm:py-2 rounded-lg ${darkMode ? 'bg-blue-600 hover:bg-blue-700 active:ring-4 active:ring-blue-400 active:scale-95' : 'bg-blue-500 hover:bg-blue-600 active:ring-4 active:ring-blue-300 active:scale-95'} text-white text-sm sm:text-base font-medium transition-all shadow-lg hover:shadow-xl ${activeTemplate === 'championship_16' ? 'ring-4 ring-white ring-offset-2 ring-offset-transparent' : ''}`}
-                      >
-                        Champs (Top 16)
-                      </button>
-                      <button
-                        onClick={loadConferenceMeet}
-                        className={`px-3 py-2.5 sm:px-4 sm:py-2 rounded-lg ${darkMode ? 'bg-amber-600 hover:bg-amber-700 active:ring-4 active:ring-amber-400 active:scale-95' : 'bg-amber-500 hover:bg-amber-600 active:ring-4 active:ring-amber-300 active:scale-95'} text-white text-sm sm:text-base font-medium transition-all shadow-lg hover:shadow-xl ${activeTemplate === 'conference' ? 'ring-4 ring-white ring-offset-2 ring-offset-transparent' : ''}`}
-                      >
-                        Conference Meet
-                      </button>
-                      <button
-                        onClick={loadSectionalsMeet}
-                        className={`px-3 py-2.5 sm:px-4 sm:py-2 rounded-lg col-span-2 sm:col-span-1 ${darkMode ? 'bg-teal-600 hover:bg-teal-700 active:ring-4 active:ring-teal-400 active:scale-95' : 'bg-teal-500 hover:bg-teal-600 active:ring-4 active:ring-teal-300 active:scale-95'} text-white text-sm sm:text-base font-medium transition-all shadow-lg hover:shadow-xl ${activeTemplate === 'sectionals' ? 'ring-4 ring-white ring-offset-2 ring-offset-transparent' : ''}`}
-                      >
-                        Sectionals
-                      </button>
-                    </div>
-
-                    <div className="mb-4">
-                      <p className={`text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                        USA Swimming Multi-team Meet (by lane count):
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {[4, 5, 6, 7, 8, 9, 10].map(lanes => (
-                          <button
-                            key={lanes}
-                            onClick={() => loadUSASwimmingMeet(lanes)}
-                            className={`px-3 py-1.5 rounded-lg ${darkMode ? 'bg-indigo-600 hover:bg-indigo-700 active:ring-4 active:ring-indigo-400 active:scale-95' : 'bg-indigo-500 hover:bg-indigo-600 active:ring-4 active:ring-indigo-300 active:scale-95'} text-white text-sm font-medium transition-all shadow-md hover:shadow-lg ${activeTemplate === 'usa_swimming_' + lanes ? 'ring-4 ring-white ring-offset-2 ring-offset-transparent' : ''}`}
-                          >
-                            {lanes}-Lane
-                          </button>
-                        ))}
-                      </div>
-                      <p className={`text-xs mt-1.5 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                        Relay points are doubled from individual points
-                      </p>
-                    </div>
-
-                    {savedTemplates.length > 0 && (
-                      <div className="mb-4">
-                        <p className={`text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Your Custom Templates:</p>
-                        <div className="flex flex-wrap gap-2">
-                          {savedTemplates.map(template => (
-                            <div key={template.id} className={`flex items-center gap-2 px-3 py-2 rounded-lg ${darkMode ? 'bg-gray-600' : 'bg-white border border-gray-300'} ${activeTemplate === 'custom_' + template.id ? 'ring-4 ring-white ring-offset-2 ring-offset-transparent' : ''}`}>
-                              <button
-                                onClick={() => loadTemplate(template)}
-                                className={`font-medium ${darkMode ? 'text-cyan-400 hover:text-cyan-300' : 'text-blue-600 hover:text-blue-700'}`}
-                              >
-                                {template.name}
-                              </button>
-                              <button
-                                onClick={() => deleteTemplate(template.id)}
-                                className="text-red-500 hover:text-red-700 p-1"
-                              >
-                                <X className="w-4 h-4" />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {showSaveTemplate ? (
-                      <div className="flex flex-col gap-2">
-                        <input
-                          type="text"
-                          value={newTemplateName}
-                          onChange={(e) => setNewTemplateName(e.target.value)}
-                          onKeyDown={(e) => e.key === 'Enter' && saveTemplate()}
-                          placeholder="Template name"
-                          aria-label="Template name"
-                          autoFocus
-                          className={`w-full px-3 py-2.5 border rounded-lg ${darkMode ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400' : 'bg-white border-gray-300'}`}
-                        />
-                        <div className="flex gap-2">
-                          <button
-                            onClick={saveTemplate}
-                            className={`flex-1 px-4 py-2.5 rounded-lg ${darkMode ? 'bg-green-600 hover:bg-green-700' : 'bg-green-500 hover:bg-green-600'} text-white font-medium`}
-                          >
-                            Save
-                          </button>
-                          <button
-                            onClick={() => {
-                              setShowSaveTemplate(false);
-                              setNewTemplateName('');
-                            }}
-                            className={`flex-1 px-4 py-2.5 rounded-lg ${darkMode ? 'bg-gray-600 hover:bg-gray-500 text-white' : 'bg-gray-300 hover:bg-gray-400 text-gray-800'} font-medium`}
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => setShowSaveTemplate(true)}
-                        className={`w-full px-4 py-2.5 rounded-lg ${darkMode ? 'bg-gray-600 hover:bg-gray-500 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-800'} font-medium`}
-                      >
-                        + Save Current Settings as Template
-                      </button>
-                    )}
-
-                    <p className={`text-xs mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                      Templates save team names, point systems, number of places, and event lineup
-                    </p>
-                  </CollapsibleSection>
-
                   {/* Special Scoring Rules Section */}
                   <CollapsibleSection
                     id="special-scoring"
@@ -4105,9 +4052,9 @@
                           className="w-5 h-5 rounded accent-amber-500 flex-shrink-0"
                         />
                         <div>
-                          <span className={`font-medium ${darkMode ? 'text-slate-200' : 'text-slate-700'}`}>Heat Lock (Prelims/Finals)</span>
+                          <span className={`font-medium ${darkMode ? 'text-slate-200' : 'text-slate-700'}`}>Heat Lock (B Finals/A Finals)</span>
                           <p className={`text-xs ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                            Consolation swimmers locked to places 9-16; finals compete for 1-8
+                            B Finals swimmers locked to places 9-16; A Finals compete for 1-8
                           </p>
                         </div>
                       </label>
@@ -4526,7 +4473,7 @@
                               {/* Visual indicators for Conference/Sectionals settings */}
                               {heatLockEnabled && !isRelay && (
                                 <span className={`text-xs px-2 py-0.5 rounded-full ${darkMode ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-amber-100 text-amber-700 border border-amber-200'}`}>
-                                  🔒 1-8 Finals / 9-16 Consolation
+                                  🔒 1-8=A Finals / 9-16=B Finals (1st-8th h1)
                                 </span>
                               )}
                               {aRelayOnly && isRelay && (
@@ -4572,6 +4519,7 @@
                                   numPlaces={numPlaces}
                                   onUpdate={updateEventResult}
                                   consumedByTie={consumedPlaces.has(place)}
+                                  heatLockEnabled={heatLockEnabled}
                                 />
                               ));
                             })()}
@@ -4626,7 +4574,7 @@
                                 {/* Visual indicators for Conference/Sectionals settings */}
                                 {heatLockEnabled && !isRelay && (
                                   <span className={`text-xs px-2 py-0.5 rounded-full ${darkMode ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-amber-100 text-amber-700 border border-amber-200'}`}>
-                                    🔒 1-8 Finals / 9-16 Consolation
+                                    🔒 1-8=A Finals / 9-16=B Finals (1st-8th h1)
                                   </span>
                                 )}
                                 {aRelayOnly && isRelay && (
