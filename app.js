@@ -810,7 +810,7 @@ const QuickEntryEventCard = ({
     className: isDiving ? darkMode ? 'text-orange-400' : 'text-orange-600' : ''
   }, event.name)), heatLockEnabled && !isRelay && /*#__PURE__*/React.createElement("span", {
     className: `text-xs px-1.5 py-0.5 rounded ${darkMode ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-700'}`
-  }, "\uD83D\uDD12 1-8=A Finals / 9-16=B Finals (1st-8th h1)"), aRelayOnly && isRelay && /*#__PURE__*/React.createElement("span", {
+  }, "\uD83D\uDD12 1-8 A Finals / 9-16 B Finals"), aRelayOnly && isRelay && /*#__PURE__*/React.createElement("span", {
     className: `text-xs px-1.5 py-0.5 rounded ${darkMode ? 'bg-teal-500/20 text-teal-400' : 'bg-teal-100 text-teal-700'}`
   }, "\uD83C\uDD70\uFE0F A-Only")), /*#__PURE__*/React.createElement("div", {
     className: "flex items-center gap-1"
@@ -1282,13 +1282,13 @@ function SwimMeetScore() {
   // Default values
   // Default teams match High School Dual Meet template
   const defaultTeams = [{
-    id: 1,
+    id: '1',
     name: 'Home Team',
     score: 0,
     girlsScore: 0,
     boysScore: 0
   }, {
-    id: 2,
+    id: '2',
     name: 'Away Team',
     score: 0,
     girlsScore: 0,
@@ -1692,6 +1692,20 @@ function SwimMeetScore() {
   useEffect(() => {
     utils.saveToStorage('activeTemplate', activeTemplate);
   }, [activeTemplate]);
+
+  // Sync state from other tabs via storage events
+  useEffect(() => {
+    const handleStorage = e => {
+      if (!e.key || !e.key.startsWith('swimMeetScore_') || e.newValue === null) return;
+      const field = e.key.replace('swimMeetScore_', '');
+      try {
+        const value = JSON.parse(e.newValue);
+        if (field === 'teams' && Array.isArray(value)) setTeams(value);else if (field === 'events' && Array.isArray(value)) setEvents(value);else if (field === 'darkMode') setDarkMode(value);else if (field === 'scoringMode') setScoringMode(value);else if (field === 'heatLockEnabled') setHeatLockEnabled(value);else if (field === 'aRelayOnly') setARelayOnly(value);
+      } catch (_) {/* ignore malformed data */}
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
 
   // When A-Relay Only is enabled, automatically set relay places equal to number of teams
   // (since each team can only enter one relay, max places = number of teams)
@@ -4113,7 +4127,7 @@ function SwimMeetScore() {
       className: isDiving ? darkMode ? 'text-orange-400' : 'text-orange-600' : ''
     }, event.name)), heatLockEnabled && !isRelay && /*#__PURE__*/React.createElement("span", {
       className: `text-xs px-2 py-0.5 rounded-full ${darkMode ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-amber-100 text-amber-700 border border-amber-200'}`
-    }, "\uD83D\uDD12 1-8=A Finals / 9-16=B Finals (1st-8th h1)"), aRelayOnly && isRelay && /*#__PURE__*/React.createElement("span", {
+    }, "\uD83D\uDD12 1-8 A Finals / 9-16 B Finals"), aRelayOnly && isRelay && /*#__PURE__*/React.createElement("span", {
       className: `text-xs px-2 py-0.5 rounded-full ${darkMode ? 'bg-teal-500/20 text-teal-400 border border-teal-500/30' : 'bg-teal-100 text-teal-700 border border-teal-200'}`
     }, "\uD83C\uDD70\uFE0F A-Relay Only Scores")), /*#__PURE__*/React.createElement("div", {
       className: "flex items-center gap-2"
@@ -4196,7 +4210,7 @@ function SwimMeetScore() {
       className: `font-semibold text-lg ${isDiving ? darkMode ? 'text-orange-400' : 'text-orange-600' : darkMode ? 'text-white' : 'text-slate-800'}`
     }, event.name), heatLockEnabled && !isRelay && /*#__PURE__*/React.createElement("span", {
       className: `text-xs px-2 py-0.5 rounded-full ${darkMode ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-amber-100 text-amber-700 border border-amber-200'}`
-    }, "\uD83D\uDD12 1-8=A Finals / 9-16=B Finals (1st-8th h1)"), aRelayOnly && isRelay && /*#__PURE__*/React.createElement("span", {
+    }, "\uD83D\uDD12 1-8 A Finals / 9-16 B Finals"), aRelayOnly && isRelay && /*#__PURE__*/React.createElement("span", {
       className: `text-xs px-2 py-0.5 rounded-full ${darkMode ? 'bg-teal-500/20 text-teal-400 border border-teal-500/30' : 'bg-teal-100 text-teal-700 border border-teal-200'}`
     }, "\uD83C\uDD70\uFE0F A-Relay Only Scores")), /*#__PURE__*/React.createElement("div", {
       className: "flex items-center gap-2"

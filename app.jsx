@@ -651,7 +651,7 @@
               {/* Visual indicators for Conference/Sectionals settings */}
               {heatLockEnabled && !isRelay && (
                 <span className={`text-xs px-1.5 py-0.5 rounded ${darkMode ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-700'}`}>
-                  🔒 1-8=A Finals / 9-16=B Finals (1st-8th h1)
+                  🔒 1-8 A Finals / 9-16 B Finals
                 </span>
               )}
               {aRelayOnly && isRelay && (
@@ -1208,8 +1208,8 @@
       // Default values
       // Default teams match High School Dual Meet template
       const defaultTeams = [
-        { id: 1, name: 'Home Team', score: 0, girlsScore: 0, boysScore: 0 },
-        { id: 2, name: 'Away Team', score: 0, girlsScore: 0, boysScore: 0 }
+        { id: '1', name: 'Home Team', score: 0, girlsScore: 0, boysScore: 0 },
+        { id: '2', name: 'Away Team', score: 0, girlsScore: 0, boysScore: 0 }
       ];
 
       // Default events match High School Dual Meet template (diving between 50 Free and 100 Fly)
@@ -1475,6 +1475,25 @@
       useEffect(() => {
         utils.saveToStorage('activeTemplate', activeTemplate);
       }, [activeTemplate]);
+
+      // Sync state from other tabs via storage events
+      useEffect(() => {
+        const handleStorage = (e) => {
+          if (!e.key || !e.key.startsWith('swimMeetScore_') || e.newValue === null) return;
+          const field = e.key.replace('swimMeetScore_', '');
+          try {
+            const value = JSON.parse(e.newValue);
+            if (field === 'teams' && Array.isArray(value)) setTeams(value);
+            else if (field === 'events' && Array.isArray(value)) setEvents(value);
+            else if (field === 'darkMode') setDarkMode(value);
+            else if (field === 'scoringMode') setScoringMode(value);
+            else if (field === 'heatLockEnabled') setHeatLockEnabled(value);
+            else if (field === 'aRelayOnly') setARelayOnly(value);
+          } catch (_) { /* ignore malformed data */ }
+        };
+        window.addEventListener('storage', handleStorage);
+        return () => window.removeEventListener('storage', handleStorage);
+      }, []);
 
       // When A-Relay Only is enabled, automatically set relay places equal to number of teams
       // (since each team can only enter one relay, max places = number of teams)
@@ -3836,7 +3855,7 @@
                               {/* Visual indicators for Conference/Sectionals settings */}
                               {heatLockEnabled && !isRelay && (
                                 <span className={`text-xs px-2 py-0.5 rounded-full ${darkMode ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-amber-100 text-amber-700 border border-amber-200'}`}>
-                                  🔒 1-8=A Finals / 9-16=B Finals (1st-8th h1)
+                                  🔒 1-8 A Finals / 9-16 B Finals
                                 </span>
                               )}
                               {aRelayOnly && isRelay && (
@@ -3937,7 +3956,7 @@
                                 {/* Visual indicators for Conference/Sectionals settings */}
                                 {heatLockEnabled && !isRelay && (
                                   <span className={`text-xs px-2 py-0.5 rounded-full ${darkMode ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-amber-100 text-amber-700 border border-amber-200'}`}>
-                                    🔒 1-8=A Finals / 9-16=B Finals (1st-8th h1)
+                                    🔒 1-8 A Finals / 9-16 B Finals
                                   </span>
                                 )}
                                 {aRelayOnly && isRelay && (
