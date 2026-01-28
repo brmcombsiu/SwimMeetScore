@@ -2480,13 +2480,17 @@
         }
       };
 
+      // Base64-encoded QR code for swimmeetscore.com (fallback when external API is unavailable)
+      const QR_CODE_BASE64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASIAAAEiAQAAAAB1xeIbAAAB5UlEQVR4nO2aTYrjMBCFv2oJeulDDpCjyDeYM+Vm8YEGrGVA5s1CkjvdmWFmMcY/LS2M7HyQR1F+cqlk4u9jfPsHCBrVqANR0coYmI0xz6A+9VvpOj3lAZcAMOJFFjR7ES+JcAeIl010fR+qpDcA8V02dIn8Qgyb6jo35b/cizjby/q7V/UnorqHlVn0f6b+5z82CkkJwMkGoHhOJ+m+qa7zU3P+oKnZ7pRno5mZ9dvpOjvloVvsPc6msXf55tn096r+2BTS5CRJIkzuOeBBi/HsVf2xKaQJCJOT7iyXLlGsvsV+NYqc8nxaXEvY88y12K9E5bzPl4+8z8+UiiO12K9C5byXFqtf3IdQf2ixX42KHuge9uw+gG49MF7TVrpOT9X6NV5kABrNpVLdRkNEn/ar/thUif34I9UP+m5CMBt0P72Fqe1jrkXl2FuY5mUHx9A4QN7RzBa0V/XHpupauyy4YVrqrVp0tbV2Neqjb9U9TLersvnYAJSVeMfqD07VPQUAwgSMfS2wxn47XWenit+XxqFT3cCfDXBY0Da6vifVLW+AErq1Xvlq1GvPkNorh9nTvjHXpmrfCsx6JyunRd5b32pNylO8HSD2uZAV0SULWrrme1V/bOr1TMJvRjsT2KiTUb8AfOYOwMRUyGwAAAAASUVORK5CYII=';
+
       // Print QR Code for spectators
       const printQRCode = () => {
         trackEvent('print_qr_code');
-        
-        // Create print window with US Letter sizing
-        const printWindow = window.open('', '_blank', 'width=850,height=1100');
-        
+
+        const qrImgTag = '<img src="https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=https://swimmeetscore.com" ' +
+          'onerror="this.onerror=null;this.src=\'' + QR_CODE_BASE64 + '\';" ' +
+          'class="qr-code" alt="QR Code for SwimMeetScore.com" />';
+
         const htmlContent = '<!DOCTYPE html>' +
           '<html>' +
           '<head>' +
@@ -2513,17 +2517,25 @@
               '<p>Point your phone camera at the QR code below</p>' +
             '</div>' +
             '<div class="qr-container">' +
-              '<img src="https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=https://swimmeetscore.com" class="qr-code" alt="QR Code for SwimMeetScore.com" />' +
+              qrImgTag +
             '</div>' +
             '<div class="url">SwimMeetScore.com</div>' +
             '<div class="tagline">Free swim meet scoring tool — Track scores in real-time!<br/>Works on any phone • No app download required</div>' +
             '<div class="swimmer-icon">🏆</div>' +
           '</body>' +
           '</html>';
-        
+
+        // Create print window with US Letter sizing
+        const printWindow = window.open('', '_blank', 'width=850,height=1100');
+
+        if (!printWindow) {
+          alert('Pop-up blocked! Please allow pop-ups for this site to print the QR code poster.');
+          return;
+        }
+
         printWindow.document.write(htmlContent);
         printWindow.document.close();
-        
+
         // Wait for content to load then trigger print
         printWindow.onload = function() {
           setTimeout(function() {
