@@ -9,9 +9,9 @@
 const fs = require('fs');
 const path = require('path');
 
-// Read the index.html file
-const indexPath = path.join(__dirname, '..', 'index.html');
-const htmlContent = fs.readFileSync(indexPath, 'utf8');
+// Read the app.jsx file where notification markup lives
+const appPath = path.join(__dirname, '..', 'app.jsx');
+const htmlContent = fs.readFileSync(appPath, 'utf8');
 
 // Helper function for assertions
 function assert(condition, message) {
