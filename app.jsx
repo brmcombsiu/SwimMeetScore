@@ -143,24 +143,6 @@
       </svg>
     );
 
-    const Trophy = ({ className }) => (
-      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-      </svg>
-    );
-
-    const Edit2 = ({ className }) => (
-      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-      </svg>
-    );
-
-    const QrCode = ({ className }) => (
-      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h6v6H3V3zm12 0h6v6h-6V3zM3 15h6v6H3v-6zm12 3h3m-3 3h3m-6-6h6v3h-3m0 3h3M6 6h0m0 12h0m12-12h0" />
-      </svg>
-    );
-
     const Zap = ({ className }) => (
       <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -1905,7 +1887,7 @@
           if (template.events && Array.isArray(template.events)) {
             const newEvents = template.events
               .filter(e => e && e.name && e.gender)
-              .map((e, index) => ({
+              .map((e, _index) => ({
                 id: utils.generateId(),
                 name: e.name,
                 gender: e.gender,
@@ -2119,7 +2101,7 @@
 
       useEffect(() => {
         recalculateAllScores(teams, events);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+
       }, [scoringMode]);
 
       const sortedTeams = useMemo(() => {
@@ -2472,7 +2454,6 @@
           await navigator.clipboard.writeText(text);
           setError(null);
           // Show success message briefly using error state (we'll style it differently)
-          const originalError = error;
           setShareSuccess(true);
           setTimeout(() => setShareSuccess(false), 3000);
         } catch (err) {
@@ -3928,10 +3909,9 @@
                       {scoringMode === 'girls' ? 'Girls Events' : 'Boys Events'}
                     </h4>
                     <div className={`space-y-${quickEntryMode ? '2' : '4'}`}>
-                      {events.filter(e => e.gender === scoringMode).map((event, index) => {
+                      {events.filter(e => e.gender === scoringMode).map((event, _index) => {
                         const isDiving = event.name === 'Diving';
                         const isRelay = event.name.includes('Relay');
-                        const allEvents = events.filter(e => e.gender === scoringMode);
                         const actualIndex = events.findIndex(e => e.id === event.id);
                         const pointSystem = isDiving ? divingPointSystem : isRelay ? relayPointSystem : individualPointSystem;
                         const numPlaces = isDiving ? numDivingPlaces : isRelay ? numRelayPlaces : numIndividualPlaces;
