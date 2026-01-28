@@ -1,0 +1,16 @@
+{
+  "name": "swimmeetscore",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "npm run build:css && npm run build:js",
+    "build:js": "babel app.jsx --out-file app.js --presets=@babel/preset-react",
+    "build:css": "tailwindcss -i input.css -o app.css --minify"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.23.5",
+    "@babel/core": "^7.23.5",
+    "@babel/preset-react": "^7.23.3",
+    "tailwindcss": "^3.4.0"
+  }
+}
