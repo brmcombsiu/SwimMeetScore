@@ -1,5 +1,5 @@
 // SwimMeetScore Service Worker
-const CACHE_NAME = 'swimmeetscore-v10';
+const CACHE_NAME = 'swimmeetscore-v11';
 
 // Files to cache for offline use
 const CACHE_FILES = [
@@ -11,15 +11,15 @@ const CACHE_FILES = [
   './favicon32x32.png',
   './favicon192x192.png',
   './favicon512x512.png',
-  './apple-touch-icon.png'
+  './apple-touch-icon.png',
+  './app.js',
+  './app.css'
 ];
 
 // External CDN resources to cache
-// Note: cdn.tailwindcss.com is excluded because it doesn't support CORS headers for caching
 const CDN_CACHE = [
   'https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js',
-  'https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js',
-  'https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js'
+  'https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js'
 ];
 
 // Install event - cache all static files
