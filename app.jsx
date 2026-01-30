@@ -2829,41 +2829,6 @@
                       </ol>
                     </section>
 
-                    {/* Team-First Mode */}
-                    <section className="mb-8">
-                      <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>⚡ Team-First Mode</h4>
-                      <p className="mb-3">
-                        Switch to Team-First Mode for faster score entry, especially on mobile. This mode shows a compact view where you tap place numbers directly for each team.
-                      </p>
-
-                      <div className={`p-4 rounded-lg mb-4 ${darkMode ? 'bg-lane-gold/20 border border-lane-gold/30' : 'bg-amber-50 border border-amber-200'}`}>
-                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-lane-gold' : 'text-amber-700'}`}>🚀 How to Use Team-First Mode</h5>
-                        <ol className="text-sm space-y-1 list-decimal list-inside">
-                          <li>Click the <strong>"Team-First Mode"</strong> button next to the Events header</li>
-                          <li>Each event shows a row per team with numbered place buttons</li>
-                          <li>Tap place numbers (1, 2, 3...) to assign them to each team</li>
-                          <li>Scores update instantly - no save button needed!</li>
-                        </ol>
-                      </div>
-                      
-                      <div className={`p-4 rounded-lg mb-4 ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
-                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>📋 Two Entry Modes</h5>
-                        <div className="text-sm space-y-2">
-                          <p><strong>Place-First Mode (Default):</strong> Pick teams for each place using dropdowns. Best for recording ties.</p>
-                          <p><strong>Team-First Mode:</strong> Tap place numbers for each team. Faster for mobile and dual meets.</p>
-                        </div>
-                      </div>
-                      
-                      <div className={`p-4 rounded-lg ${darkMode ? 'bg-green-900/30 border border-green-700/50' : 'bg-green-50 border border-green-200'}`}>
-                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-green-400' : 'text-green-700'}`}>🎯 Tips for Team-First Mode</h5>
-                        <ul className="text-sm space-y-1">
-                          <li>• Each team's row shows their total points earned</li>
-                          <li>• Grayed numbers with dashes (-) are consumed by ties above</li>
-                          <li>• Dashed borders show places already taken by another team</li>
-                          <li>• Gold/silver/bronze colors highlight 1st/2nd/3rd places</li>
-                        </ul>
-                      </div>
-                    </section>
 
                     {/* Tie Handling */}
                     <section className="mb-8">
@@ -3783,49 +3748,51 @@
 
               <div>
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
-                  <div className="flex items-center gap-2 flex-wrap">
+                  <div>
                     <h3 className={`text-xl font-bold ${darkMode ? 'text-chlorine' : 'text-slate-800'}`}>Events</h3>
-                    {/* Entry Mode Toggle */}
-                    <button
-                      onClick={() => { setTeamFirstMode(!teamFirstMode); triggerHaptic('light'); trackEvent('toggle_entry_mode', { mode: !teamFirstMode ? 'team-first' : 'place-first' }); }}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
-                        teamFirstMode
-                          ? (darkMode ? 'bg-lane-gold text-pool-deep' : 'bg-amber-500 text-white')
-                          : (darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600 border border-gray-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-300')
-                      }`}
-                      title={teamFirstMode ? "Switch to Place-First Mode" : "Switch to Team-First Mode"}
-                    >
-                      <Zap className="w-3.5 h-3.5" />
-                      {teamFirstMode ? 'Team-First Mode' : 'Place-First Mode'}
-                    </button>
-                    <button
-                      onClick={emailResults}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${darkMode ? 'bg-chlorine/20 text-chlorine hover:bg-chlorine/30 border border-chlorine/30' : 'bg-cyan-600 text-white hover:bg-cyan-700'}`}
-                      title="Email full results"
-                    >
-                      <Mail className="w-4 h-4" />
-                      Email Results
-                    </button>
-                    {!teamFirstMode && events.length > 0 && (
+                    <div className="flex items-center gap-2 flex-wrap mt-2">
+                      {/* Entry Mode Toggle */}
                       <button
-                        onClick={toggleAllEvents}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600 border border-gray-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-300'}`}
-                        title={events.some(e => !collapsedEvents[e.id]) ? "Collapse all events" : "Expand all events"}
+                        onClick={() => { setTeamFirstMode(!teamFirstMode); triggerHaptic('light'); trackEvent('toggle_entry_mode', { mode: !teamFirstMode ? 'team-first' : 'place-first' }); }}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
+                          teamFirstMode
+                            ? (darkMode ? 'bg-lane-gold text-pool-deep' : 'bg-amber-500 text-white')
+                            : (darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600 border border-gray-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-300')
+                        }`}
+                        title={teamFirstMode ? "Switch to Place-First Mode" : "Switch to Team-First Mode"}
                       >
-                        <ChevronDown className={`w-3.5 h-3.5 transition-transform ${events.some(e => !collapsedEvents[e.id]) ? '' : 'rotate-180'}`} />
-                        {events.some(e => !collapsedEvents[e.id]) ? 'Collapse All' : 'Expand All'}
+                        <Zap className="w-3.5 h-3.5" />
+                        {teamFirstMode ? 'Team-First Mode' : 'Place-First Mode'}
                       </button>
-                    )}
+                      <button
+                        onClick={emailResults}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${darkMode ? 'bg-chlorine/20 text-chlorine hover:bg-chlorine/30 border border-chlorine/30' : 'bg-cyan-600 text-white hover:bg-cyan-700'}`}
+                        title="Email full results"
+                      >
+                        <Mail className="w-4 h-4" />
+                        Email Results
+                      </button>
+                      {!teamFirstMode && events.length > 0 && (
+                        <button
+                          onClick={toggleAllEvents}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600 border border-gray-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-300'}`}
+                          title={events.some(e => !collapsedEvents[e.id]) ? "Collapse all events" : "Expand all events"}
+                        >
+                          <ChevronDown className={`w-3.5 h-3.5 transition-transform ${events.some(e => !collapsedEvents[e.id]) ? '' : 'rotate-180'}`} />
+                          {events.some(e => !collapsedEvents[e.id]) ? 'Collapse All' : 'Expand All'}
+                        </button>
+                      )}
+                    </div>
                   </div>
                   <div className={`text-xs px-3 py-1.5 rounded-full ${darkMode ? 'bg-lane-gold/20 text-lane-gold border border-lane-gold/30' : 'bg-amber-100 text-amber-700 border border-amber-200'}`}>
                     {teamFirstMode
-                      ? '⚡ Team-First: Tap place numbers to assign to each team'
-                      : '💡 Place-First: Select multiple teams in a place for ties'
+                      ? '⚡ Tap place numbers to assign to each team'
+                      : '💡 Select multiple teams in a place for ties'
                     }
                   </div>
                 </div>
                 {scoringMode === 'combined' ? (
-                  <div className={`space-y-${teamFirstMode ? '2' : '4'}`}>
+                  <div className={`space-y-2`}>
                     {events.map((event, index) => {
                       const isDiving = event.name === 'Diving';
                       const isRelay = event.name.includes('Relay');
@@ -3858,15 +3825,15 @@
                       // Place-First Mode - dropdowns (collapsible)
                       const isEventCollapsed = collapsedEvents[event.id];
                       return (
-                        <div key={event.id} className={`rounded-xl overflow-hidden ${darkMode ? 'bg-pool-mid/80 border border-white/10' : 'bg-white border border-slate-200 shadow-sm'}`}>
+                        <div key={event.id} className={`rounded-xl ${darkMode ? 'bg-pool-mid/80 border border-white/10' : 'bg-white border border-slate-200 shadow-sm'} relative`} style={{ zIndex: events.length - index }}>
                           <button
                             type="button"
                             onClick={() => toggleEvent(event.id)}
-                            className={`w-full flex items-center justify-between p-4 ${isEventCollapsed ? '' : 'pb-2'} cursor-pointer transition ${darkMode ? 'hover:bg-white/5' : 'hover:bg-slate-50'}`}
+                            className={`w-full flex items-center justify-between px-3 py-2 cursor-pointer transition rounded-xl ${darkMode ? 'hover:bg-white/5' : 'hover:bg-slate-50'}`}
                             aria-expanded={!isEventCollapsed}
                           >
                             <div className="flex items-center gap-2 flex-wrap">
-                              <h5 className={`font-semibold text-lg ${darkMode ? 'text-white' : 'text-slate-800'}`}>
+                              <h5 className={`font-semibold text-base ${darkMode ? 'text-white' : 'text-slate-800'}`}>
                                 <span className={event.gender === 'girls' ? (darkMode ? 'text-pink-400' : 'text-pink-600') : (darkMode ? 'text-blue-400' : 'text-blue-600')}>
                                   {event.gender === 'girls' ? 'Girls' : 'Boys'}
                                 </span>
@@ -3891,27 +3858,27 @@
                             </div>
                           </button>
                           {!isEventCollapsed && (
-                            <div className="px-4 pb-4">
-                              <div className="flex items-center justify-end gap-2 mb-3">
+                            <div className="px-3 pb-3">
+                              <div className="flex items-center justify-end gap-1 mb-2">
                                 <button
-                                  onClick={() => moveEventUp(index)}
+                                  onClick={(e) => { e.stopPropagation(); moveEventUp(index); }}
                                   disabled={index === 0}
                                   className={`p-1 rounded ${index === 0 ? 'opacity-30 cursor-not-allowed' : (darkMode ? 'hover:bg-white/10' : 'hover:bg-slate-100')} ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}
                                 >
-                                  <ChevronUp className="w-5 h-5" />
+                                  <ChevronUp className="w-4 h-4" />
                                 </button>
                                 <button
-                                  onClick={() => moveEventDown(index)}
+                                  onClick={(e) => { e.stopPropagation(); moveEventDown(index); }}
                                   disabled={index === events.length - 1}
                                   className={`p-1 rounded ${index === events.length - 1 ? 'opacity-30 cursor-not-allowed' : (darkMode ? 'hover:bg-white/10' : 'hover:bg-slate-100')} ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}
                                 >
-                                  <ChevronDown className="w-5 h-5" />
+                                  <ChevronDown className="w-4 h-4" />
                                 </button>
                                 <button
-                                  onClick={() => removeEvent(event.id)}
+                                  onClick={(e) => { e.stopPropagation(); removeEvent(event.id); }}
                                   className={`p-1 rounded ${darkMode ? 'text-red-400 hover:bg-red-500/20' : 'text-red-500 hover:bg-red-50'}`}
                                 >
-                                  <X className="w-5 h-5" />
+                                  <X className="w-4 h-4" />
                                 </button>
                               </div>
                               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-1">
@@ -3944,7 +3911,7 @@
                     <h4 className={`text-lg font-semibold mb-4 ${scoringMode === 'girls' ? (darkMode ? 'text-pink-400' : 'text-pink-600') : (darkMode ? 'text-blue-400' : 'text-blue-600')}`}>
                       {scoringMode === 'girls' ? 'Girls Events' : 'Boys Events'}
                     </h4>
-                    <div className={`space-y-${teamFirstMode ? '2' : '4'}`}>
+                    <div className={`space-y-2`}>
                       {events.filter(e => e.gender === scoringMode).map((event, _index) => {
                         const isDiving = event.name === 'Diving';
                         const isRelay = event.name.includes('Relay');
@@ -3978,15 +3945,15 @@
                         // Place-First Mode - dropdowns (collapsible)
                         const isEventCollapsed = collapsedEvents[event.id];
                         return (
-                          <div key={event.id} className={`rounded-xl overflow-hidden ${darkMode ? 'bg-pool-mid/80 border border-white/10' : 'bg-white border border-slate-200 shadow-sm'}`}>
+                          <div key={event.id} className={`rounded-xl ${darkMode ? 'bg-pool-mid/80 border border-white/10' : 'bg-white border border-slate-200 shadow-sm'} relative`} style={{ zIndex: events.length - _index }}>
                             <button
                               type="button"
                               onClick={() => toggleEvent(event.id)}
-                              className={`w-full flex items-center justify-between p-4 ${isEventCollapsed ? '' : 'pb-2'} cursor-pointer transition ${darkMode ? 'hover:bg-white/5' : 'hover:bg-slate-50'}`}
+                              className={`w-full flex items-center justify-between px-3 py-2 cursor-pointer transition rounded-xl ${darkMode ? 'hover:bg-white/5' : 'hover:bg-slate-50'}`}
                               aria-expanded={!isEventCollapsed}
                             >
                               <div className="flex items-center gap-2 flex-wrap">
-                                <h5 className={`font-semibold text-lg ${isDiving ? (darkMode ? 'text-orange-400' : 'text-orange-600') : (darkMode ? 'text-white' : 'text-slate-800')}`}>{event.name}</h5>
+                                <h5 className={`font-semibold text-base ${isDiving ? (darkMode ? 'text-orange-400' : 'text-orange-600') : (darkMode ? 'text-white' : 'text-slate-800')}`}>{event.name}</h5>
                                 {heatLockEnabled && !isRelay && (
                                   <span className={`text-xs px-2 py-0.5 rounded-full ${darkMode ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-amber-100 text-amber-700 border border-amber-200'}`}>
                                     🔒 1-8 A Finals / 9-16 B Finals
@@ -4003,27 +3970,27 @@
                               </div>
                             </button>
                             {!isEventCollapsed && (
-                              <div className="px-4 pb-4">
-                                <div className="flex items-center justify-end gap-2 mb-3">
+                              <div className="px-3 pb-3">
+                                <div className="flex items-center justify-end gap-1 mb-2">
                                   <button
-                                    onClick={() => moveEventUp(actualIndex)}
+                                    onClick={(e) => { e.stopPropagation(); moveEventUp(actualIndex); }}
                                     disabled={actualIndex === 0}
                                     className={`p-1 rounded ${actualIndex === 0 ? 'opacity-30 cursor-not-allowed' : (darkMode ? 'hover:bg-white/10' : 'hover:bg-slate-100')} ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}
                                   >
-                                    <ChevronUp className="w-5 h-5" />
+                                    <ChevronUp className="w-4 h-4" />
                                   </button>
                                   <button
-                                    onClick={() => moveEventDown(actualIndex)}
+                                    onClick={(e) => { e.stopPropagation(); moveEventDown(actualIndex); }}
                                     disabled={actualIndex === events.length - 1}
                                     className={`p-1 rounded ${actualIndex === events.length - 1 ? 'opacity-30 cursor-not-allowed' : (darkMode ? 'hover:bg-white/10' : 'hover:bg-slate-100')} ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}
                                   >
-                                    <ChevronDown className="w-5 h-5" />
+                                    <ChevronDown className="w-4 h-4" />
                                   </button>
                                   <button
-                                    onClick={() => removeEvent(event.id)}
+                                    onClick={(e) => { e.stopPropagation(); removeEvent(event.id); }}
                                     className={`p-1 rounded ${darkMode ? 'text-red-400 hover:bg-red-500/20' : 'text-red-500 hover:bg-red-50'}`}
                                   >
-                                    <X className="w-5 h-5" />
+                                    <X className="w-4 h-4" />
                                   </button>
                                 </div>
                                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-1">
