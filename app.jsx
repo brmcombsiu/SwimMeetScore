@@ -1105,6 +1105,7 @@
     function SwimMeetScore() {
       // Error state for user feedback
       const [error, setError] = useState(null);
+      const [heatReminder, setHeatReminder] = useState(null);
       const [showConfirmDialog, setShowConfirmDialog] = useState(null);
       const [bulkEntryEvent, setBulkEntryEvent] = useState(null); // For bulk entry modal
       const [teamFirstMode, setTeamFirstMode] = useState(false); // Toggle between place-first and team-first entry modes
@@ -1116,6 +1117,14 @@
           return () => clearTimeout(timer);
         }
       }, [error]);
+
+      // Clear heat reminder after 6 seconds
+      useEffect(() => {
+        if (heatReminder) {
+          const timer = setTimeout(() => setHeatReminder(null), 6000);
+          return () => clearTimeout(timer);
+        }
+      }, [heatReminder]);
 
       // Capture the PWA install prompt
       useEffect(() => {
@@ -2013,6 +2022,18 @@
             trackEvent('record_result', { place: place });
             triggerHaptic('light');
           }
+
+          // B Finals reminder: if heat lock is on, event is individual with >10 places,
+          // user just scored a place in 1-8, and no places 9-16 have results yet
+          if (isChecked && teamId && heatLockEnabled && !isRelay && numIndividualPlaces > 10 && place >= 1 && place <= 8) {
+            const updatedEvent = newEvents.find(e => e.id === eventId);
+            if (updatedEvent) {
+              const hasBFinalsResults = (updatedEvent.results || []).some(r => r.place >= 9 && r.place <= 16 && r.teamIds && r.teamIds.length > 0);
+              if (!hasBFinalsResults) {
+                setHeatReminder(`Don't forget to score Heat 1 (B Finals) in places 9th–16th for ${updatedEvent.name}.`);
+              }
+            }
+          }
         } catch (e) {
           console.error('Error updating event result:', e);
           setError('Failed to update result. Please try again.');
@@ -2661,6 +2682,19 @@
                 <button
                   onClick={() => setError(null)}
                   className={`ml-4 flex-shrink-0 ${darkMode ? 'text-red-300 hover:text-red-100' : 'text-red-500 hover:text-red-700'}`}
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          )}
+          {heatReminder && (
+            <div className="fixed top-4 left-4 right-4 z-50 flex justify-center animate-fade-slide-up">
+              <div className={`max-w-lg w-full p-4 rounded-lg flex items-center justify-between shadow-lg ${darkMode ? 'bg-amber-900 text-amber-100 border border-amber-700' : 'bg-amber-100 text-amber-800 border border-amber-300'}`}>
+                <span>🔒 {heatReminder}</span>
+                <button
+                  onClick={() => setHeatReminder(null)}
+                  className={`ml-4 flex-shrink-0 ${darkMode ? 'text-amber-300 hover:text-amber-100' : 'text-amber-500 hover:text-amber-700'}`}
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -3986,13 +4020,13 @@
                               <div className="flex items-center gap-2 flex-wrap">
                                 <h5 className={`font-semibold text-base ${isDiving ? (darkMode ? 'text-orange-400' : 'text-orange-600') : (darkMode ? 'text-white' : 'text-slate-800')}`}>{event.name}</h5>
                                 {heatLockEnabled && !isRelay && (
-                                  <span className={`text-xs px-2 py-0.5 rounded-full ${darkMode ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-amber-100 text-amber-700 border border-amber-200'}`}>
-                                    🔒 1-8 A Finals / 9-16 B Finals
+                                  <span className={`text-xs px-1.5 py-0.5 rounded-full whitespace-nowrap ${darkMode ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-amber-100 text-amber-700 border border-amber-200'}`}>
+                                    🔒 A/B Finals
                                   </span>
                                 )}
                                 {aRelayOnly && isRelay && (
-                                  <span className={`text-xs px-2 py-0.5 rounded-full ${darkMode ? 'bg-teal-500/20 text-teal-400 border border-teal-500/30' : 'bg-teal-100 text-teal-700 border border-teal-200'}`}>
-                                    🅰️ A-Relay Only Scores
+                                  <span className={`text-xs px-1.5 py-0.5 rounded-full whitespace-nowrap ${darkMode ? 'bg-teal-500/20 text-teal-400 border border-teal-500/30' : 'bg-teal-100 text-teal-700 border border-teal-200'}`}>
+                                    🅰️ A-Relay Only
                                   </span>
                                 )}
                               </div>
@@ -4038,6 +4072,7 @@
                                         numPlaces={numPlaces}
                                         onUpdate={updateEventResult}
                                         consumedByTie={consumedPlaces.has(place)}
+                                        heatLockEnabled={heatLockEnabled}
                                       />
                                     ));
                                   })()}

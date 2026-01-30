@@ -255,45 +255,6 @@ const Swimmer = ({
   strokeWidth: 2,
   d: "M7 14.5l2-1.5"
 }));
-const Trophy = ({
-  className
-}) => /*#__PURE__*/React.createElement("svg", {
-  className: className,
-  fill: "none",
-  stroke: "currentColor",
-  viewBox: "0 0 24 24"
-}, /*#__PURE__*/React.createElement("path", {
-  strokeLinecap: "round",
-  strokeLinejoin: "round",
-  strokeWidth: 2,
-  d: "M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
-}));
-const Edit2 = ({
-  className
-}) => /*#__PURE__*/React.createElement("svg", {
-  className: className,
-  fill: "none",
-  stroke: "currentColor",
-  viewBox: "0 0 24 24"
-}, /*#__PURE__*/React.createElement("path", {
-  strokeLinecap: "round",
-  strokeLinejoin: "round",
-  strokeWidth: 2,
-  d: "M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-}));
-const QrCode = ({
-  className
-}) => /*#__PURE__*/React.createElement("svg", {
-  className: className,
-  fill: "none",
-  stroke: "currentColor",
-  viewBox: "0 0 24 24"
-}, /*#__PURE__*/React.createElement("path", {
-  strokeLinecap: "round",
-  strokeLinejoin: "round",
-  strokeWidth: 2,
-  d: "M3 3h6v6H3V3zm12 0h6v6h-6V3zM3 15h6v6H3v-6zm12 3h3m-3 3h3m-6-6h6v3h-3m0 3h3M6 6h0m0 12h0m12-12h0"
-}));
 const Zap = ({
   className
 }) => /*#__PURE__*/React.createElement("svg", {
@@ -735,7 +696,7 @@ const triggerHaptic = (style = 'light') => {
   }
 };
 
-// Quick Entry Event Card - Team-first entry mode (inline, not modal)
+// Team-First Entry Event Card (inline, not modal)
 const QuickEntryEventCard = ({
   event,
   teams,
@@ -1086,7 +1047,7 @@ const BulkEntryModal = ({
     className: `w-5 h-5 ${darkMode ? 'text-chlorine' : 'text-white'}`
   }), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h3", {
     className: `text-base font-bold ${darkMode ? 'text-chlorine' : 'text-white'}`
-  }, "Quick Entry"), /*#__PURE__*/React.createElement("p", {
+  }, "Team-First Entry"), /*#__PURE__*/React.createElement("p", {
     className: `text-xs ${darkMode ? 'text-gray-400' : 'text-white/80'}`
   }, event.gender === 'girls' ? 'Girls' : 'Boys', " ", event.name))), /*#__PURE__*/React.createElement("button", {
     onClick: onClose,
@@ -1196,9 +1157,10 @@ const BulkEntryModal = ({
 function SwimMeetScore() {
   // Error state for user feedback
   const [error, setError] = useState(null);
+  const [heatReminder, setHeatReminder] = useState(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(null);
   const [bulkEntryEvent, setBulkEntryEvent] = useState(null); // For bulk entry modal
-  const [quickEntryMode, setQuickEntryMode] = useState(false); // Toggle between place-first and team-first entry modes
+  const [teamFirstMode, setTeamFirstMode] = useState(false); // Toggle between place-first and team-first entry modes
 
   // Clear error after 5 seconds
   useEffect(() => {
@@ -1207,6 +1169,14 @@ function SwimMeetScore() {
       return () => clearTimeout(timer);
     }
   }, [error]);
+
+  // Clear heat reminder after 6 seconds
+  useEffect(() => {
+    if (heatReminder) {
+      const timer = setTimeout(() => setHeatReminder(null), 6000);
+      return () => clearTimeout(timer);
+    }
+  }, [heatReminder]);
 
   // Capture the PWA install prompt
   useEffect(() => {
@@ -1604,6 +1574,32 @@ function SwimMeetScore() {
       utils.saveToStorage('collapsedSections', updated);
       return updated;
     });
+  };
+
+  // Collapsible events state for place-first mode
+  const [collapsedEvents, setCollapsedEvents] = useState(() => {
+    const initial = {};
+    const savedEvents = utils.loadFromStorage('events', defaultEvents);
+    if (Array.isArray(savedEvents)) {
+      savedEvents.forEach(e => {
+        initial[e.id] = true;
+      });
+    }
+    return initial;
+  });
+  const toggleEvent = eventId => {
+    setCollapsedEvents(prev => ({
+      ...prev,
+      [eventId]: !prev[eventId]
+    }));
+  };
+  const toggleAllEvents = () => {
+    const anyExpanded = events.some(e => !collapsedEvents[e.id]);
+    const updated = {};
+    events.forEach(e => {
+      updated[e.id] = anyExpanded;
+    });
+    setCollapsedEvents(updated);
   };
   const [individualPointSystem, setIndividualPointSystem] = useState(() => {
     const loaded = utils.loadFromStorage('individualPointSystem', defaultIndividualPoints);
@@ -2104,7 +2100,7 @@ function SwimMeetScore() {
         setTeams(newTeams);
       }
       if (template.events && Array.isArray(template.events)) {
-        const newEvents = template.events.filter(e => e && e.name && e.gender).map((e, index) => ({
+        const newEvents = template.events.filter(e => e && e.name && e.gender).map((e, _index) => ({
           id: utils.generateId(),
           name: e.name,
           gender: e.gender,
@@ -2210,6 +2206,18 @@ function SwimMeetScore() {
           place: place
         });
         triggerHaptic('light');
+      }
+
+      // B Finals reminder: if heat lock is on, event is individual with >10 places,
+      // user just scored a place in 1-8, and no places 9-16 have results yet
+      if (isChecked && teamId && heatLockEnabled && !isRelay && numIndividualPlaces > 10 && place >= 1 && place <= 8) {
+        const updatedEvent = newEvents.find(e => e.id === eventId);
+        if (updatedEvent) {
+          const hasBFinalsResults = (updatedEvent.results || []).some(r => r.place >= 9 && r.place <= 16 && r.teamIds && r.teamIds.length > 0);
+          if (!hasBFinalsResults) {
+            setHeatReminder(`Don't forget to score Heat 1 (B Finals) in places 9th–16th for ${updatedEvent.name}.`);
+          }
+        }
       }
     } catch (e) {
       console.error('Error updating event result:', e);
@@ -2317,7 +2325,6 @@ function SwimMeetScore() {
   };
   useEffect(() => {
     recalculateAllScores(teams, events);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scoringMode]);
   const sortedTeams = useMemo(() => {
     if (!Array.isArray(teams) || teams.length === 0) return [];
@@ -3051,7 +3058,6 @@ function SwimMeetScore() {
       await navigator.clipboard.writeText(text);
       setError(null);
       // Show success message briefly using error state (we'll style it differently)
-      const originalError = error;
       setShareSuccess(true);
       setTimeout(() => setShareSuccess(false), 3000);
     } catch (err) {
@@ -3129,6 +3135,9 @@ function SwimMeetScore() {
       body += '================================\n\n';
       filteredEvents.forEach(event => {
         const genderPrefix = scoringMode === 'combined' ? event.gender === 'girls' ? 'Girls ' : 'Boys ' : '';
+        const isDiving = event.name === 'Diving';
+        const isRelay = event.name.includes('Relay');
+        const evtPointSystem = isDiving ? divingPointSystem : isRelay ? relayPointSystem : individualPointSystem;
         body += genderPrefix + event.name + ':\n';
         if (event.results && event.results.length > 0) {
           // Sort results by place
@@ -3136,14 +3145,25 @@ function SwimMeetScore() {
           sortedResults.forEach(result => {
             const placeNum = result.place;
             const placeStr = placeNum === 1 ? '1st' : placeNum === 2 ? '2nd' : placeNum === 3 ? '3rd' : placeNum + 'th';
+            const numTied = result.teamIds.length;
+            let points;
+            if (numTied > 1) {
+              let totalPoints = 0;
+              for (let i = 0; i < numTied; i++) {
+                totalPoints += evtPointSystem[placeNum + i] || 0;
+              }
+              points = (totalPoints / numTied).toFixed(1).replace(/\.0$/, '');
+            } else {
+              points = evtPointSystem[placeNum] ?? 0;
+            }
             const teamNames = result.teamIds.map(id => {
               const team = teams.find(t => String(t.id) === String(id));
               return team ? team.name : 'Unknown';
             }).join(', ');
-            if (result.teamIds.length > 1) {
-              body += '  ' + placeStr + ' (TIE): ' + teamNames + '\n';
+            if (numTied > 1) {
+              body += '  ' + placeStr + ' (TIE): ' + teamNames + ' (' + points + ' pts each)\n';
             } else {
-              body += '  ' + placeStr + ': ' + teamNames + '\n';
+              body += '  ' + placeStr + ': ' + teamNames + ' (' + points + ' pts)\n';
             }
           });
         } else {
@@ -3175,6 +3195,15 @@ function SwimMeetScore() {
   }, /*#__PURE__*/React.createElement("span", null, error), /*#__PURE__*/React.createElement("button", {
     onClick: () => setError(null),
     className: `ml-4 flex-shrink-0 ${darkMode ? 'text-red-300 hover:text-red-100' : 'text-red-500 hover:text-red-700'}`
+  }, /*#__PURE__*/React.createElement(X, {
+    className: "w-5 h-5"
+  })))), heatReminder && /*#__PURE__*/React.createElement("div", {
+    className: "fixed top-4 left-4 right-4 z-50 flex justify-center animate-fade-slide-up"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: `max-w-lg w-full p-4 rounded-lg flex items-center justify-between shadow-lg ${darkMode ? 'bg-amber-900 text-amber-100 border border-amber-700' : 'bg-amber-100 text-amber-800 border border-amber-300'}`
+  }, /*#__PURE__*/React.createElement("span", null, "\uD83D\uDD12 ", heatReminder), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setHeatReminder(null),
+    className: `ml-4 flex-shrink-0 ${darkMode ? 'text-amber-300 hover:text-amber-100' : 'text-amber-500 hover:text-amber-700'}`
   }, /*#__PURE__*/React.createElement(X, {
     className: "w-5 h-5"
   })))), shareSuccess && /*#__PURE__*/React.createElement("div", {
@@ -3303,29 +3332,13 @@ function SwimMeetScore() {
     className: "list-decimal list-inside space-y-2"
   }, /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("strong", null, "Add Teams:"), " Go to Settings and add your competing teams"), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("strong", null, "Choose a Template:"), " Select \"High School Dual Meet\" or \"Competition Mode\" for preset events and point systems, or customize your own"), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("strong", null, "Record Results:"), " For each event, select the team(s) that placed 1st, 2nd, 3rd, etc."), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("strong", null, "View Scores:"), " The scoreboard updates automatically as you enter results"))), /*#__PURE__*/React.createElement("section", {
     className: "mb-8"
-  }, /*#__PURE__*/React.createElement("h4", {
-    className: `text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`
-  }, "\u26A1 Quick Entry Mode"), /*#__PURE__*/React.createElement("p", {
-    className: "mb-3"
-  }, "Toggle Quick Mode ON for faster score entry, especially on mobile. This mode shows a compact view where you tap place numbers directly for each team."), /*#__PURE__*/React.createElement("div", {
-    className: `p-4 rounded-lg mb-4 ${darkMode ? 'bg-lane-gold/20 border border-lane-gold/30' : 'bg-amber-50 border border-amber-200'}`
-  }, /*#__PURE__*/React.createElement("h5", {
-    className: `font-semibold mb-2 ${darkMode ? 'text-lane-gold' : 'text-amber-700'}`
-  }, "\uD83D\uDE80 How to Use Quick Mode"), /*#__PURE__*/React.createElement("ol", {
-    className: "text-sm space-y-1 list-decimal list-inside"
-  }, /*#__PURE__*/React.createElement("li", null, "Click the ", /*#__PURE__*/React.createElement("strong", null, "\"Quick Mode\""), " button next to the Events header"), /*#__PURE__*/React.createElement("li", null, "Each event shows a row per team with numbered place buttons"), /*#__PURE__*/React.createElement("li", null, "Tap place numbers (1, 2, 3...) to assign them to each team"), /*#__PURE__*/React.createElement("li", null, "Scores update instantly - no save button needed!"))), /*#__PURE__*/React.createElement("div", {
-    className: `p-4 rounded-lg mb-4 ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`
+  }, /*#__PURE__*/React.createElement("div", {
+    className: `p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`
   }, /*#__PURE__*/React.createElement("h5", {
     className: `font-semibold mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`
   }, "\uD83D\uDCCB Two Entry Modes"), /*#__PURE__*/React.createElement("div", {
     className: "text-sm space-y-2"
-  }, /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("strong", null, "Quick Mode OFF (Default):"), " Pick teams for each place using dropdowns. Best for recording ties."), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("strong", null, "Quick Mode ON:"), " Tap place numbers for each team. Faster for mobile and dual meets."))), /*#__PURE__*/React.createElement("div", {
-    className: `p-4 rounded-lg ${darkMode ? 'bg-green-900/30 border border-green-700/50' : 'bg-green-50 border border-green-200'}`
-  }, /*#__PURE__*/React.createElement("h5", {
-    className: `font-semibold mb-2 ${darkMode ? 'text-green-400' : 'text-green-700'}`
-  }, "\uD83C\uDFAF Tips for Quick Mode"), /*#__PURE__*/React.createElement("ul", {
-    className: "text-sm space-y-1"
-  }, /*#__PURE__*/React.createElement("li", null, "\u2022 Each team's row shows their total points earned"), /*#__PURE__*/React.createElement("li", null, "\u2022 Grayed numbers with dashes (-) are consumed by ties above"), /*#__PURE__*/React.createElement("li", null, "\u2022 Dashed borders show places already taken by another team"), /*#__PURE__*/React.createElement("li", null, "\u2022 Gold/silver/bronze colors highlight 1st/2nd/3rd places")))), /*#__PURE__*/React.createElement("section", {
+  }, /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("strong", null, "Place-First Mode (Default):"), " Pick teams for each place using dropdowns. Best for recording ties."), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("strong", null, "Team-First Mode:"), " Tap place numbers for each team. Faster dual meets as you can simply select the places for one team and the scores for the other team fill in automatically.")))), /*#__PURE__*/React.createElement("section", {
     className: "mb-8"
   }, /*#__PURE__*/React.createElement("h4", {
     className: `text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`
@@ -3381,7 +3394,7 @@ function SwimMeetScore() {
     className: `text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`
   }, "\uD83D\uDCA1 Tips"), /*#__PURE__*/React.createElement("ul", {
     className: "space-y-2"
-  }, /*#__PURE__*/React.createElement("li", null, "\u2022 ", /*#__PURE__*/React.createElement("strong", null, "Quick Mode:"), " Toggle \"Quick Mode\" next to Events header for faster mobile entry - tap place numbers directly for each team"), /*#__PURE__*/React.createElement("li", null, "\u2022 ", /*#__PURE__*/React.createElement("strong", null, "Works Offline:"), " Once loaded, works without internet - perfect for pools with bad service!"), /*#__PURE__*/React.createElement("li", null, "\u2022 ", /*#__PURE__*/React.createElement("strong", null, "Save Templates:"), " Create custom templates for your league's specific scoring rules"), /*#__PURE__*/React.createElement("li", null, "\u2022 ", /*#__PURE__*/React.createElement("strong", null, "Dark Mode:"), " Use dark mode for better visibility at indoor pools"), /*#__PURE__*/React.createElement("li", null, "\u2022 ", /*#__PURE__*/React.createElement("strong", null, "Data Persists:"), " Your data stays saved even if you close the browser"), /*#__PURE__*/React.createElement("li", null, "\u2022 ", /*#__PURE__*/React.createElement("strong", null, "Share Scores:"), " Tap the Share button on the Scoreboard to quickly send team standings via text or social media"), /*#__PURE__*/React.createElement("li", null, "\u2022 ", /*#__PURE__*/React.createElement("strong", null, "Email Results:"), " Tap the Email Results button next to Events to send a complete meet report including final standings and all event-by-event results with places"), /*#__PURE__*/React.createElement("li", null, "\u2022 ", /*#__PURE__*/React.createElement("strong", null, "Clear Data:"), " Start fresh anytime from Settings \u2192 Clear Data"))), /*#__PURE__*/React.createElement("section", {
+  }, /*#__PURE__*/React.createElement("li", null, "\u2022 ", /*#__PURE__*/React.createElement("strong", null, "Team-First Mode:"), " Toggle \"Team-First Mode\" next to Events header for faster mobile entry - tap place numbers directly for each team"), /*#__PURE__*/React.createElement("li", null, "\u2022 ", /*#__PURE__*/React.createElement("strong", null, "Works Offline:"), " Once loaded, works without internet - perfect for pools with bad service!"), /*#__PURE__*/React.createElement("li", null, "\u2022 ", /*#__PURE__*/React.createElement("strong", null, "Save Templates:"), " Create custom templates for your league's specific scoring rules"), /*#__PURE__*/React.createElement("li", null, "\u2022 ", /*#__PURE__*/React.createElement("strong", null, "Dark Mode:"), " Use dark mode for better visibility at indoor pools"), /*#__PURE__*/React.createElement("li", null, "\u2022 ", /*#__PURE__*/React.createElement("strong", null, "Data Persists:"), " Your data stays saved even if you close the browser"), /*#__PURE__*/React.createElement("li", null, "\u2022 ", /*#__PURE__*/React.createElement("strong", null, "Share Scores:"), " Tap the Share button on the Scoreboard to quickly send team standings via text or social media"), /*#__PURE__*/React.createElement("li", null, "\u2022 ", /*#__PURE__*/React.createElement("strong", null, "Email Results:"), " Tap the Email Results button next to Events to send a complete meet report including final standings and all event-by-event results with places"), /*#__PURE__*/React.createElement("li", null, "\u2022 ", /*#__PURE__*/React.createElement("strong", null, "Clear Data:"), " Start fresh anytime from Settings \u2192 Clear Data"))), /*#__PURE__*/React.createElement("section", {
     className: "mb-8"
   }, /*#__PURE__*/React.createElement("h4", {
     className: `text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`
@@ -3733,6 +3746,7 @@ function SwimMeetScore() {
     type: "text",
     value: settingsEditingTeamName,
     onChange: e => setSettingsEditingTeamName(e.target.value),
+    onFocus: e => e.target.select(),
     onBlur: () => saveTeamNameInSettings(team.id),
     onKeyDown: e => {
       if (e.key === 'Enter') saveTeamNameInSettings(team.id);
@@ -4033,6 +4047,7 @@ function SwimMeetScore() {
     type: "text",
     value: editingTeamName,
     onChange: e => setEditingTeamName(e.target.value),
+    onFocus: e => e.target.select(),
     onBlur: () => saveTeamName(team.id),
     onKeyDown: e => {
       if (e.key === 'Enter') saveTeamName(team.id);
@@ -4066,40 +4081,50 @@ function SwimMeetScore() {
     className: `text-lg sm:text-3xl font-bold ${darkMode ? 'text-cyan-400' : 'text-blue-600'}`
   }, scoringMode === 'girls' ? team.girlsScore : scoringMode === 'boys' ? team.boysScore : team.score))))))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     className: "flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "flex items-center gap-2 flex-wrap"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-2"
   }, /*#__PURE__*/React.createElement("h3", {
     className: `text-xl font-bold ${darkMode ? 'text-chlorine' : 'text-slate-800'}`
   }, "Events"), /*#__PURE__*/React.createElement("button", {
-    onClick: () => {
-      setQuickEntryMode(!quickEntryMode);
-      triggerHaptic('light');
-      trackEvent('toggle_entry_mode', {
-        mode: !quickEntryMode ? 'team-first' : 'place-first'
-      });
-    },
-    className: `flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${quickEntryMode ? darkMode ? 'bg-lane-gold text-pool-deep' : 'bg-amber-500 text-white' : darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600 border border-gray-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-300'}`,
-    title: quickEntryMode ? "Switch to Place-First mode" : "Switch to Team-First Quick Entry mode"
-  }, /*#__PURE__*/React.createElement(Zap, {
-    className: "w-3.5 h-3.5"
-  }), quickEntryMode ? 'Quick Mode ON' : 'Quick Mode'), /*#__PURE__*/React.createElement("button", {
     onClick: emailResults,
     className: `flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${darkMode ? 'bg-chlorine/20 text-chlorine hover:bg-chlorine/30 border border-chlorine/30' : 'bg-cyan-600 text-white hover:bg-cyan-700'}`,
     title: "Email full results"
   }, /*#__PURE__*/React.createElement(Mail, {
     className: "w-4 h-4"
   }), "Email Results")), /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-2 flex-wrap mt-2"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      setTeamFirstMode(!teamFirstMode);
+      triggerHaptic('light');
+      trackEvent('toggle_entry_mode', {
+        mode: !teamFirstMode ? 'team-first' : 'place-first'
+      });
+    },
+    className: `flex items-center gap-2 px-1 py-1 rounded-full text-xs font-medium transition cursor-pointer ${darkMode ? 'bg-gray-700 border border-gray-600' : 'bg-gray-200 border border-gray-300'}`,
+    title: teamFirstMode ? "Switch to Place-First Mode" : "Switch to Team-First Mode"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: `px-2.5 py-1 rounded-full transition-all ${!teamFirstMode ? darkMode ? 'bg-chlorine text-pool-deep font-semibold' : 'bg-cyan-600 text-white font-semibold' : ''}`
+  }, "Place-First"), /*#__PURE__*/React.createElement("span", {
+    className: `px-2.5 py-1 rounded-full transition-all ${teamFirstMode ? darkMode ? 'bg-lane-gold text-pool-deep font-semibold' : 'bg-amber-500 text-white font-semibold' : ''}`
+  }, "Team-First")), !teamFirstMode && events.length > 0 && /*#__PURE__*/React.createElement("button", {
+    onClick: toggleAllEvents,
+    className: `flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600 border border-gray-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-300'}`,
+    title: events.some(e => !collapsedEvents[e.id]) ? "Collapse all events" : "Expand all events"
+  }, /*#__PURE__*/React.createElement(ChevronDown, {
+    className: `w-3.5 h-3.5 transition-transform ${events.some(e => !collapsedEvents[e.id]) ? '' : 'rotate-180'}`
+  }), events.some(e => !collapsedEvents[e.id]) ? 'Collapse All' : 'Expand All'))), /*#__PURE__*/React.createElement("div", {
     className: `text-xs px-3 py-1.5 rounded-full ${darkMode ? 'bg-lane-gold/20 text-lane-gold border border-lane-gold/30' : 'bg-amber-100 text-amber-700 border border-amber-200'}`
-  }, quickEntryMode ? '⚡ Tap place numbers to assign to each team' : '💡 Tip: Select multiple teams in a place for ties')), scoringMode === 'combined' ? /*#__PURE__*/React.createElement("div", {
-    className: `space-y-${quickEntryMode ? '2' : '4'}`
+  }, teamFirstMode ? '⚡ Tap place numbers to assign to each team' : '💡 Select multiple teams in a place for ties')), scoringMode === 'combined' ? /*#__PURE__*/React.createElement("div", {
+    className: `space-y-2`
   }, events.map((event, index) => {
     const isDiving = event.name === 'Diving';
     const isRelay = event.name.includes('Relay');
     const pointSystem = isDiving ? divingPointSystem : isRelay ? relayPointSystem : individualPointSystem;
     const numPlaces = isDiving ? numDivingPlaces : isRelay ? numRelayPlaces : numIndividualPlaces;
 
-    // Quick Entry Mode - Team-first compact cards
-    if (quickEntryMode) {
+    // Team-First Mode - compact cards
+    if (teamFirstMode) {
       return /*#__PURE__*/React.createElement(QuickEntryEventCard, {
         key: event.id,
         event: event,
@@ -4119,44 +4144,66 @@ function SwimMeetScore() {
       });
     }
 
-    // Default Mode - Place-first with dropdowns
+    // Place-First Mode - dropdowns (collapsible)
+    const isEventCollapsed = collapsedEvents[event.id];
     return /*#__PURE__*/React.createElement("div", {
       key: event.id,
-      className: `rounded-xl p-4 ${darkMode ? 'bg-pool-mid/80 border border-white/10' : 'bg-white border border-slate-200 shadow-sm'}`
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "flex items-center justify-between mb-3"
+      className: `rounded-xl ${darkMode ? 'bg-pool-mid/80 border border-white/10' : 'bg-white border border-slate-200 shadow-sm'} relative`,
+      style: {
+        zIndex: events.length - index
+      }
+    }, /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      onClick: () => toggleEvent(event.id),
+      className: `w-full flex items-center justify-between px-3 py-2 cursor-pointer transition rounded-xl ${darkMode ? 'hover:bg-white/5' : 'hover:bg-slate-50'}`,
+      "aria-expanded": !isEventCollapsed
     }, /*#__PURE__*/React.createElement("div", {
       className: "flex items-center gap-2 flex-wrap"
     }, /*#__PURE__*/React.createElement("h5", {
-      className: `font-semibold text-lg ${darkMode ? 'text-white' : 'text-slate-800'}`
+      className: `font-semibold text-base ${darkMode ? 'text-white' : 'text-slate-800'}`
     }, /*#__PURE__*/React.createElement("span", {
       className: event.gender === 'girls' ? darkMode ? 'text-pink-400' : 'text-pink-600' : darkMode ? 'text-blue-400' : 'text-blue-600'
-    }, event.gender === 'girls' ? 'Girls' : 'Boys'), ' ', /*#__PURE__*/React.createElement("span", {
+    }, event.gender === 'girls' ? 'G' : 'B'), ' ', /*#__PURE__*/React.createElement("span", {
       className: isDiving ? darkMode ? 'text-orange-400' : 'text-orange-600' : ''
     }, event.name)), heatLockEnabled && !isRelay && /*#__PURE__*/React.createElement("span", {
-      className: `text-xs px-2 py-0.5 rounded-full ${darkMode ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-amber-100 text-amber-700 border border-amber-200'}`
-    }, "\uD83D\uDD12 1-8 A Finals / 9-16 B Finals"), aRelayOnly && isRelay && /*#__PURE__*/React.createElement("span", {
-      className: `text-xs px-2 py-0.5 rounded-full ${darkMode ? 'bg-teal-500/20 text-teal-400 border border-teal-500/30' : 'bg-teal-100 text-teal-700 border border-teal-200'}`
-    }, "\uD83C\uDD70\uFE0F A-Relay Only Scores")), /*#__PURE__*/React.createElement("div", {
+      className: `text-xs px-1.5 py-0.5 rounded-full whitespace-nowrap ${darkMode ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-amber-100 text-amber-700 border border-amber-200'}`
+    }, "\uD83D\uDD12 A/B Finals"), aRelayOnly && isRelay && /*#__PURE__*/React.createElement("span", {
+      className: `text-xs px-1.5 py-0.5 rounded-full whitespace-nowrap ${darkMode ? 'bg-teal-500/20 text-teal-400 border border-teal-500/30' : 'bg-teal-100 text-teal-700 border border-teal-200'}`
+    }, "\uD83C\uDD70\uFE0F A-Relay Only")), /*#__PURE__*/React.createElement("div", {
       className: "flex items-center gap-2"
+    }, /*#__PURE__*/React.createElement(ChevronDown, {
+      className: `w-5 h-5 transition-transform ${darkMode ? 'text-slate-400' : 'text-slate-500'} ${!isEventCollapsed ? 'rotate-180' : ''}`
+    }))), !isEventCollapsed && /*#__PURE__*/React.createElement("div", {
+      className: "px-3 pb-3"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "flex items-center justify-end gap-1 mb-2"
     }, /*#__PURE__*/React.createElement("button", {
-      onClick: () => moveEventUp(index),
+      onClick: e => {
+        e.stopPropagation();
+        moveEventUp(index);
+      },
       disabled: index === 0,
       className: `p-1 rounded ${index === 0 ? 'opacity-30 cursor-not-allowed' : darkMode ? 'hover:bg-white/10' : 'hover:bg-slate-100'} ${darkMode ? 'text-slate-400' : 'text-slate-500'}`
     }, /*#__PURE__*/React.createElement(ChevronUp, {
-      className: "w-5 h-5"
+      className: "w-4 h-4"
     })), /*#__PURE__*/React.createElement("button", {
-      onClick: () => moveEventDown(index),
+      onClick: e => {
+        e.stopPropagation();
+        moveEventDown(index);
+      },
       disabled: index === events.length - 1,
       className: `p-1 rounded ${index === events.length - 1 ? 'opacity-30 cursor-not-allowed' : darkMode ? 'hover:bg-white/10' : 'hover:bg-slate-100'} ${darkMode ? 'text-slate-400' : 'text-slate-500'}`
     }, /*#__PURE__*/React.createElement(ChevronDown, {
-      className: "w-5 h-5"
+      className: "w-4 h-4"
     })), /*#__PURE__*/React.createElement("button", {
-      onClick: () => removeEvent(event.id),
+      onClick: e => {
+        e.stopPropagation();
+        removeEvent(event.id);
+      },
       className: `p-1 rounded ${darkMode ? 'text-red-400 hover:bg-red-500/20' : 'text-red-500 hover:bg-red-50'}`
     }, /*#__PURE__*/React.createElement(X, {
-      className: "w-5 h-5"
-    })))), /*#__PURE__*/React.createElement("div", {
+      className: "w-4 h-4"
+    }))), /*#__PURE__*/React.createElement("div", {
       className: "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-1"
     }, (() => {
       const consumedPlaces = getConsumedPlaces(event);
@@ -4172,21 +4219,20 @@ function SwimMeetScore() {
         consumedByTie: consumedPlaces.has(place),
         heatLockEnabled: heatLockEnabled
       }));
-    })()));
+    })())));
   })) : /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h4", {
     className: `text-lg font-semibold mb-4 ${scoringMode === 'girls' ? darkMode ? 'text-pink-400' : 'text-pink-600' : darkMode ? 'text-blue-400' : 'text-blue-600'}`
   }, scoringMode === 'girls' ? 'Girls Events' : 'Boys Events'), /*#__PURE__*/React.createElement("div", {
-    className: `space-y-${quickEntryMode ? '2' : '4'}`
-  }, events.filter(e => e.gender === scoringMode).map((event, index) => {
+    className: `space-y-2`
+  }, events.filter(e => e.gender === scoringMode).map((event, _index) => {
     const isDiving = event.name === 'Diving';
     const isRelay = event.name.includes('Relay');
-    const allEvents = events.filter(e => e.gender === scoringMode);
     const actualIndex = events.findIndex(e => e.id === event.id);
     const pointSystem = isDiving ? divingPointSystem : isRelay ? relayPointSystem : individualPointSystem;
     const numPlaces = isDiving ? numDivingPlaces : isRelay ? numRelayPlaces : numIndividualPlaces;
 
-    // Quick Entry Mode - Team-first compact cards
-    if (quickEntryMode) {
+    // Team-First Mode - compact cards
+    if (teamFirstMode) {
       return /*#__PURE__*/React.createElement(QuickEntryEventCard, {
         key: event.id,
         event: event,
@@ -4206,40 +4252,62 @@ function SwimMeetScore() {
       });
     }
 
-    // Default Mode - Place-first with dropdowns
+    // Place-First Mode - dropdowns (collapsible)
+    const isEventCollapsed = collapsedEvents[event.id];
     return /*#__PURE__*/React.createElement("div", {
       key: event.id,
-      className: `rounded-xl p-4 ${darkMode ? 'bg-pool-mid/80 border border-white/10' : 'bg-white border border-slate-200 shadow-sm'}`
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "flex items-center justify-between mb-3"
+      className: `rounded-xl ${darkMode ? 'bg-pool-mid/80 border border-white/10' : 'bg-white border border-slate-200 shadow-sm'} relative`,
+      style: {
+        zIndex: events.length - _index
+      }
+    }, /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      onClick: () => toggleEvent(event.id),
+      className: `w-full flex items-center justify-between px-3 py-2 cursor-pointer transition rounded-xl ${darkMode ? 'hover:bg-white/5' : 'hover:bg-slate-50'}`,
+      "aria-expanded": !isEventCollapsed
     }, /*#__PURE__*/React.createElement("div", {
       className: "flex items-center gap-2 flex-wrap"
     }, /*#__PURE__*/React.createElement("h5", {
-      className: `font-semibold text-lg ${isDiving ? darkMode ? 'text-orange-400' : 'text-orange-600' : darkMode ? 'text-white' : 'text-slate-800'}`
+      className: `font-semibold text-base ${isDiving ? darkMode ? 'text-orange-400' : 'text-orange-600' : darkMode ? 'text-white' : 'text-slate-800'}`
     }, event.name), heatLockEnabled && !isRelay && /*#__PURE__*/React.createElement("span", {
-      className: `text-xs px-2 py-0.5 rounded-full ${darkMode ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-amber-100 text-amber-700 border border-amber-200'}`
-    }, "\uD83D\uDD12 1-8 A Finals / 9-16 B Finals"), aRelayOnly && isRelay && /*#__PURE__*/React.createElement("span", {
-      className: `text-xs px-2 py-0.5 rounded-full ${darkMode ? 'bg-teal-500/20 text-teal-400 border border-teal-500/30' : 'bg-teal-100 text-teal-700 border border-teal-200'}`
-    }, "\uD83C\uDD70\uFE0F A-Relay Only Scores")), /*#__PURE__*/React.createElement("div", {
+      className: `text-xs px-1.5 py-0.5 rounded-full whitespace-nowrap ${darkMode ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-amber-100 text-amber-700 border border-amber-200'}`
+    }, "\uD83D\uDD12 A/B Finals"), aRelayOnly && isRelay && /*#__PURE__*/React.createElement("span", {
+      className: `text-xs px-1.5 py-0.5 rounded-full whitespace-nowrap ${darkMode ? 'bg-teal-500/20 text-teal-400 border border-teal-500/30' : 'bg-teal-100 text-teal-700 border border-teal-200'}`
+    }, "\uD83C\uDD70\uFE0F A-Relay Only")), /*#__PURE__*/React.createElement("div", {
       className: "flex items-center gap-2"
+    }, /*#__PURE__*/React.createElement(ChevronDown, {
+      className: `w-5 h-5 transition-transform ${darkMode ? 'text-slate-400' : 'text-slate-500'} ${!isEventCollapsed ? 'rotate-180' : ''}`
+    }))), !isEventCollapsed && /*#__PURE__*/React.createElement("div", {
+      className: "px-3 pb-3"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "flex items-center justify-end gap-1 mb-2"
     }, /*#__PURE__*/React.createElement("button", {
-      onClick: () => moveEventUp(actualIndex),
+      onClick: e => {
+        e.stopPropagation();
+        moveEventUp(actualIndex);
+      },
       disabled: actualIndex === 0,
       className: `p-1 rounded ${actualIndex === 0 ? 'opacity-30 cursor-not-allowed' : darkMode ? 'hover:bg-white/10' : 'hover:bg-slate-100'} ${darkMode ? 'text-slate-400' : 'text-slate-500'}`
     }, /*#__PURE__*/React.createElement(ChevronUp, {
-      className: "w-5 h-5"
+      className: "w-4 h-4"
     })), /*#__PURE__*/React.createElement("button", {
-      onClick: () => moveEventDown(actualIndex),
+      onClick: e => {
+        e.stopPropagation();
+        moveEventDown(actualIndex);
+      },
       disabled: actualIndex === events.length - 1,
       className: `p-1 rounded ${actualIndex === events.length - 1 ? 'opacity-30 cursor-not-allowed' : darkMode ? 'hover:bg-white/10' : 'hover:bg-slate-100'} ${darkMode ? 'text-slate-400' : 'text-slate-500'}`
     }, /*#__PURE__*/React.createElement(ChevronDown, {
-      className: "w-5 h-5"
+      className: "w-4 h-4"
     })), /*#__PURE__*/React.createElement("button", {
-      onClick: () => removeEvent(event.id),
+      onClick: e => {
+        e.stopPropagation();
+        removeEvent(event.id);
+      },
       className: `p-1 rounded ${darkMode ? 'text-red-400 hover:bg-red-500/20' : 'text-red-500 hover:bg-red-50'}`
     }, /*#__PURE__*/React.createElement(X, {
-      className: "w-5 h-5"
-    })))), /*#__PURE__*/React.createElement("div", {
+      className: "w-4 h-4"
+    }))), /*#__PURE__*/React.createElement("div", {
       className: "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-1"
     }, (() => {
       const consumedPlaces = getConsumedPlaces(event);
@@ -4252,9 +4320,10 @@ function SwimMeetScore() {
         pointSystem: pointSystem,
         numPlaces: numPlaces,
         onUpdate: updateEventResult,
-        consumedByTie: consumedPlaces.has(place)
+        consumedByTie: consumedPlaces.has(place),
+        heatLockEnabled: heatLockEnabled
       }));
-    })()));
+    })())));
   }))), /*#__PURE__*/React.createElement("div", {
     className: `rounded-lg p-4 mt-6 ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`
   }, /*#__PURE__*/React.createElement("h4", {
