@@ -1157,6 +1157,7 @@ const BulkEntryModal = ({
 function SwimMeetScore() {
   // Error state for user feedback
   const [error, setError] = useState(null);
+  const [heatReminder, setHeatReminder] = useState(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(null);
   const [bulkEntryEvent, setBulkEntryEvent] = useState(null); // For bulk entry modal
   const [teamFirstMode, setTeamFirstMode] = useState(false); // Toggle between place-first and team-first entry modes
@@ -1168,6 +1169,14 @@ function SwimMeetScore() {
       return () => clearTimeout(timer);
     }
   }, [error]);
+
+  // Clear heat reminder after 6 seconds
+  useEffect(() => {
+    if (heatReminder) {
+      const timer = setTimeout(() => setHeatReminder(null), 6000);
+      return () => clearTimeout(timer);
+    }
+  }, [heatReminder]);
 
   // Capture the PWA install prompt
   useEffect(() => {
@@ -2198,6 +2207,18 @@ function SwimMeetScore() {
         });
         triggerHaptic('light');
       }
+
+      // B Finals reminder: if heat lock is on, event is individual with >10 places,
+      // user just scored a place in 1-8, and no places 9-16 have results yet
+      if (isChecked && teamId && heatLockEnabled && !isRelay && numIndividualPlaces > 10 && place >= 1 && place <= 8) {
+        const updatedEvent = newEvents.find(e => e.id === eventId);
+        if (updatedEvent) {
+          const hasBFinalsResults = (updatedEvent.results || []).some(r => r.place >= 9 && r.place <= 16 && r.teamIds && r.teamIds.length > 0);
+          if (!hasBFinalsResults) {
+            setHeatReminder(`Don't forget to score Heat 1 (B Finals) in places 9th–16th for ${updatedEvent.name}.`);
+          }
+        }
+      }
     } catch (e) {
       console.error('Error updating event result:', e);
       setError('Failed to update result. Please try again.');
@@ -3174,6 +3195,15 @@ function SwimMeetScore() {
   }, /*#__PURE__*/React.createElement("span", null, error), /*#__PURE__*/React.createElement("button", {
     onClick: () => setError(null),
     className: `ml-4 flex-shrink-0 ${darkMode ? 'text-red-300 hover:text-red-100' : 'text-red-500 hover:text-red-700'}`
+  }, /*#__PURE__*/React.createElement(X, {
+    className: "w-5 h-5"
+  })))), heatReminder && /*#__PURE__*/React.createElement("div", {
+    className: "fixed top-4 left-4 right-4 z-50 flex justify-center animate-fade-slide-up"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: `max-w-lg w-full p-4 rounded-lg flex items-center justify-between shadow-lg ${darkMode ? 'bg-amber-900 text-amber-100 border border-amber-700' : 'bg-amber-100 text-amber-800 border border-amber-300'}`
+  }, /*#__PURE__*/React.createElement("span", null, "\uD83D\uDD12 ", heatReminder), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setHeatReminder(null),
+    className: `ml-4 flex-shrink-0 ${darkMode ? 'text-amber-300 hover:text-amber-100' : 'text-amber-500 hover:text-amber-700'}`
   }, /*#__PURE__*/React.createElement(X, {
     className: "w-5 h-5"
   })))), shareSuccess && /*#__PURE__*/React.createElement("div", {
