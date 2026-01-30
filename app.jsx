@@ -1355,7 +1355,14 @@
       };
 
       // Collapsible events state for place-first mode
-      const [collapsedEvents, setCollapsedEvents] = useState({});
+      const [collapsedEvents, setCollapsedEvents] = useState(() => {
+        const initial = {};
+        const savedEvents = utils.loadFromStorage('events', defaultEvents);
+        if (Array.isArray(savedEvents)) {
+          savedEvents.forEach(e => { initial[e.id] = true; });
+        }
+        return initial;
+      });
 
       const toggleEvent = (eventId) => {
         setCollapsedEvents(prev => ({ ...prev, [eventId]: !prev[eventId] }));
@@ -3775,21 +3782,8 @@
               <div>
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
                   <div>
-                    <h3 className={`text-xl font-bold ${darkMode ? 'text-chlorine' : 'text-slate-800'}`}>Events</h3>
-                    <div className="flex items-center gap-2 flex-wrap mt-2">
-                      {/* Entry Mode Toggle */}
-                      <button
-                        onClick={() => { setTeamFirstMode(!teamFirstMode); triggerHaptic('light'); trackEvent('toggle_entry_mode', { mode: !teamFirstMode ? 'team-first' : 'place-first' }); }}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
-                          teamFirstMode
-                            ? (darkMode ? 'bg-lane-gold text-pool-deep' : 'bg-amber-500 text-white')
-                            : (darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600 border border-gray-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-300')
-                        }`}
-                        title={teamFirstMode ? "Switch to Place-First Mode" : "Switch to Team-First Mode"}
-                      >
-                        <Zap className="w-3.5 h-3.5" />
-                        {teamFirstMode ? 'Team-First Mode' : 'Place-First Mode'}
-                      </button>
+                    <div className="flex items-center gap-2">
+                      <h3 className={`text-xl font-bold ${darkMode ? 'text-chlorine' : 'text-slate-800'}`}>Events</h3>
                       <button
                         onClick={emailResults}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${darkMode ? 'bg-chlorine/20 text-chlorine hover:bg-chlorine/30 border border-chlorine/30' : 'bg-cyan-600 text-white hover:bg-cyan-700'}`}
@@ -3797,6 +3791,17 @@
                       >
                         <Mail className="w-4 h-4" />
                         Email Results
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap mt-2">
+                      {/* Entry Mode Toggle Switch */}
+                      <button
+                        onClick={() => { setTeamFirstMode(!teamFirstMode); triggerHaptic('light'); trackEvent('toggle_entry_mode', { mode: !teamFirstMode ? 'team-first' : 'place-first' }); }}
+                        className={`flex items-center gap-2 px-1 py-1 rounded-full text-xs font-medium transition cursor-pointer ${darkMode ? 'bg-gray-700 border border-gray-600' : 'bg-gray-200 border border-gray-300'}`}
+                        title={teamFirstMode ? "Switch to Place-First Mode" : "Switch to Team-First Mode"}
+                      >
+                        <span className={`px-2.5 py-1 rounded-full transition-all ${!teamFirstMode ? (darkMode ? 'bg-chlorine text-pool-deep font-semibold' : 'bg-cyan-600 text-white font-semibold') : ''}`}>Place-First</span>
+                        <span className={`px-2.5 py-1 rounded-full transition-all ${teamFirstMode ? (darkMode ? 'bg-lane-gold text-pool-deep font-semibold' : 'bg-amber-500 text-white font-semibold') : ''}`}>Team-First</span>
                       </button>
                       {!teamFirstMode && events.length > 0 && (
                         <button
@@ -3861,7 +3866,7 @@
                             <div className="flex items-center gap-2 flex-wrap">
                               <h5 className={`font-semibold text-base ${darkMode ? 'text-white' : 'text-slate-800'}`}>
                                 <span className={event.gender === 'girls' ? (darkMode ? 'text-pink-400' : 'text-pink-600') : (darkMode ? 'text-blue-400' : 'text-blue-600')}>
-                                  {event.gender === 'girls' ? 'Girls' : 'Boys'}
+                                  {event.gender === 'girls' ? 'G' : 'B'}
                                 </span>
                                 {' '}
                                 <span className={isDiving ? (darkMode ? 'text-orange-400' : 'text-orange-600') : ''}>
@@ -3869,13 +3874,13 @@
                                 </span>
                               </h5>
                               {heatLockEnabled && !isRelay && (
-                                <span className={`text-xs px-2 py-0.5 rounded-full ${darkMode ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-amber-100 text-amber-700 border border-amber-200'}`}>
-                                  🔒 1-8 A Finals / 9-16 B Finals
+                                <span className={`text-xs px-1.5 py-0.5 rounded-full whitespace-nowrap ${darkMode ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-amber-100 text-amber-700 border border-amber-200'}`}>
+                                  🔒 A/B Finals
                                 </span>
                               )}
                               {aRelayOnly && isRelay && (
-                                <span className={`text-xs px-2 py-0.5 rounded-full ${darkMode ? 'bg-teal-500/20 text-teal-400 border border-teal-500/30' : 'bg-teal-100 text-teal-700 border border-teal-200'}`}>
-                                  🅰️ A-Relay Only Scores
+                                <span className={`text-xs px-1.5 py-0.5 rounded-full whitespace-nowrap ${darkMode ? 'bg-teal-500/20 text-teal-400 border border-teal-500/30' : 'bg-teal-100 text-teal-700 border border-teal-200'}`}>
+                                  🅰️ A-Relay Only
                                 </span>
                               )}
                             </div>
