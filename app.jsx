@@ -3986,13 +3986,13 @@
                               <div className="flex items-center gap-2 flex-wrap">
                                 <h5 className={`font-semibold text-base ${isDiving ? (darkMode ? 'text-orange-400' : 'text-orange-600') : (darkMode ? 'text-white' : 'text-slate-800')}`}>{event.name}</h5>
                                 {heatLockEnabled && !isRelay && (
-                                  <span className={`text-xs px-2 py-0.5 rounded-full ${darkMode ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-amber-100 text-amber-700 border border-amber-200'}`}>
-                                    🔒 1-8 A Finals / 9-16 B Finals
+                                  <span className={`text-xs px-1.5 py-0.5 rounded-full whitespace-nowrap ${darkMode ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-amber-100 text-amber-700 border border-amber-200'}`}>
+                                    🔒 A/B Finals
                                   </span>
                                 )}
                                 {aRelayOnly && isRelay && (
-                                  <span className={`text-xs px-2 py-0.5 rounded-full ${darkMode ? 'bg-teal-500/20 text-teal-400 border border-teal-500/30' : 'bg-teal-100 text-teal-700 border border-teal-200'}`}>
-                                    🅰️ A-Relay Only Scores
+                                  <span className={`text-xs px-1.5 py-0.5 rounded-full whitespace-nowrap ${darkMode ? 'bg-teal-500/20 text-teal-400 border border-teal-500/30' : 'bg-teal-100 text-teal-700 border border-teal-200'}`}>
+                                    🅰️ A-Relay Only
                                   </span>
                                 )}
                               </div>
@@ -4038,6 +4038,7 @@
                                         numPlaces={numPlaces}
                                         onUpdate={updateEventResult}
                                         consumedByTie={consumedPlaces.has(place)}
+                                        heatLockEnabled={heatLockEnabled}
                                       />
                                     ));
                                   })()}
