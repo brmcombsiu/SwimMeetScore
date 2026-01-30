@@ -2829,6 +2829,16 @@
                       </ol>
                     </section>
 
+                    {/* Two Entry Modes */}
+                    <section className="mb-8">
+                      <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>📋 Two Entry Modes</h5>
+                        <div className="text-sm space-y-2">
+                          <p><strong>Place-First Mode (Default):</strong> Pick teams for each place using dropdowns. Best for recording ties.</p>
+                          <p><strong>Team-First Mode:</strong> Tap place numbers for each team. Faster dual meets as you can simply select the places for one team and the scores for the other team fill in automatically.</p>
+                        </div>
+                      </div>
+                    </section>
 
                     {/* Tie Handling */}
                     <section className="mb-8">
@@ -3338,6 +3348,7 @@
                                 type="text"
                                 value={settingsEditingTeamName}
                                 onChange={(e) => setSettingsEditingTeamName(e.target.value)}
+                                onFocus={(e) => e.target.select()}
                                 onBlur={() => saveTeamNameInSettings(team.id)}
                                 onKeyDown={(e) => {
                                   if (e.key === 'Enter') saveTeamNameInSettings(team.id);
