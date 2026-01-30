@@ -2589,24 +2589,38 @@
           
           filteredEvents.forEach((event) => {
             const genderPrefix = scoringMode === 'combined' ? (event.gender === 'girls' ? 'Girls ' : 'Boys ') : '';
+            const isDiving = event.name === 'Diving';
+            const isRelay = event.name.includes('Relay');
+            const evtPointSystem = isDiving ? divingPointSystem : isRelay ? relayPointSystem : individualPointSystem;
             body += genderPrefix + event.name + ':\n';
-            
+
             if (event.results && event.results.length > 0) {
               // Sort results by place
               const sortedResults = [...event.results].sort((a, b) => a.place - b.place);
-              
+
               sortedResults.forEach((result) => {
                 const placeNum = result.place;
                 const placeStr = placeNum === 1 ? '1st' : placeNum === 2 ? '2nd' : placeNum === 3 ? '3rd' : placeNum + 'th';
+                const numTied = result.teamIds.length;
+                let points;
+                if (numTied > 1) {
+                  let totalPoints = 0;
+                  for (let i = 0; i < numTied; i++) {
+                    totalPoints += (evtPointSystem[placeNum + i]) || 0;
+                  }
+                  points = (totalPoints / numTied).toFixed(1).replace(/\.0$/, '');
+                } else {
+                  points = evtPointSystem[placeNum] ?? 0;
+                }
                 const teamNames = result.teamIds.map(id => {
                   const team = teams.find(t => String(t.id) === String(id));
                   return team ? team.name : 'Unknown';
                 }).join(', ');
-                
-                if (result.teamIds.length > 1) {
-                  body += '  ' + placeStr + ' (TIE): ' + teamNames + '\n';
+
+                if (numTied > 1) {
+                  body += '  ' + placeStr + ' (TIE): ' + teamNames + ' (' + points + ' pts each)\n';
                 } else {
-                  body += '  ' + placeStr + ': ' + teamNames + '\n';
+                  body += '  ' + placeStr + ': ' + teamNames + ' (' + points + ' pts)\n';
                 }
               });
             } else {
@@ -3712,6 +3726,7 @@
                               type="text"
                               value={editingTeamName}
                               onChange={(e) => setEditingTeamName(e.target.value)}
+                              onFocus={(e) => e.target.select()}
                               onBlur={() => saveTeamName(team.id)}
                               onKeyDown={(e) => {
                                 if (e.key === 'Enter') saveTeamName(team.id);
