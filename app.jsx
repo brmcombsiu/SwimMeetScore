@@ -1304,6 +1304,7 @@
 
       // State with localStorage initialization
       const CURRENT_VERSION = 4; // Version 4 adds tie support with teamIds array
+      const APP_VERSION = '1.1.0';
       
       // Check and migrate events if needed
       const initializeEvents = () => {
@@ -3298,6 +3299,9 @@
                     >
                       Got It!
                     </button>
+                    <p className={`text-center text-xs mt-3 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                      Version {APP_VERSION}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -3316,22 +3320,6 @@
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button
-                    onClick={performUndo}
-                    disabled={!canUndo}
-                    title="Undo (Ctrl+Z)"
-                    className={`p-2.5 rounded-xl transition ${canUndo ? (darkMode ? 'bg-pool-light/50 hover:bg-pool-light text-white border border-white/10' : 'bg-cyan-50 hover:bg-cyan-100 text-cyan-700 border border-cyan-200') : (darkMode ? 'bg-pool-light/20 text-white/30 border border-white/5 cursor-not-allowed' : 'bg-gray-100 text-gray-300 border border-gray-200 cursor-not-allowed')}`}
-                  >
-                    <Undo className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={performRedo}
-                    disabled={!canRedo}
-                    title="Redo (Ctrl+Y)"
-                    className={`p-2.5 rounded-xl transition ${canRedo ? (darkMode ? 'bg-pool-light/50 hover:bg-pool-light text-white border border-white/10' : 'bg-cyan-50 hover:bg-cyan-100 text-cyan-700 border border-cyan-200') : (darkMode ? 'bg-pool-light/20 text-white/30 border border-white/5 cursor-not-allowed' : 'bg-gray-100 text-gray-300 border border-gray-200 cursor-not-allowed')}`}
-                  >
-                    <Redo className="w-5 h-5" />
-                  </button>
                   <button
                     onClick={() => { setShowAbout(true); trackEvent('open_help'); }}
                     className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition text-sm font-medium ${darkMode ? 'bg-pool-light/50 hover:bg-pool-light text-white border border-white/10' : 'bg-cyan-50 hover:bg-cyan-100 text-cyan-700 border border-cyan-200'}`}
@@ -4018,6 +4006,24 @@
                         <Mail className="w-4 h-4" />
                         Email Results
                       </button>
+                      <div className="flex items-center gap-1 ml-auto sm:ml-2">
+                        <button
+                          onClick={performUndo}
+                          disabled={!canUndo}
+                          title="Undo (Ctrl+Z)"
+                          className={`p-1.5 rounded-lg transition ${canUndo ? (darkMode ? 'bg-pool-light/50 hover:bg-pool-light text-white border border-white/10' : 'bg-cyan-50 hover:bg-cyan-100 text-cyan-700 border border-cyan-200') : (darkMode ? 'bg-pool-light/20 text-white/20 border border-white/5 cursor-not-allowed' : 'bg-gray-100 text-gray-300 border border-gray-200 cursor-not-allowed')}`}
+                        >
+                          <Undo className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={performRedo}
+                          disabled={!canRedo}
+                          title="Redo (Ctrl+Y)"
+                          className={`p-1.5 rounded-lg transition ${canRedo ? (darkMode ? 'bg-pool-light/50 hover:bg-pool-light text-white border border-white/10' : 'bg-cyan-50 hover:bg-cyan-100 text-cyan-700 border border-cyan-200') : (darkMode ? 'bg-pool-light/20 text-white/20 border border-white/5 cursor-not-allowed' : 'bg-gray-100 text-gray-300 border border-gray-200 cursor-not-allowed')}`}
+                        >
+                          <Redo className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap mt-2">
                       {/* Entry Mode Toggle Switch */}

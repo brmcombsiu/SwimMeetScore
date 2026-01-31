@@ -1542,6 +1542,7 @@ function SwimMeetScore() {
 
   // State with localStorage initialization
   const CURRENT_VERSION = 4; // Version 4 adds tie support with teamIds array
+  const APP_VERSION = '1.1.0';
 
   // Check and migrate events if needed
   const initializeEvents = () => {
@@ -3717,7 +3718,9 @@ function SwimMeetScore() {
   }, /*#__PURE__*/React.createElement("button", {
     onClick: () => setShowAbout(false),
     className: `w-full py-3 rounded-lg font-semibold transition ${darkMode ? 'bg-cyan-600 hover:bg-cyan-700 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'}`
-  }, "Got It!")))), /*#__PURE__*/React.createElement("div", {
+  }, "Got It!"), /*#__PURE__*/React.createElement("p", {
+    className: `text-center text-xs mt-3 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`
+  }, "Version ", APP_VERSION)))), /*#__PURE__*/React.createElement("div", {
     className: `rounded-2xl shadow-xl p-4 sm:p-6 mb-6 backdrop-blur-sm ${darkMode ? 'bg-pool-mid/80 border border-chlorine/20' : 'bg-white/90 border border-cyan-200'}`
   }, /*#__PURE__*/React.createElement("div", {
     className: "flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3"
@@ -3734,20 +3737,6 @@ function SwimMeetScore() {
   }, "Score")))), /*#__PURE__*/React.createElement("div", {
     className: "flex items-center gap-2"
   }, /*#__PURE__*/React.createElement("button", {
-    onClick: performUndo,
-    disabled: !canUndo,
-    title: "Undo (Ctrl+Z)",
-    className: `p-2.5 rounded-xl transition ${canUndo ? darkMode ? 'bg-pool-light/50 hover:bg-pool-light text-white border border-white/10' : 'bg-cyan-50 hover:bg-cyan-100 text-cyan-700 border border-cyan-200' : darkMode ? 'bg-pool-light/20 text-white/30 border border-white/5 cursor-not-allowed' : 'bg-gray-100 text-gray-300 border border-gray-200 cursor-not-allowed'}`
-  }, /*#__PURE__*/React.createElement(Undo, {
-    className: "w-5 h-5"
-  })), /*#__PURE__*/React.createElement("button", {
-    onClick: performRedo,
-    disabled: !canRedo,
-    title: "Redo (Ctrl+Y)",
-    className: `p-2.5 rounded-xl transition ${canRedo ? darkMode ? 'bg-pool-light/50 hover:bg-pool-light text-white border border-white/10' : 'bg-cyan-50 hover:bg-cyan-100 text-cyan-700 border border-cyan-200' : darkMode ? 'bg-pool-light/20 text-white/30 border border-white/5 cursor-not-allowed' : 'bg-gray-100 text-gray-300 border border-gray-200 cursor-not-allowed'}`
-  }, /*#__PURE__*/React.createElement(Redo, {
-    className: "w-5 h-5"
-  })), /*#__PURE__*/React.createElement("button", {
     onClick: () => {
       setShowAbout(true);
       trackEvent('open_help');
@@ -4325,7 +4314,23 @@ function SwimMeetScore() {
     title: "Email full results"
   }, /*#__PURE__*/React.createElement(Mail, {
     className: "w-4 h-4"
-  }), "Email Results")), /*#__PURE__*/React.createElement("div", {
+  }), "Email Results"), /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-1 ml-auto sm:ml-2"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: performUndo,
+    disabled: !canUndo,
+    title: "Undo (Ctrl+Z)",
+    className: `p-1.5 rounded-lg transition ${canUndo ? darkMode ? 'bg-pool-light/50 hover:bg-pool-light text-white border border-white/10' : 'bg-cyan-50 hover:bg-cyan-100 text-cyan-700 border border-cyan-200' : darkMode ? 'bg-pool-light/20 text-white/20 border border-white/5 cursor-not-allowed' : 'bg-gray-100 text-gray-300 border border-gray-200 cursor-not-allowed'}`
+  }, /*#__PURE__*/React.createElement(Undo, {
+    className: "w-4 h-4"
+  })), /*#__PURE__*/React.createElement("button", {
+    onClick: performRedo,
+    disabled: !canRedo,
+    title: "Redo (Ctrl+Y)",
+    className: `p-1.5 rounded-lg transition ${canRedo ? darkMode ? 'bg-pool-light/50 hover:bg-pool-light text-white border border-white/10' : 'bg-cyan-50 hover:bg-cyan-100 text-cyan-700 border border-cyan-200' : darkMode ? 'bg-pool-light/20 text-white/20 border border-white/5 cursor-not-allowed' : 'bg-gray-100 text-gray-300 border border-gray-200 cursor-not-allowed'}`
+  }, /*#__PURE__*/React.createElement(Redo, {
+    className: "w-4 h-4"
+  })))), /*#__PURE__*/React.createElement("div", {
     className: "flex items-center gap-2 flex-wrap mt-2"
   }, /*#__PURE__*/React.createElement("button", {
     onClick: () => {
