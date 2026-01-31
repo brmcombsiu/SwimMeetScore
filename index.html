@@ -167,6 +167,26 @@
     });
   </script>
   
+  <!-- Global Error Monitoring -->
+  <script>
+    window.addEventListener('error', function(event) {
+      console.error('SwimMeetScore Error:', event.message, event.filename, event.lineno);
+      trackEvent('js_error', {
+        error_message: String(event.message).substring(0, 100),
+        error_source: String(event.filename || '').split('/').pop(),
+        error_line: event.lineno,
+        error_col: event.colno
+      });
+    });
+    window.addEventListener('unhandledrejection', function(event) {
+      console.error('SwimMeetScore Unhandled Promise:', event.reason);
+      trackEvent('js_error', {
+        error_message: String(event.reason).substring(0, 100),
+        error_source: 'unhandled_promise'
+      });
+    });
+  </script>
+
   <!-- Structured Data (JSON-LD) -->
   <script type="application/ld+json">
   {
