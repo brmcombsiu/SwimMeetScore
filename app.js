@@ -3412,7 +3412,7 @@ function SwimMeetScore() {
     className: `text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`
   }, "\uD83C\uDFCA How to Use"), /*#__PURE__*/React.createElement("ol", {
     className: "list-decimal list-inside space-y-2"
-  }, /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("strong", null, "Add Teams:"), " Go to Settings and add your competing teams"), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("strong", null, "Choose a Template:"), " Select \"High School Dual Meet\" or \"Competition Mode\" for preset events and point systems, or customize your own"), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("strong", null, "Record Results:"), " For each event, select the team(s) that placed 1st, 2nd, 3rd, etc."), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("strong", null, "View Scores:"), " The scoreboard updates automatically as you enter results"))), /*#__PURE__*/React.createElement("section", {
+  }, /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("strong", null, "Add Teams:"), " Go to Settings and add your competing teams"), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("strong", null, "Choose a Template:"), " Select a preset template like \"High School Dual Meet,\" \"Conference Meet,\" or \"Sectionals\" for preset events and point systems, or customize your own"), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("strong", null, "Record Results:"), " For each event, select the team(s) that placed 1st, 2nd, 3rd, etc."), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("strong", null, "View Scores:"), " The scoreboard updates automatically as you enter results"))), /*#__PURE__*/React.createElement("section", {
     className: "mb-8"
   }, /*#__PURE__*/React.createElement("div", {
     className: `p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`
@@ -3420,7 +3420,9 @@ function SwimMeetScore() {
     className: `font-semibold mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`
   }, "\uD83D\uDCCB Two Entry Modes"), /*#__PURE__*/React.createElement("div", {
     className: "text-sm space-y-2"
-  }, /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("strong", null, "Place Mode (Default):"), " Pick teams for each place using dropdowns. Best for recording ties."), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("strong", null, "Team Mode:"), " Tap place numbers for each team. Faster dual meets as you can simply select the places for one team and the scores for the other team fill in automatically.")))), /*#__PURE__*/React.createElement("section", {
+  }, /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("strong", null, "Place Mode (Default):"), " Pick teams for each place using dropdowns. Best for recording ties."), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("strong", null, "Team Mode:"), " Tap place numbers for each team. Faster dual meets as you can simply select the places for one team and the scores for the other team fill in automatically."), /*#__PURE__*/React.createElement("p", {
+    className: "mt-2"
+  }, /*#__PURE__*/React.createElement("strong", null, "Auto-fill in Team Mode:"), " When there are exactly 2 teams and one team has places assigned, an \"Auto-fill [team name]\" button appears in each event card. Pressing it assigns all remaining unoccupied places to the other team.")))), /*#__PURE__*/React.createElement("section", {
     className: "mb-8"
   }, /*#__PURE__*/React.createElement("h4", {
     className: `text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`

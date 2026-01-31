@@ -2931,7 +2931,7 @@
                       <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>🏊 How to Use</h4>
                       <ol className="list-decimal list-inside space-y-2">
                         <li><strong>Add Teams:</strong> Go to Settings and add your competing teams</li>
-                        <li><strong>Choose a Template:</strong> Select "High School Dual Meet" or "Competition Mode" for preset events and point systems, or customize your own</li>
+                        <li><strong>Choose a Template:</strong> Select a preset template like "High School Dual Meet," "Conference Meet," or "Sectionals" for preset events and point systems, or customize your own</li>
                         <li><strong>Record Results:</strong> For each event, select the team(s) that placed 1st, 2nd, 3rd, etc.</li>
                         <li><strong>View Scores:</strong> The scoreboard updates automatically as you enter results</li>
                       </ol>
@@ -2944,6 +2944,7 @@
                         <div className="text-sm space-y-2">
                           <p><strong>Place Mode (Default):</strong> Pick teams for each place using dropdowns. Best for recording ties.</p>
                           <p><strong>Team Mode:</strong> Tap place numbers for each team. Faster dual meets as you can simply select the places for one team and the scores for the other team fill in automatically.</p>
+                          <p className="mt-2"><strong>Auto-fill in Team Mode:</strong> When there are exactly 2 teams and one team has places assigned, an "Auto-fill [team name]" button appears in each event card. Pressing it assigns all remaining unoccupied places to the other team.</p>
                         </div>
                       </div>
                     </section>

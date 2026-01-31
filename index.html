@@ -609,14 +609,26 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
+        navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
           .then((registration) => {
             console.log('SwimMeetScore: Service Worker registered successfully');
-            
-            // Check for updates periodically
+
+            // Check for updates every 5 minutes
             setInterval(() => {
               registration.update();
-            }, 60 * 60 * 1000); // Check every hour
+            }, 5 * 60 * 1000);
+
+            // When a new SW is waiting, activate it immediately
+            registration.addEventListener('updatefound', () => {
+              const newWorker = registration.installing;
+              if (newWorker) {
+                newWorker.addEventListener('statechange', () => {
+                  if (newWorker.state === 'activated') {
+                    console.log('SwimMeetScore: New version activated');
+                  }
+                });
+              }
+            });
           })
           .catch((error) => {
             console.log('SwimMeetScore: Service Worker registration failed:', error);
