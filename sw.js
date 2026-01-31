@@ -1,5 +1,5 @@
 // SwimMeetScore Service Worker
-const CACHE_NAME = 'swimmeetscore-v14';
+const CACHE_NAME = 'swimmeetscore-v15';
 
 // Files to cache for offline use
 const CACHE_FILES = [
@@ -85,8 +85,8 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(event.request.url);
   
-  // Skip Google Analytics and Clarity
-  if (url.hostname.includes('google') || url.hostname.includes('clarity')) {
+  // Skip Google Analytics and Clarity (but allow Google Fonts)
+  if ((url.hostname.includes('google') && !url.hostname.includes('fonts.googleapis.com') && !url.hostname.includes('fonts.gstatic.com')) || url.hostname.includes('clarity')) {
     return;
   }
 
@@ -127,7 +127,8 @@ self.addEventListener('fetch', (event) => {
         return fetchAndCache(event.request);
       })
       .catch(() => {
-        // Nothing we can do — let the browser handle the error
+        // Offline and not in cache - return empty response for non-critical resources
+        return new Response('', { status: 408, statusText: 'Offline' });
       })
   );
 });
