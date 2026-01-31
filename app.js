@@ -705,6 +705,7 @@ const QuickEntryEventCard = ({
   numPlaces,
   pointSystem,
   onUpdate,
+  onBulkUpdate,
   onMoveUp,
   onMoveDown,
   onRemove,
@@ -800,11 +801,29 @@ const QuickEntryEventCard = ({
         onClick: e => {
           e.stopPropagation();
           triggerHaptic('light');
+          // Build complete results array with existing + new assignments
+          const newResults = [...(event.results || [])];
           for (let p = 1; p <= numPlaces; p++) {
             if (!assignedPlaces.includes(p) && !isPlaceConsumed(p)) {
-              onUpdate(event.id, p, unassignedTeam.id, true);
+              const existingIndex = newResults.findIndex(r => r && r.place === p);
+              if (existingIndex >= 0) {
+                const ids = [...(newResults[existingIndex].teamIds || [])];
+                if (!ids.includes(String(unassignedTeam.id))) {
+                  ids.push(String(unassignedTeam.id));
+                }
+                newResults[existingIndex] = {
+                  place: p,
+                  teamIds: ids
+                };
+              } else {
+                newResults.push({
+                  place: p,
+                  teamIds: [String(unassignedTeam.id)]
+                });
+              }
             }
           }
+          onBulkUpdate(event.id, newResults);
         },
         className: `text-xs px-2 py-1 rounded-full font-medium transition ${darkMode ? 'bg-chlorine/20 text-chlorine border border-chlorine/30 hover:bg-chlorine/30' : 'bg-cyan-100 text-cyan-700 border border-cyan-200 hover:bg-cyan-200'}`
       }, "Auto-fill ", unassignedTeam.name);
@@ -2200,6 +2219,10 @@ function SwimMeetScore() {
                 };
                 utils.saveToStorage('collapsedSections', updated);
                 return updated;
+              });
+              window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
               });
             },
             className: "underline font-semibold hover:opacity-80"
@@ -4192,6 +4215,7 @@ function SwimMeetScore() {
         numPlaces: numPlaces,
         pointSystem: pointSystem,
         onUpdate: updateEventResult,
+        onBulkUpdate: bulkUpdateEventResults,
         onMoveUp: () => moveEventUp(index),
         onMoveDown: () => moveEventDown(index),
         onRemove: () => removeEvent(event.id),
