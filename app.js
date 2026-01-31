@@ -616,7 +616,8 @@ const PlaceSelector = ({
   const result = event.results.find(r => r.place === place);
   const selectedTeamIds = result?.teamIds || [];
   const isRelay = event.name.includes('Relay');
-  const isBFinals = heatLockEnabled && !isRelay && numPlaces > 10 && place >= 9 && place <= 16;
+  const isDiving = event.name === 'Diving';
+  const isBFinals = heatLockEnabled && !isRelay && !isDiving && numPlaces > 10 && place >= 9 && place <= 16;
   const heatPosition = isBFinals ? place - 8 : null;
   const placeLabel = place === 1 ? '1st' : place === 2 ? '2nd' : place === 3 ? '3rd' : `${place}th`;
 
@@ -808,11 +809,11 @@ const QuickEntryEventCard = ({
     className: event.gender === 'girls' ? darkMode ? 'text-pink-400' : 'text-pink-600' : darkMode ? 'text-blue-400' : 'text-blue-600'
   }, event.gender === 'girls' ? 'G' : 'B'), ' ', /*#__PURE__*/React.createElement("span", {
     className: isDiving ? darkMode ? 'text-orange-400' : 'text-orange-600' : ''
-  }, event.name)), heatLockEnabled && !isRelay && /*#__PURE__*/React.createElement("span", {
+  }, event.name)), heatLockEnabled && !isRelay && !isDiving && /*#__PURE__*/React.createElement("span", {
     className: `text-xs px-1.5 py-0.5 rounded-full whitespace-nowrap ${darkMode ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-amber-100 text-amber-700 border border-amber-200'}`
   }, "\uD83D\uDD12 A/B Finals"), aRelayOnly && isRelay && /*#__PURE__*/React.createElement("span", {
     className: `text-xs px-1.5 py-0.5 rounded-full whitespace-nowrap ${darkMode ? 'bg-teal-500/20 text-teal-400 border border-teal-500/30' : 'bg-teal-100 text-teal-700 border border-teal-200'}`
-  }, "\uD83C\uDD70\uFE0F A-Relay Only")), /*#__PURE__*/React.createElement("div", {
+  }, "\uD83C\uDD70\uFE0F Relay Only")), /*#__PURE__*/React.createElement("div", {
     className: "flex items-center gap-2"
   }, /*#__PURE__*/React.createElement(ChevronDown, {
     className: `w-5 h-5 transition-transform ${darkMode ? 'text-slate-400' : 'text-slate-500'} ${!isCollapsed ? 'rotate-180' : ''}`
@@ -893,7 +894,7 @@ const QuickEntryEventCard = ({
     className: "space-y-2"
   }, teams.map(team => {
     const teamPlaces = getTeamPlaces(team.id);
-    const showHeatLabels = heatLockEnabled && !isRelay && numPlaces > 10;
+    const showHeatLabels = heatLockEnabled && !isRelay && !isDiving && numPlaces > 10;
 
     // Calculate points for this team
     const teamPoints = (() => {
@@ -1542,7 +1543,7 @@ function SwimMeetScore() {
 
   // State with localStorage initialization
   const CURRENT_VERSION = 4; // Version 4 adds tie support with teamIds array
-  const APP_VERSION = '1.1.0';
+  const APP_VERSION = '1.2.0';
 
   // Check and migrate events if needed
   const initializeEvents = () => {
@@ -2403,7 +2404,8 @@ function SwimMeetScore() {
 
       // B Finals reminder: if heat lock is on, event is individual with >10 places,
       // user just scored a place in 1-8, and no places 9-16 have results yet
-      if (isChecked && teamId && heatLockEnabled && !isRelay && numIndividualPlaces > 10 && place >= 1 && place <= 8) {
+      const isDivingEvent = targetEvent.name === 'Diving';
+      if (isChecked && teamId && heatLockEnabled && !isRelay && !isDivingEvent && numIndividualPlaces > 10 && place >= 1 && place <= 8) {
         const updatedEvent = newEvents.find(e => e.id === eventId);
         if (updatedEvent) {
           const hasBFinalsResults = (updatedEvent.results || []).some(r => r.place >= 9 && r.place <= 16 && r.teamIds && r.teamIds.length > 0);
@@ -3641,7 +3643,7 @@ function SwimMeetScore() {
     className: `p-4 rounded-lg ${darkMode ? 'bg-teal-900/30 border border-teal-700/50' : 'bg-teal-50 border border-teal-200'}`
   }, /*#__PURE__*/React.createElement("h5", {
     className: `font-semibold mb-2 ${darkMode ? 'text-teal-400' : 'text-teal-700'}`
-  }, "\uD83C\uDD70\uFE0F A-Relay Only Scoring"), /*#__PURE__*/React.createElement("p", {
+  }, "\uD83C\uDD70\uFE0F Relay Only Scoring"), /*#__PURE__*/React.createElement("p", {
     className: `text-sm mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`
   }, "When enabled, displays a reminder on relay events that only A-relays score points. B-relays are exhibition and don't count toward team scores."), /*#__PURE__*/React.createElement("p", {
     className: `text-xs ${darkMode ? 'text-teal-300' : 'text-teal-600'}`
@@ -3838,9 +3840,9 @@ function SwimMeetScore() {
   }].map(tmpl => {
     const isActive = activeTemplate === tmpl.key;
     const colorMap = {
-      pink: darkMode ? 'bg-pink-600 hover:bg-pink-700' : 'bg-pink-500 hover:bg-pink-600',
-      amber: darkMode ? 'bg-amber-600 hover:bg-amber-700' : 'bg-amber-500 hover:bg-amber-600',
-      teal: darkMode ? 'bg-teal-600 hover:bg-teal-700' : 'bg-teal-500 hover:bg-teal-600'
+      pink: darkMode ? 'bg-pink-700 hover:bg-pink-600' : 'bg-pink-600 hover:bg-pink-700',
+      amber: darkMode ? 'bg-amber-700 hover:bg-amber-600' : 'bg-amber-600 hover:bg-amber-700',
+      teal: darkMode ? 'bg-teal-700 hover:bg-teal-600' : 'bg-teal-600 hover:bg-teal-700'
     };
     return /*#__PURE__*/React.createElement("button", {
       key: tmpl.key,
@@ -3864,7 +3866,7 @@ function SwimMeetScore() {
     return /*#__PURE__*/React.createElement("button", {
       key: lanes,
       onClick: () => loadUSASwimmingMeet(lanes),
-      className: `flex flex-col items-center py-2 rounded-lg ${darkMode ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-indigo-500 hover:bg-indigo-600'} text-white text-sm font-medium transition-all shadow-md hover:shadow-lg active:scale-95 ${isActive ? 'ring-[3px] ring-white shadow-lg scale-[1.02]' : ''}`
+      className: `flex flex-col items-center py-2 rounded-lg ${darkMode ? 'bg-indigo-700 hover:bg-indigo-600' : 'bg-indigo-600 hover:bg-indigo-700'} text-white text-sm font-medium transition-all shadow-md hover:shadow-lg active:scale-95 ${isActive ? 'ring-[3px] ring-white shadow-lg scale-[1.02]' : ''}`
     }, /*#__PURE__*/React.createElement("span", {
       className: "font-bold"
     }, lanes), /*#__PURE__*/React.createElement("span", {
@@ -4340,13 +4342,13 @@ function SwimMeetScore() {
         mode: !teamFirstMode ? 'team-mode' : 'place-mode'
       });
     },
-    className: `flex items-center gap-2 px-1 py-1 rounded-full text-xs font-medium transition cursor-pointer ${darkMode ? 'bg-gray-700 border border-gray-600' : 'bg-gray-200 border border-gray-300'}`,
+    className: `flex items-center gap-1 px-0.5 py-0.5 rounded-full text-xs font-medium transition cursor-pointer ${darkMode ? 'bg-gray-700 border border-gray-600' : 'bg-gray-200 border border-gray-300'}`,
     title: teamFirstMode ? "Switch to Place Mode" : "Switch to Team Mode"
   }, /*#__PURE__*/React.createElement("span", {
-    className: `px-2.5 py-1 rounded-full transition-all ${!teamFirstMode ? darkMode ? 'bg-chlorine text-pool-deep font-semibold' : 'bg-cyan-600 text-white font-semibold' : ''}`
-  }, "Place Mode"), /*#__PURE__*/React.createElement("span", {
-    className: `px-2.5 py-1 rounded-full transition-all ${teamFirstMode ? darkMode ? 'bg-lane-gold text-pool-deep font-semibold' : 'bg-amber-500 text-white font-semibold' : ''}`
-  }, "Team Mode")), events.length > 0 && /*#__PURE__*/React.createElement("button", {
+    className: `px-2 py-0.5 rounded-full transition-all ${!teamFirstMode ? darkMode ? 'bg-chlorine text-pool-deep font-semibold' : 'bg-cyan-600 text-white font-semibold' : ''}`
+  }, "Place"), /*#__PURE__*/React.createElement("span", {
+    className: `px-2 py-0.5 rounded-full transition-all ${teamFirstMode ? darkMode ? 'bg-lane-gold text-pool-deep font-semibold' : 'bg-amber-500 text-white font-semibold' : ''}`
+  }, "Team")), events.length > 0 && /*#__PURE__*/React.createElement("button", {
     onClick: toggleAllEvents,
     className: `flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600 border border-gray-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-300'}`,
     title: events.some(e => !collapsedEvents[e.id]) ? "Collapse all events" : "Expand all events"
@@ -4407,11 +4409,11 @@ function SwimMeetScore() {
       className: event.gender === 'girls' ? darkMode ? 'text-pink-400' : 'text-pink-600' : darkMode ? 'text-blue-400' : 'text-blue-600'
     }, event.gender === 'girls' ? 'G' : 'B'), ' ', /*#__PURE__*/React.createElement("span", {
       className: isDiving ? darkMode ? 'text-orange-400' : 'text-orange-600' : ''
-    }, event.name)), heatLockEnabled && !isRelay && /*#__PURE__*/React.createElement("span", {
+    }, event.name)), heatLockEnabled && !isRelay && !isDiving && /*#__PURE__*/React.createElement("span", {
       className: `text-xs px-1.5 py-0.5 rounded-full whitespace-nowrap ${darkMode ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-amber-100 text-amber-700 border border-amber-200'}`
     }, "\uD83D\uDD12 A/B Finals"), aRelayOnly && isRelay && /*#__PURE__*/React.createElement("span", {
       className: `text-xs px-1.5 py-0.5 rounded-full whitespace-nowrap ${darkMode ? 'bg-teal-500/20 text-teal-400 border border-teal-500/30' : 'bg-teal-100 text-teal-700 border border-teal-200'}`
-    }, "\uD83C\uDD70\uFE0F A-Relay Only")), /*#__PURE__*/React.createElement("div", {
+    }, "\uD83C\uDD70\uFE0F Relay Only")), /*#__PURE__*/React.createElement("div", {
       className: "flex items-center gap-2"
     }, /*#__PURE__*/React.createElement(ChevronDown, {
       className: `w-5 h-5 transition-transform ${darkMode ? 'text-slate-400' : 'text-slate-500'} ${!isEventCollapsed ? 'rotate-180' : ''}`
@@ -4513,11 +4515,11 @@ function SwimMeetScore() {
       className: "flex items-center gap-2 flex-wrap"
     }, /*#__PURE__*/React.createElement("h5", {
       className: `font-semibold text-base ${isDiving ? darkMode ? 'text-orange-400' : 'text-orange-600' : darkMode ? 'text-white' : 'text-slate-800'}`
-    }, event.name), heatLockEnabled && !isRelay && /*#__PURE__*/React.createElement("span", {
+    }, event.name), heatLockEnabled && !isRelay && !isDiving && /*#__PURE__*/React.createElement("span", {
       className: `text-xs px-1.5 py-0.5 rounded-full whitespace-nowrap ${darkMode ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-amber-100 text-amber-700 border border-amber-200'}`
     }, "\uD83D\uDD12 A/B Finals"), aRelayOnly && isRelay && /*#__PURE__*/React.createElement("span", {
       className: `text-xs px-1.5 py-0.5 rounded-full whitespace-nowrap ${darkMode ? 'bg-teal-500/20 text-teal-400 border border-teal-500/30' : 'bg-teal-100 text-teal-700 border border-teal-200'}`
-    }, "\uD83C\uDD70\uFE0F A-Relay Only")), /*#__PURE__*/React.createElement("div", {
+    }, "\uD83C\uDD70\uFE0F Relay Only")), /*#__PURE__*/React.createElement("div", {
       className: "flex items-center gap-2"
     }, /*#__PURE__*/React.createElement(ChevronDown, {
       className: `w-5 h-5 transition-transform ${darkMode ? 'text-slate-400' : 'text-slate-500'} ${!isEventCollapsed ? 'rotate-180' : ''}`

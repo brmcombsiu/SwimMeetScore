@@ -440,7 +440,8 @@
       const result = event.results.find(r => r.place === place);
       const selectedTeamIds = result?.teamIds || [];
       const isRelay = event.name.includes('Relay');
-      const isBFinals = heatLockEnabled && !isRelay && numPlaces > 10 && place >= 9 && place <= 16;
+      const isDiving = event.name === 'Diving';
+      const isBFinals = heatLockEnabled && !isRelay && !isDiving && numPlaces > 10 && place >= 9 && place <= 16;
       const heatPosition = isBFinals ? place - 8 : null;
       const placeLabel = place === 1 ? '1st' : place === 2 ? '2nd' : place === 3 ? '3rd' : `${place}th`;
 
@@ -654,14 +655,14 @@
                 </span>
               </h5>
               {/* Visual indicators for Conference/Sectionals settings */}
-              {heatLockEnabled && !isRelay && (
+              {heatLockEnabled && !isRelay && !isDiving && (
                 <span className={`text-xs px-1.5 py-0.5 rounded-full whitespace-nowrap ${darkMode ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-amber-100 text-amber-700 border border-amber-200'}`}>
                   🔒 A/B Finals
                 </span>
               )}
               {aRelayOnly && isRelay && (
                 <span className={`text-xs px-1.5 py-0.5 rounded-full whitespace-nowrap ${darkMode ? 'bg-teal-500/20 text-teal-400 border border-teal-500/30' : 'bg-teal-100 text-teal-700 border border-teal-200'}`}>
-                  🅰️ A-Relay Only
+                  🅰️ Relay Only
                 </span>
               )}
             </div>
@@ -740,7 +741,7 @@
               <div className="space-y-2">
                 {teams.map(team => {
                   const teamPlaces = getTeamPlaces(team.id);
-                  const showHeatLabels = heatLockEnabled && !isRelay && numPlaces > 10;
+                  const showHeatLabels = heatLockEnabled && !isRelay && !isDiving && numPlaces > 10;
 
                   // Calculate points for this team
                   const teamPoints = (() => {
@@ -1304,7 +1305,7 @@
 
       // State with localStorage initialization
       const CURRENT_VERSION = 4; // Version 4 adds tie support with teamIds array
-      const APP_VERSION = '1.1.0';
+      const APP_VERSION = '1.2.0';
       
       // Check and migrate events if needed
       const initializeEvents = () => {
@@ -2175,7 +2176,8 @@
 
           // B Finals reminder: if heat lock is on, event is individual with >10 places,
           // user just scored a place in 1-8, and no places 9-16 have results yet
-          if (isChecked && teamId && heatLockEnabled && !isRelay && numIndividualPlaces > 10 && place >= 1 && place <= 8) {
+          const isDivingEvent = targetEvent.name === 'Diving';
+          if (isChecked && teamId && heatLockEnabled && !isRelay && !isDivingEvent && numIndividualPlaces > 10 && place >= 1 && place <= 8) {
             const updatedEvent = newEvents.find(e => e.id === eventId);
             if (updatedEvent) {
               const hasBFinalsResults = (updatedEvent.results || []).some(r => r.place >= 9 && r.place <= 16 && r.teamIds && r.teamIds.length > 0);
@@ -3184,7 +3186,7 @@
                       </div>
                       
                       <div className={`p-4 rounded-lg ${darkMode ? 'bg-teal-900/30 border border-teal-700/50' : 'bg-teal-50 border border-teal-200'}`}>
-                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-teal-400' : 'text-teal-700'}`}>🅰️ A-Relay Only Scoring</h5>
+                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-teal-400' : 'text-teal-700'}`}>🅰️ Relay Only Scoring</h5>
                         <p className={`text-sm mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                           When enabled, displays a reminder on relay events that only A-relays score points. B-relays are exhibition and don't count toward team scores.
                         </p>
@@ -3412,9 +3414,9 @@
                         ].map(tmpl => {
                           const isActive = activeTemplate === tmpl.key;
                           const colorMap = {
-                            pink: darkMode ? 'bg-pink-600 hover:bg-pink-700' : 'bg-pink-500 hover:bg-pink-600',
-                            amber: darkMode ? 'bg-amber-600 hover:bg-amber-700' : 'bg-amber-500 hover:bg-amber-600',
-                            teal: darkMode ? 'bg-teal-600 hover:bg-teal-700' : 'bg-teal-500 hover:bg-teal-600',
+                            pink: darkMode ? 'bg-pink-700 hover:bg-pink-600' : 'bg-pink-600 hover:bg-pink-700',
+                            amber: darkMode ? 'bg-amber-700 hover:bg-amber-600' : 'bg-amber-600 hover:bg-amber-700',
+                            teal: darkMode ? 'bg-teal-700 hover:bg-teal-600' : 'bg-teal-600 hover:bg-teal-700',
                           };
                           return (
                             <button
@@ -3445,7 +3447,7 @@
                             <button
                               key={lanes}
                               onClick={() => loadUSASwimmingMeet(lanes)}
-                              className={`flex flex-col items-center py-2 rounded-lg ${darkMode ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-indigo-500 hover:bg-indigo-600'} text-white text-sm font-medium transition-all shadow-md hover:shadow-lg active:scale-95 ${isActive ? 'ring-[3px] ring-white shadow-lg scale-[1.02]' : ''}`}
+                              className={`flex flex-col items-center py-2 rounded-lg ${darkMode ? 'bg-indigo-700 hover:bg-indigo-600' : 'bg-indigo-600 hover:bg-indigo-700'} text-white text-sm font-medium transition-all shadow-md hover:shadow-lg active:scale-95 ${isActive ? 'ring-[3px] ring-white shadow-lg scale-[1.02]' : ''}`}
                             >
                               <span className="font-bold">{lanes}</span>
                               <span className="text-xs text-white/80">lanes</span>
@@ -4029,11 +4031,11 @@
                       {/* Entry Mode Toggle Switch */}
                       <button
                         onClick={() => { setTeamFirstMode(!teamFirstMode); triggerHaptic('light'); trackEvent('toggle_entry_mode', { mode: !teamFirstMode ? 'team-mode' : 'place-mode' }); }}
-                        className={`flex items-center gap-2 px-1 py-1 rounded-full text-xs font-medium transition cursor-pointer ${darkMode ? 'bg-gray-700 border border-gray-600' : 'bg-gray-200 border border-gray-300'}`}
+                        className={`flex items-center gap-1 px-0.5 py-0.5 rounded-full text-xs font-medium transition cursor-pointer ${darkMode ? 'bg-gray-700 border border-gray-600' : 'bg-gray-200 border border-gray-300'}`}
                         title={teamFirstMode ? "Switch to Place Mode" : "Switch to Team Mode"}
                       >
-                        <span className={`px-2.5 py-1 rounded-full transition-all ${!teamFirstMode ? (darkMode ? 'bg-chlorine text-pool-deep font-semibold' : 'bg-cyan-600 text-white font-semibold') : ''}`}>Place Mode</span>
-                        <span className={`px-2.5 py-1 rounded-full transition-all ${teamFirstMode ? (darkMode ? 'bg-lane-gold text-pool-deep font-semibold' : 'bg-amber-500 text-white font-semibold') : ''}`}>Team Mode</span>
+                        <span className={`px-2 py-0.5 rounded-full transition-all ${!teamFirstMode ? (darkMode ? 'bg-chlorine text-pool-deep font-semibold' : 'bg-cyan-600 text-white font-semibold') : ''}`}>Place</span>
+                        <span className={`px-2 py-0.5 rounded-full transition-all ${teamFirstMode ? (darkMode ? 'bg-lane-gold text-pool-deep font-semibold' : 'bg-amber-500 text-white font-semibold') : ''}`}>Team</span>
                       </button>
                       {events.length > 0 && (
                         <button
@@ -4107,14 +4109,14 @@
                                   {event.name}
                                 </span>
                               </h5>
-                              {heatLockEnabled && !isRelay && (
+                              {heatLockEnabled && !isRelay && !isDiving && (
                                 <span className={`text-xs px-1.5 py-0.5 rounded-full whitespace-nowrap ${darkMode ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-amber-100 text-amber-700 border border-amber-200'}`}>
                                   🔒 A/B Finals
                                 </span>
                               )}
                               {aRelayOnly && isRelay && (
                                 <span className={`text-xs px-1.5 py-0.5 rounded-full whitespace-nowrap ${darkMode ? 'bg-teal-500/20 text-teal-400 border border-teal-500/30' : 'bg-teal-100 text-teal-700 border border-teal-200'}`}>
-                                  🅰️ A-Relay Only
+                                  🅰️ Relay Only
                                 </span>
                               )}
                             </div>
@@ -4221,14 +4223,14 @@
                             >
                               <div className="flex items-center gap-2 flex-wrap">
                                 <h5 className={`font-semibold text-base ${isDiving ? (darkMode ? 'text-orange-400' : 'text-orange-600') : (darkMode ? 'text-white' : 'text-slate-800')}`}>{event.name}</h5>
-                                {heatLockEnabled && !isRelay && (
+                                {heatLockEnabled && !isRelay && !isDiving && (
                                   <span className={`text-xs px-1.5 py-0.5 rounded-full whitespace-nowrap ${darkMode ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-amber-100 text-amber-700 border border-amber-200'}`}>
                                     🔒 A/B Finals
                                   </span>
                                 )}
                                 {aRelayOnly && isRelay && (
                                   <span className={`text-xs px-1.5 py-0.5 rounded-full whitespace-nowrap ${darkMode ? 'bg-teal-500/20 text-teal-400 border border-teal-500/30' : 'bg-teal-100 text-teal-700 border border-teal-200'}`}>
-                                    🅰️ A-Relay Only
+                                    🅰️ Relay Only
                                   </span>
                                 )}
                               </div>

@@ -237,8 +237,8 @@
     "applicationCategory": "SportsApplication",
     "operatingSystem": "Any",
     "browserRequirements": "Requires JavaScript. Requires HTML5.",
-    "softwareVersion": "1.0",
-    "datePublished": "2026-01-11",
+    "softwareVersion": "1.2.0",
+    "datePublished": "2026-01-31",
     "author": {
       "@type": "Organization",
       "name": "Kaden Co"
@@ -503,9 +503,75 @@
     }
   </style>
   
-  <!-- Load scripts with defer for non-blocking -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <!-- Load scripts - service worker will serve from cache when offline -->
+  <script>
+    // Ensure service worker is ready before loading scripts when offline
+    function loadScript(src) {
+      return new Promise(function(resolve, reject) {
+        var s = document.createElement('script');
+        s.src = src;
+        s.crossOrigin = 'anonymous';
+        s.referrerPolicy = 'no-referrer';
+        s.onload = resolve;
+        s.onerror = function() {
+          // Retry once after a short delay (gives SW time to claim the page)
+          setTimeout(function() {
+            var s2 = document.createElement('script');
+            s2.src = src + '?' + Date.now();
+            s2.crossOrigin = 'anonymous';
+            s2.referrerPolicy = 'no-referrer';
+            s2.onload = resolve;
+            s2.onerror = reject;
+            document.head.appendChild(s2);
+          }, 500);
+        };
+        document.head.appendChild(s);
+      });
+    }
+
+    // Wait for SW to be ready if available, then load React
+    (function() {
+      var loaded = false;
+      function loadReactScripts() {
+        if (loaded) return;
+        loaded = true;
+        return loadScript('https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js')
+          .then(function() {
+            return loadScript('https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js');
+          })
+          .then(function() {
+            // Load the app after React is ready
+            var appScript = document.createElement('script');
+            appScript.src = './app.js';
+            document.body.appendChild(appScript);
+          })
+          .catch(function(err) {
+            console.error('SwimMeetScore: Failed to load scripts', err);
+            var ls = document.getElementById('loading-screen');
+            if (ls) {
+              var txt = ls.querySelector('.loading-text');
+              if (txt) txt.textContent = 'Offline – please reload';
+            }
+          });
+      }
+
+      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        // SW already controls the page, load immediately
+        loadReactScripts();
+      } else if ('serviceWorker' in navigator) {
+        // SW not yet controlling - wait briefly for it to claim the page
+        navigator.serviceWorker.ready.then(function() {
+          // Small delay to ensure claim() has taken effect
+          setTimeout(loadReactScripts, 50);
+        });
+        // Fallback if ready takes too long (e.g., first visit online)
+        setTimeout(loadReactScripts, 1000);
+      } else {
+        // No SW support, load directly
+        loadReactScripts();
+      }
+    })();
+  </script>
   <style>
     body { 
       margin: 0; 
@@ -624,37 +690,34 @@
   
   <noscript>This app requires JavaScript to run. Please enable JavaScript in your browser settings.</noscript>
   <div id="root"></div>
-  <script src="./app.js"></script>
 
   <!-- Service Worker Registration for Offline Support -->
   <script>
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
-          .then((registration) => {
-            console.log('SwimMeetScore: Service Worker registered successfully');
+      navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
+        .then((registration) => {
+          console.log('SwimMeetScore: Service Worker registered successfully');
 
-            // Check for updates every 5 minutes
-            setInterval(() => {
-              registration.update();
-            }, 5 * 60 * 1000);
+          // Check for updates every 5 minutes
+          setInterval(() => {
+            registration.update();
+          }, 5 * 60 * 1000);
 
-            // When a new SW is waiting, activate it immediately
-            registration.addEventListener('updatefound', () => {
-              const newWorker = registration.installing;
-              if (newWorker) {
-                newWorker.addEventListener('statechange', () => {
-                  if (newWorker.state === 'activated') {
-                    console.log('SwimMeetScore: New version activated');
-                  }
-                });
-              }
-            });
-          })
-          .catch((error) => {
-            console.log('SwimMeetScore: Service Worker registration failed:', error);
+          // When a new SW is waiting, activate it immediately
+          registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing;
+            if (newWorker) {
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'activated') {
+                  console.log('SwimMeetScore: New version activated');
+                }
+              });
+            }
           });
-      });
+        })
+        .catch((error) => {
+          console.log('SwimMeetScore: Service Worker registration failed:', error);
+        });
     }
   </script>
 </body>
