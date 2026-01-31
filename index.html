@@ -503,9 +503,33 @@
     }
   </style>
   
+  <!-- Service Worker Registration (before script loading for offline support) -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
+        .then(function(registration) {
+          console.log('SwimMeetScore: Service Worker registered successfully');
+          setInterval(function() { registration.update(); }, 5 * 60 * 1000);
+          registration.addEventListener('updatefound', function() {
+            var newWorker = registration.installing;
+            if (newWorker) {
+              newWorker.addEventListener('statechange', function() {
+                if (newWorker.state === 'activated') {
+                  console.log('SwimMeetScore: New version activated');
+                }
+              });
+            }
+          });
+        })
+        .catch(function(error) {
+          console.log('SwimMeetScore: Service Worker registration failed:', error);
+        });
+    }
+  </script>
+
   <!-- Load scripts - service worker will serve from cache when offline -->
   <script>
-    // Ensure service worker is ready before loading scripts when offline
+    // Load a script with one retry (no cache-busting query string so SW cache matches)
     function loadScript(src) {
       return new Promise(function(resolve, reject) {
         var s = document.createElement('script');
@@ -517,7 +541,7 @@
           // Retry once after a short delay (gives SW time to claim the page)
           setTimeout(function() {
             var s2 = document.createElement('script');
-            s2.src = src + '?' + Date.now();
+            s2.src = src;
             s2.crossOrigin = 'anonymous';
             s2.referrerPolicy = 'no-referrer';
             s2.onload = resolve;
@@ -541,9 +565,7 @@
           })
           .then(function() {
             // Load the app after React is ready
-            var appScript = document.createElement('script');
-            appScript.src = './app.js';
-            document.body.appendChild(appScript);
+            return loadScript('./app.js');
           })
           .catch(function(err) {
             console.error('SwimMeetScore: Failed to load scripts', err);
@@ -556,16 +578,15 @@
       }
 
       if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-        // SW already controls the page, load immediately
+        // SW already controls the page (normal case for returning users), load immediately
         loadReactScripts();
       } else if ('serviceWorker' in navigator) {
-        // SW not yet controlling - wait briefly for it to claim the page
-        navigator.serviceWorker.ready.then(function() {
-          // Small delay to ensure claim() has taken effect
-          setTimeout(loadReactScripts, 50);
+        // SW not yet controlling — wait for it to claim the page
+        navigator.serviceWorker.addEventListener('controllerchange', function() {
+          loadReactScripts();
         });
-        // Fallback if ready takes too long (e.g., first visit online)
-        setTimeout(loadReactScripts, 1000);
+        // Fallback: if online or SW never claims, load after a short delay anyway
+        setTimeout(loadReactScripts, 1500);
       } else {
         // No SW support, load directly
         loadReactScripts();
@@ -690,35 +711,5 @@
   
   <noscript>This app requires JavaScript to run. Please enable JavaScript in your browser settings.</noscript>
   <div id="root"></div>
-
-  <!-- Service Worker Registration for Offline Support -->
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
-        .then((registration) => {
-          console.log('SwimMeetScore: Service Worker registered successfully');
-
-          // Check for updates every 5 minutes
-          setInterval(() => {
-            registration.update();
-          }, 5 * 60 * 1000);
-
-          // When a new SW is waiting, activate it immediately
-          registration.addEventListener('updatefound', () => {
-            const newWorker = registration.installing;
-            if (newWorker) {
-              newWorker.addEventListener('statechange', () => {
-                if (newWorker.state === 'activated') {
-                  console.log('SwimMeetScore: New version activated');
-                }
-              });
-            }
-          });
-        })
-        .catch((error) => {
-          console.log('SwimMeetScore: Service Worker registration failed:', error);
-        });
-    }
-  </script>
 </body>
 </html>
