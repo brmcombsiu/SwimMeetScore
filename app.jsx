@@ -336,7 +336,7 @@
     // Mobile-friendly point input for scoring systems
     const PointInput = ({ value, onChange, onBlur, place, darkMode }) => {
       const handleDecrement = () => {
-        const newValue = Math.max(-999, (parseInt(value, 10) || 0) - 1);
+        const newValue = Math.max(0, (parseInt(value, 10) || 0) - 1);
         onChange(newValue);
       };
 
@@ -347,13 +347,13 @@
 
       const handleInputChange = (e) => {
         const inputValue = e.target.value;
-        if (inputValue === '' || inputValue === '-') {
+        if (inputValue === '') {
           onChange(0);
           return;
         }
         const num = parseInt(inputValue, 10);
         if (!isNaN(num)) {
-          onChange(Math.max(-999, Math.min(999, num)));
+          onChange(Math.max(0, Math.min(999, num)));
         }
       };
 
@@ -381,7 +381,8 @@
             <input
               type="number"
               inputMode="numeric"
-              pattern="-?[0-9]*"
+              pattern="[0-9]*"
+              min="0"
               value={value}
               onChange={handleInputChange}
               onBlur={onBlur}
@@ -569,7 +570,7 @@
     };
 
     // Team Mode Entry Event Card (inline, not modal)
-    const QuickEntryEventCard = ({ event, teams, darkMode, numPlaces, pointSystem, onUpdate, onMoveUp, onMoveDown, onRemove, canMoveUp, canMoveDown, heatLockEnabled, aRelayOnly, teamPlaceLimitEnabled, isCollapsed, onToggle }) => {
+    const QuickEntryEventCard = ({ event, teams, darkMode, numPlaces, pointSystem, onUpdate, onBulkUpdate, onMoveUp, onMoveDown, onRemove, canMoveUp, canMoveDown, heatLockEnabled, aRelayOnly, teamPlaceLimitEnabled, isCollapsed, onToggle }) => {
       const isDiving = event.name === 'Diving';
       const isRelay = event.name.includes('Relay');
 
@@ -653,7 +654,49 @@
           </button>
           {!isCollapsed && (
             <div className="px-3 pb-3">
-              <div className="flex items-center justify-end gap-1 mb-2">
+              <div className="flex items-center justify-between mb-2">
+                {teams.length === 2 && (() => {
+                  // Check if exactly one team has places assigned
+                  const team0Places = getTeamPlaces(teams[0].id);
+                  const team1Places = getTeamPlaces(teams[1].id);
+                  const oneHasPlaces = (team0Places.length > 0 && team1Places.length === 0) || (team0Places.length === 0 && team1Places.length > 0);
+                  const assignedTeam = team0Places.length > 0 ? teams[0] : teams[1];
+                  const unassignedTeam = team0Places.length > 0 ? teams[1] : teams[0];
+                  const assignedPlaces = team0Places.length > 0 ? team0Places : team1Places;
+                  if (oneHasPlaces) {
+                    return (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          triggerHaptic('light');
+                          // Build complete results array with existing + new assignments
+                          const newResults = [...(event.results || [])];
+                          for (let p = 1; p <= numPlaces; p++) {
+                            if (!assignedPlaces.includes(p) && !isPlaceConsumed(p)) {
+                              const existingIndex = newResults.findIndex(r => r && r.place === p);
+                              if (existingIndex >= 0) {
+                                const ids = [...(newResults[existingIndex].teamIds || [])];
+                                if (!ids.includes(String(unassignedTeam.id))) {
+                                  ids.push(String(unassignedTeam.id));
+                                }
+                                newResults[existingIndex] = { place: p, teamIds: ids };
+                              } else {
+                                newResults.push({ place: p, teamIds: [String(unassignedTeam.id)] });
+                              }
+                            }
+                          }
+                          onBulkUpdate(event.id, newResults);
+                        }}
+                        className={`text-xs px-2 py-1 rounded-full font-medium transition ${darkMode ? 'bg-chlorine/20 text-chlorine border border-chlorine/30 hover:bg-chlorine/30' : 'bg-cyan-100 text-cyan-700 border border-cyan-200 hover:bg-cyan-200'}`}
+                      >
+                        Auto-fill {unassignedTeam.name}
+                      </button>
+                    );
+                  }
+                  return <div />;
+                })()}
+                {teams.length !== 2 && <div />}
+                <div className="flex items-center gap-1">
                 <button
                   onClick={(e) => { e.stopPropagation(); onMoveUp(); }}
                   disabled={!canMoveUp}
@@ -674,6 +717,7 @@
                 >
                   <X className="w-4 h-4" />
                 </button>
+                </div>
               </div>
               {/* Team rows with place buttons */}
               <div className="space-y-2">
@@ -1973,7 +2017,7 @@
             });
             if (teamPlaceCount >= maxTeamPlaces) {
               // Show error and prevent addition
-              setError(`Team limit reached: A team can only occupy ${maxTeamPlaces} of ${numRelayPlaces} relay places.`);
+              setError(<span>Team limit reached: A team can only occupy {maxTeamPlaces} of {numRelayPlaces} relay places. <button onClick={() => { setError(null); setShowSettings(true); setCollapsedSections(prev => { const updated = { ...prev, 'special-scoring': false }; utils.saveToStorage('collapsedSections', updated); return updated; }); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="underline font-semibold hover:opacity-80">Change in Settings</button></span>);
               triggerHaptic('heavy');
               return;
             }
@@ -2668,6 +2712,7 @@
         
         body += '================================\n';
         body += 'Scored with SwimMeetScore.com\n';
+        body += 'https://swimmeetscore.com\n';
         body += 'Free swim meet scoring tool\n';
         
         const mailtoLink = 'mailto:?subject=' + subject + '&body=' + encodeURIComponent(body);
@@ -3857,12 +3902,11 @@
                       )}
                     </div>
                   </div>
-                  <div className={`text-xs px-3 py-1.5 rounded-full ${darkMode ? 'bg-lane-gold/20 text-lane-gold border border-lane-gold/30' : 'bg-amber-100 text-amber-700 border border-amber-200'}`}>
-                    {teamFirstMode
-                      ? '⚡ Tap place numbers to assign to each team'
-                      : '💡 Select multiple teams in a place for ties'
-                    }
-                  </div>
+                  {teamFirstMode && (
+                    <div className={`text-xs px-3 py-1.5 rounded-full ${darkMode ? 'bg-lane-gold/20 text-lane-gold border border-lane-gold/30' : 'bg-amber-100 text-amber-700 border border-amber-200'}`}>
+                      ⚡ Tap place numbers to assign to each team
+                    </div>
+                  )}
                 </div>
                 {scoringMode === 'combined' ? (
                   <div className={`space-y-2`}>
@@ -3883,6 +3927,7 @@
                             numPlaces={numPlaces}
                             pointSystem={pointSystem}
                             onUpdate={updateEventResult}
+                            onBulkUpdate={bulkUpdateEventResults}
                             onMoveUp={() => moveEventUp(index)}
                             onMoveDown={() => moveEventDown(index)}
                             onRemove={() => removeEvent(event.id)}

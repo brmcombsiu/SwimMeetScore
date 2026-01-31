@@ -1,5 +1,5 @@
 // SwimMeetScore Service Worker
-const CACHE_NAME = 'swimmeetscore-v11';
+const CACHE_NAME = 'swimmeetscore-v12';
 
 // Files to cache for offline use
 const CACHE_FILES = [
@@ -99,6 +99,15 @@ self.addEventListener('fetch', (event) => {
           return caches.match('./index.html')
             .then((cached) => cached || caches.match('./'));
         })
+    );
+    return;
+  }
+
+  // App JS/CSS: network-first so refreshes always get the latest version
+  if (url.origin === location.origin && (url.pathname.endsWith('/app.js') || url.pathname.endsWith('/app.css'))) {
+    event.respondWith(
+      fetchAndCache(event.request)
+        .catch(() => caches.match(event.request))
     );
     return;
   }
