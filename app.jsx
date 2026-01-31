@@ -315,6 +315,7 @@
             }`}
             style={{ minHeight: '44px' }}
             id={id || undefined}
+            name={id || undefined}
             aria-label={label}
           />
           <button
@@ -361,7 +362,7 @@
 
       return (
         <div className={`p-1.5 sm:p-2 rounded-lg ${darkMode ? 'bg-gray-600' : 'bg-white'}`}>
-          <label className={`text-xs font-medium block mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+          <label htmlFor={`point-input-${place}`} className={`text-xs font-medium block mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
             {placeLabel}
           </label>
           <div className="flex items-center justify-center">
@@ -380,6 +381,8 @@
             </button>
             <input
               type="number"
+              id={`point-input-${place}`}
+              name={`point-input-${place}`}
               inputMode="numeric"
               pattern="[0-9]*"
               min="0"
@@ -472,12 +475,12 @@
       if (consumedByTie) {
         return (
           <div className={`p-1 rounded opacity-50 ${darkMode ? 'bg-gray-800' : 'bg-gray-200'}`}>
-            <label className={`text-xs font-medium block ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+            <span className={`text-xs font-medium block ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
               {placeLabel}
               {isBFinals && (
                 <span className={`ml-0.5 ${darkMode ? 'text-amber-400/50' : 'text-amber-600/50'}`}>H1:{heatPosition}</span>
               )}
-            </label>
+            </span>
             <div className={`w-full px-1 py-1 border rounded text-xs italic ${darkMode ? 'bg-gray-700 border-gray-600 text-gray-500' : 'bg-gray-100 border-gray-300 text-gray-400'}`}>
               (tied above)
             </div>
@@ -487,7 +490,7 @@
 
       return (
         <div className={`p-1 rounded ${darkMode ? 'bg-gray-600' : 'bg-white'} ${numTied > 1 ? (darkMode ? 'ring-2 ring-yellow-500' : 'ring-2 ring-yellow-400') : ''}`} ref={dropdownRef}>
-          <label className={`text-xs font-medium block ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+          <span className={`text-xs font-medium block ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
             {placeLabel}
             {isBFinals && (
               <span className={`ml-0.5 ${darkMode ? 'text-amber-400' : 'text-amber-600'}`}>H1:{heatPosition}</span>
@@ -495,7 +498,7 @@
             <span className={`ml-0.5 ${numTied > 1 ? (darkMode ? 'text-yellow-400' : 'text-yellow-600') : ''}`}>
               ({numTied > 1 ? `${splitPointsDisplay} ea` : `${pointsDisplay} pts`})
             </span>
-          </label>
+          </span>
 
           {/* Dropdown button */}
           <div className="relative">
@@ -533,6 +536,8 @@
                     >
                       <input
                         type="checkbox"
+                        id={`team-select-${team.id}`}
+                        name={`team-select-${team.id}`}
                         checked={isChecked}
                         onChange={(e) => handleTeamToggle(team.id, e.target.checked)}
                         className="w-4 h-4 rounded flex-shrink-0"
@@ -1080,6 +1085,8 @@
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
+                      id="auto-fill-toggle"
+                      name="auto-fill-toggle"
                       checked={autoFillEnabled}
                       onChange={(e) => { setAutoFillEnabled(e.target.checked); triggerHaptic('light'); }}
                       className="w-4 h-4 rounded accent-amber-500"
@@ -3382,6 +3389,8 @@
                       <div className="flex flex-col gap-2">
                         <input
                           type="text"
+                          id="template-name"
+                          name="template-name"
                           value={newTemplateName}
                           onChange={(e) => setNewTemplateName(e.target.value)}
                           onKeyDown={(e) => e.key === 'Enter' && saveTemplate()}
@@ -3434,6 +3443,8 @@
                     <div className="flex flex-col gap-2 mb-3">
                       <input
                         type="text"
+                        id="new-team-name"
+                        name="new-team-name"
                         value={newTeamName}
                         onChange={(e) => setNewTeamName(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && addTeam()}
@@ -3455,6 +3466,8 @@
                             {settingsEditingTeamId === team.id ? (
                               <input
                                 type="text"
+                                id={`settings-edit-team-${team.id}`}
+                                name="settings-edit-team-name"
                                 value={settingsEditingTeamName}
                                 onChange={(e) => setSettingsEditingTeamName(e.target.value)}
                                 onFocus={(e) => e.target.select()}
@@ -3507,6 +3520,8 @@
                       <label className={`flex items-center gap-3 cursor-pointer p-3 rounded-lg transition ${darkMode ? 'hover:bg-gray-700/50' : 'hover:bg-amber-50'}`}>
                         <input
                           type="checkbox"
+                          id="team-place-limit"
+                          name="team-place-limit"
                           checked={teamPlaceLimitEnabled}
                           onChange={(e) => { setActiveTemplate(null); setTeamPlaceLimitEnabled(e.target.checked); }}
                           className="w-5 h-5 rounded accent-amber-500 flex-shrink-0"
@@ -3521,6 +3536,8 @@
                       <label className={`flex items-center gap-3 cursor-pointer p-3 rounded-lg transition ${darkMode ? 'hover:bg-gray-700/50' : 'hover:bg-amber-50'}`}>
                         <input
                           type="checkbox"
+                          id="heat-lock"
+                          name="heat-lock"
                           checked={heatLockEnabled}
                           onChange={(e) => { setActiveTemplate(null); setHeatLockEnabled(e.target.checked); }}
                           className="w-5 h-5 rounded accent-amber-500 flex-shrink-0"
@@ -3535,6 +3552,8 @@
                       <label className={`flex items-center gap-3 cursor-pointer p-3 rounded-lg transition ${darkMode ? 'hover:bg-gray-700/50' : 'hover:bg-amber-50'}`}>
                         <input
                           type="checkbox"
+                          id="a-relay-only"
+                          name="a-relay-only"
                           checked={aRelayOnly}
                           onChange={(e) => { setActiveTemplate(null); setARelayOnly(e.target.checked); }}
                           className="w-5 h-5 rounded accent-amber-500 flex-shrink-0"
@@ -3725,6 +3744,8 @@
                     <label className={`flex items-center gap-3 cursor-pointer p-2 rounded-lg transition ${darkMode ? 'hover:bg-gray-700/50' : 'hover:bg-gray-100'}`}>
                       <input
                         type="checkbox"
+                        id="dark-mode"
+                        name="dark-mode"
                         checked={darkMode}
                         onChange={(e) => setDarkMode(e.target.checked)}
                         className="w-5 h-5 rounded accent-cyan-500"
@@ -3819,6 +3840,8 @@
                           {editingTeamId === team.id ? (
                             <input
                               type="text"
+                              id={`scoreboard-edit-team-${team.id}`}
+                              name="scoreboard-edit-team-name"
                               value={editingTeamName}
                               onChange={(e) => setEditingTeamName(e.target.value)}
                               onFocus={(e) => e.target.select()}
@@ -4149,6 +4172,8 @@
                   <div className="flex flex-col sm:flex-row gap-2 mb-2">
                     <input
                       type="text"
+                      id="new-event-name"
+                      name="new-event-name"
                       value={newEventName}
                       onChange={(e) => setNewEventName(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && addEvent()}
@@ -4159,6 +4184,8 @@
                     />
                     <div className="flex gap-2 flex-wrap">
                       <select
+                        id="new-event-type"
+                        name="new-event-type"
                         value={newEventType}
                         onChange={(e) => {
                           setNewEventType(e.target.value);
@@ -4173,6 +4200,8 @@
                         <option value="diving">Diving</option>
                       </select>
                       <select
+                        id="new-event-gender"
+                        name="new-event-gender"
                         value={newEventGender}
                         onChange={(e) => setNewEventGender(e.target.value)}
                         aria-label="Event gender"
