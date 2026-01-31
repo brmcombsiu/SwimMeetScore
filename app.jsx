@@ -568,8 +568,8 @@
       }
     };
 
-    // Team-First Entry Event Card (inline, not modal)
-    const QuickEntryEventCard = ({ event, teams, darkMode, numPlaces, pointSystem, onUpdate, onMoveUp, onMoveDown, onRemove, canMoveUp, canMoveDown, heatLockEnabled, aRelayOnly, teamPlaceLimitEnabled }) => {
+    // Team Mode Entry Event Card (inline, not modal)
+    const QuickEntryEventCard = ({ event, teams, darkMode, numPlaces, pointSystem, onUpdate, onMoveUp, onMoveDown, onRemove, canMoveUp, canMoveDown, heatLockEnabled, aRelayOnly, teamPlaceLimitEnabled, isCollapsed, onToggle }) => {
       const isDiving = event.name === 'Diving';
       const isRelay = event.name.includes('Relay');
 
@@ -617,11 +617,16 @@
       };
 
       return (
-        <div className={`rounded-xl p-3 ${darkMode ? 'bg-pool-mid/80 border border-white/10' : 'bg-white border border-slate-200 shadow-sm'}`}>
-          {/* Event Header */}
-          <div className="flex items-center justify-between mb-2">
+        <div className={`rounded-xl ${darkMode ? 'bg-pool-mid/80 border border-white/10' : 'bg-white border border-slate-200 shadow-sm'}`}>
+          {/* Collapsible Event Header */}
+          <button
+            type="button"
+            onClick={onToggle}
+            className={`w-full flex items-center justify-between px-3 py-2 cursor-pointer transition rounded-xl ${darkMode ? 'hover:bg-white/5' : 'hover:bg-slate-50'}`}
+            aria-expanded={!isCollapsed}
+          >
             <div className="flex items-center gap-2 flex-wrap">
-              <h5 className={`font-semibold ${darkMode ? 'text-white' : 'text-slate-800'}`}>
+              <h5 className={`font-semibold text-base ${darkMode ? 'text-white' : 'text-slate-800'}`}>
                 <span className={event.gender === 'girls' ? (darkMode ? 'text-pink-400' : 'text-pink-600') : (darkMode ? 'text-blue-400' : 'text-blue-600')}>
                   {event.gender === 'girls' ? 'G' : 'B'}
                 </span>
@@ -632,173 +637,164 @@
               </h5>
               {/* Visual indicators for Conference/Sectionals settings */}
               {heatLockEnabled && !isRelay && (
-                <span className={`text-xs px-1.5 py-0.5 rounded ${darkMode ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-700'}`}>
-                  🔒 1-8 A Finals / 9-16 B Finals
+                <span className={`text-xs px-1.5 py-0.5 rounded-full whitespace-nowrap ${darkMode ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-amber-100 text-amber-700 border border-amber-200'}`}>
+                  🔒 A/B Finals
                 </span>
               )}
               {aRelayOnly && isRelay && (
-                <span className={`text-xs px-1.5 py-0.5 rounded ${darkMode ? 'bg-teal-500/20 text-teal-400' : 'bg-teal-100 text-teal-700'}`}>
-                  🅰️ A-Only
+                <span className={`text-xs px-1.5 py-0.5 rounded-full whitespace-nowrap ${darkMode ? 'bg-teal-500/20 text-teal-400 border border-teal-500/30' : 'bg-teal-100 text-teal-700 border border-teal-200'}`}>
+                  🅰️ A-Relay Only
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-1">
-              <button
-                onClick={onMoveUp}
-                disabled={!canMoveUp}
-                className={`p-1 rounded ${!canMoveUp ? 'opacity-30 cursor-not-allowed' : (darkMode ? 'hover:bg-white/10' : 'hover:bg-slate-100')} ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}
-              >
-                <ChevronUp className="w-4 h-4" />
-              </button>
-              <button
-                onClick={onMoveDown}
-                disabled={!canMoveDown}
-                className={`p-1 rounded ${!canMoveDown ? 'opacity-30 cursor-not-allowed' : (darkMode ? 'hover:bg-white/10' : 'hover:bg-slate-100')} ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}
-              >
-                <ChevronDown className="w-4 h-4" />
-              </button>
-              <button
-                onClick={onRemove}
-                className={`p-1 rounded ${darkMode ? 'text-red-400 hover:bg-red-500/20' : 'text-red-500 hover:bg-red-50'}`}
-              >
-                <X className="w-4 h-4" />
-              </button>
+            <div className="flex items-center gap-2">
+              <ChevronDown className={`w-5 h-5 transition-transform ${darkMode ? 'text-slate-400' : 'text-slate-500'} ${!isCollapsed ? 'rotate-180' : ''}`} />
             </div>
-          </div>
+          </button>
+          {!isCollapsed && (
+            <div className="px-3 pb-3">
+              <div className="flex items-center justify-end gap-1 mb-2">
+                <button
+                  onClick={(e) => { e.stopPropagation(); onMoveUp(); }}
+                  disabled={!canMoveUp}
+                  className={`p-1 rounded ${!canMoveUp ? 'opacity-30 cursor-not-allowed' : (darkMode ? 'hover:bg-white/10' : 'hover:bg-slate-100')} ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}
+                >
+                  <ChevronUp className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); onMoveDown(); }}
+                  disabled={!canMoveDown}
+                  className={`p-1 rounded ${!canMoveDown ? 'opacity-30 cursor-not-allowed' : (darkMode ? 'hover:bg-white/10' : 'hover:bg-slate-100')} ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}
+                >
+                  <ChevronDown className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); onRemove(); }}
+                  className={`p-1 rounded ${darkMode ? 'text-red-400 hover:bg-red-500/20' : 'text-red-500 hover:bg-red-50'}`}
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              {/* Team rows with place buttons */}
+              <div className="space-y-2">
+                {teams.map(team => {
+                  const teamPlaces = getTeamPlaces(team.id);
+                  const showHeatLabels = heatLockEnabled && !isRelay && numPlaces > 10;
 
-          {/* Team rows with place buttons */}
-          <div className="space-y-2">
-            {teams.map(team => {
-              const teamPlaces = getTeamPlaces(team.id);
-              const showHeatLabels = heatLockEnabled && !isRelay && numPlaces > 10;
-              return (
-                <div key={team.id} className={`flex items-center gap-2 ${darkMode ? '' : ''}`}>
-                  {/* Team name - fixed width */}
-                  <div className={`w-20 sm:w-24 flex-shrink-0 text-xs font-medium truncate ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                    {team.name}
-                  </div>
-
-                  {/* Place buttons - scrollable on mobile */}
-                  <div className="flex gap-1 flex-wrap">
-                    {Array.from({ length: numPlaces }, (_, i) => i + 1).map(place => {
-                      const isSelected = teamPlaces.includes(place);
-                      const teamsAtPlace = getTeamsAtPlace(place);
-                      const isTie = teamsAtPlace.length > 1;
-                      const hasOtherTeam = teamsAtPlace.some(id => id !== String(team.id));
-                      const consumed = isPlaceConsumed(place) && !isSelected;
-                      const points = pointSystem[place] || 0;
-
-                      // For B Finals places (9-16), show heat position label
-                      const isBFinals = showHeatLabels && place >= 9 && place <= 16;
-                      const heatPosition = isBFinals ? place - 8 : null;
-
-                      if (consumed) {
-                        return (
-                          <div
-                            key={place}
-                            className={`w-8 h-8 sm:w-9 sm:h-9 rounded flex items-center justify-center text-xs opacity-30 ${darkMode ? 'bg-gray-700 text-gray-500' : 'bg-gray-200 text-gray-400'}`}
-                            title="Consumed by tie above"
-                          >
-                            -
-                          </div>
-                        );
+                  // Calculate points for this team
+                  const teamPoints = (() => {
+                    if (teamPlaces.length === 0) return 0;
+                    let totalPts = 0;
+                    const applyTeamLimit = teamPlaceLimitEnabled && isRelay;
+                    const maxTeamPlaces = applyTeamLimit ? Math.max(1, numPlaces - 1) : numPlaces;
+                    const teamPlaceCount = {};
+                    const resultsByPlace = {};
+                    for (let p = 1; p <= numPlaces; p++) {
+                      const teamsAtP = getTeamsAtPlace(p);
+                      if (teamsAtP.length > 0) resultsByPlace[p] = teamsAtP;
+                    }
+                    let currentPlace = 1;
+                    while (currentPlace <= numPlaces) {
+                      const teamsAtCurrentPlace = resultsByPlace[currentPlace];
+                      if (teamsAtCurrentPlace && teamsAtCurrentPlace.length > 0) {
+                        const numTied = teamsAtCurrentPlace.length;
+                        const eligibleTeams = teamsAtCurrentPlace.filter(teamId => {
+                          if (!applyTeamLimit) return true;
+                          return (teamPlaceCount[teamId] || 0) < maxTeamPlaces;
+                        });
+                        eligibleTeams.forEach(teamId => {
+                          teamPlaceCount[teamId] = (teamPlaceCount[teamId] || 0) + 1;
+                        });
+                        if (eligibleTeams.includes(String(team.id))) {
+                          let tiedPoints = 0;
+                          for (let i = 0; i < eligibleTeams.length && (currentPlace + i) <= numPlaces; i++) {
+                            tiedPoints += (pointSystem[currentPlace + i]) || 0;
+                          }
+                          totalPts += tiedPoints / eligibleTeams.length;
+                        }
+                        currentPlace += numTied;
+                      } else {
+                        currentPlace++;
                       }
+                    }
+                    return Math.round(totalPts * 10) / 10;
+                  })();
 
-                      return (
-                        <button
-                          key={place}
-                          onClick={() => togglePlace(team.id, place)}
-                          className={`${isBFinals ? 'w-10 h-8 sm:w-11 sm:h-9' : 'w-8 h-8 sm:w-9 sm:h-9'} rounded font-medium text-xs transition-all ${
-                            isSelected
-                              ? (place === 1
-                                  ? 'bg-gradient-to-br from-amber-400 to-amber-500 text-amber-900'
-                                  : place === 2
-                                    ? 'bg-gradient-to-br from-gray-300 to-gray-400 text-gray-800'
-                                    : place === 3
-                                      ? 'bg-gradient-to-br from-orange-400 to-orange-500 text-orange-900'
-                                      : (darkMode ? 'bg-chlorine text-pool-deep' : 'bg-cyan-600 text-white'))
-                              : hasOtherTeam
-                                ? (darkMode ? 'bg-gray-600/50 text-gray-400 border border-dashed border-gray-500' : 'bg-gray-100 text-gray-400 border border-dashed border-gray-300')
-                                : (darkMode ? 'bg-gray-700/50 text-gray-400 hover:bg-gray-600 border border-gray-600' : 'bg-gray-50 text-gray-500 hover:bg-gray-100 border border-gray-200')
-                          } ${isTie && isSelected ? 'ring-2 ring-yellow-400' : ''}`}
-                          title={`${getPlaceLabel(place)} (${points}pts)${isBFinals ? ` - B Finals ${heatPosition}${heatPosition === 1 ? 'st' : heatPosition === 2 ? 'nd' : heatPosition === 3 ? 'rd' : 'th'}` : ''}${hasOtherTeam && !isSelected ? ' - taken' : ''}`}
-                        >
-                          {isBFinals ? (
-                            <span className="flex flex-col items-center leading-none">
-                              <span>{place}</span>
-                              <span className={`text-[9px] leading-none ${isSelected ? '' : (darkMode ? 'text-amber-400' : 'text-amber-600')}`}>H1:{heatPosition}</span>
-                            </span>
-                          ) : place}
-                        </button>
-                      );
-                    })}
-                  </div>
+                  return (
+                    <div key={team.id}>
+                      {/* Team name with points underneath */}
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className={`text-xs font-medium truncate ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                          {team.name}
+                        </div>
+                        {teamPoints > 0 && (
+                          <div className={`text-xs font-medium ${darkMode ? 'text-chlorine' : 'text-cyan-600'}`}>
+                            {teamPoints}pt
+                          </div>
+                        )}
+                      </div>
 
-                  {/* Points earned indicator - accounts for ties, consumed places, and team place limit */}
-                  {teamPlaces.length > 0 && (
-                    <div className={`text-xs font-medium ml-auto ${darkMode ? 'text-chlorine' : 'text-cyan-600'}`}>
-                      {(() => {
-                        let totalPts = 0;
+                      {/* Place buttons */}
+                      <div className="flex gap-1 flex-wrap">
+                        {Array.from({ length: numPlaces }, (_, i) => i + 1).map(place => {
+                          const isSelected = teamPlaces.includes(place);
+                          const teamsAtPlace = getTeamsAtPlace(place);
+                          const isTie = teamsAtPlace.length > 1;
+                          const hasOtherTeam = teamsAtPlace.some(id => id !== String(team.id));
+                          const consumed = isPlaceConsumed(place) && !isSelected;
+                          const points = pointSystem[place] || 0;
 
-                        // Calculate max team places for the limit (relays only)
-                        const applyTeamLimit = teamPlaceLimitEnabled && isRelay;
-                        const maxTeamPlaces = applyTeamLimit ? Math.max(1, numPlaces - 1) : numPlaces;
-                        const teamPlaceCount = {};
+                          // For B Finals places (9-16), show heat position label
+                          const isBFinals = showHeatLabels && place >= 9 && place <= 16;
+                          const heatPosition = isBFinals ? place - 8 : null;
 
-                        // Build a map of place -> teamIds for this event
-                        const resultsByPlace = {};
-                        for (let p = 1; p <= numPlaces; p++) {
-                          const teamsAtP = getTeamsAtPlace(p);
-                          if (teamsAtP.length > 0) {
-                            resultsByPlace[p] = teamsAtP;
+                          if (consumed) {
+                            return (
+                              <div
+                                key={place}
+                                className={`w-8 h-8 sm:w-9 sm:h-9 rounded flex items-center justify-center text-xs opacity-30 ${darkMode ? 'bg-gray-700 text-gray-500' : 'bg-gray-200 text-gray-400'}`}
+                                title="Consumed by tie above"
+                              >
+                                -
+                              </div>
+                            );
                           }
-                        }
 
-                        // Process places sequentially, skipping consumed ones (same logic as recalculateAllScores)
-                        let currentPlace = 1;
-                        while (currentPlace <= numPlaces) {
-                          const teamsAtCurrentPlace = resultsByPlace[currentPlace];
-
-                          if (teamsAtCurrentPlace && teamsAtCurrentPlace.length > 0) {
-                            const numTied = teamsAtCurrentPlace.length;
-
-                            // Filter eligible teams based on team place limit (relays only)
-                            const eligibleTeams = teamsAtCurrentPlace.filter(teamId => {
-                              if (!applyTeamLimit) return true;
-                              const currentCount = teamPlaceCount[teamId] || 0;
-                              return currentCount < maxTeamPlaces;
-                            });
-
-                            // Update counts for eligible teams
-                            eligibleTeams.forEach(teamId => {
-                              teamPlaceCount[teamId] = (teamPlaceCount[teamId] || 0) + 1;
-                            });
-
-                            // Check if this team is at this place AND eligible
-                            if (eligibleTeams.includes(String(team.id))) {
-                              // Sum up points for places consumed by eligible teams
-                              let tiedPoints = 0;
-                              for (let i = 0; i < eligibleTeams.length && (currentPlace + i) <= numPlaces; i++) {
-                                tiedPoints += (pointSystem[currentPlace + i]) || 0;
-                              }
-                              totalPts += tiedPoints / eligibleTeams.length;
-                            }
-
-                            // Skip places consumed by this tie
-                            currentPlace += numTied;
-                          } else {
-                            currentPlace++;
-                          }
-                        }
-
-                        return Math.round(totalPts * 10) / 10;
-                      })()}pt
+                          return (
+                            <button
+                              key={place}
+                              onClick={() => togglePlace(team.id, place)}
+                              className={`${isBFinals ? 'w-10 h-8 sm:w-11 sm:h-9' : 'w-8 h-8 sm:w-9 sm:h-9'} rounded font-medium text-xs transition-all ${
+                                isSelected
+                                  ? (place === 1
+                                      ? 'bg-gradient-to-br from-amber-400 to-amber-500 text-amber-900'
+                                      : place === 2
+                                        ? 'bg-gradient-to-br from-gray-300 to-gray-400 text-gray-800'
+                                        : place === 3
+                                          ? 'bg-gradient-to-br from-orange-400 to-orange-500 text-orange-900'
+                                          : (darkMode ? 'bg-chlorine text-pool-deep' : 'bg-cyan-600 text-white'))
+                                  : hasOtherTeam
+                                    ? (darkMode ? 'bg-gray-600/50 text-gray-400 border border-dashed border-gray-500' : 'bg-gray-100 text-gray-400 border border-dashed border-gray-300')
+                                    : (darkMode ? 'bg-gray-700/50 text-gray-400 hover:bg-gray-600 border border-gray-600' : 'bg-gray-50 text-gray-500 hover:bg-gray-100 border border-gray-200')
+                              } ${isTie && isSelected ? 'ring-2 ring-yellow-400' : ''}`}
+                              title={`${getPlaceLabel(place)} (${points}pts)${isBFinals ? ` - B Finals ${heatPosition}${heatPosition === 1 ? 'st' : heatPosition === 2 ? 'nd' : heatPosition === 3 ? 'rd' : 'th'}` : ''}${hasOtherTeam && !isSelected ? ' - taken' : ''}`}
+                            >
+                              {isBFinals ? (
+                                <span className="flex flex-col items-center leading-none">
+                                  <span>{place}</span>
+                                  <span className={`text-[9px] leading-none ${isSelected ? '' : (darkMode ? 'text-amber-400' : 'text-amber-600')}`}>H1:{heatPosition}</span>
+                                </span>
+                              ) : place}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       );
     };
@@ -930,7 +926,7 @@
               <div className="flex items-center gap-2">
                 <Zap className={`w-5 h-5 ${darkMode ? 'text-chlorine' : 'text-white'}`} />
                 <div>
-                  <h3 className={`text-base font-bold ${darkMode ? 'text-chlorine' : 'text-white'}`}>Team-First Entry</h3>
+                  <h3 className={`text-base font-bold ${darkMode ? 'text-chlorine' : 'text-white'}`}>Team Mode Entry</h3>
                   <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-white/80'}`}>
                     {event.gender === 'girls' ? 'Girls' : 'Boys'} {event.name}
                   </p>
@@ -1108,7 +1104,7 @@
       const [heatReminder, setHeatReminder] = useState(null);
       const [showConfirmDialog, setShowConfirmDialog] = useState(null);
       const [bulkEntryEvent, setBulkEntryEvent] = useState(null); // For bulk entry modal
-      const [teamFirstMode, setTeamFirstMode] = useState(false); // Toggle between place-first and team-first entry modes
+      const [teamFirstMode, setTeamFirstMode] = useState(false); // Toggle between place-mode and team-mode entry modes
       
       // Clear error after 5 seconds
       useEffect(() => {
@@ -1363,14 +1359,19 @@
         });
       };
 
-      // Collapsible events state for place-first mode
-      const [collapsedEvents, setCollapsedEvents] = useState(() => {
-        const initial = {};
-        const savedEvents = utils.loadFromStorage('events', defaultEvents);
-        if (Array.isArray(savedEvents)) {
-          savedEvents.forEach(e => { initial[e.id] = true; });
+      // Collapsible events state for both place-mode and team-mode
+      // Helper: collapse all events except the first one
+      const collapseAllButFirst = (eventsList) => {
+        const collapsed = {};
+        if (Array.isArray(eventsList)) {
+          eventsList.forEach((e, i) => { collapsed[e.id] = i !== 0; });
         }
-        return initial;
+        return collapsed;
+      };
+
+      const [collapsedEvents, setCollapsedEvents] = useState(() => {
+        const savedEvents = utils.loadFromStorage('events', defaultEvents);
+        return collapseAllButFirst(savedEvents);
       });
 
       const toggleEvent = (eventId) => {
@@ -1924,6 +1925,7 @@
                 results: []
               }));
             setEvents(newEvents);
+            setCollapsedEvents(collapseAllButFirst(newEvents));
             recalculateAllScores(newTeams, newEvents);
           } else {
             recalculateAllScores(newTeams, events);
@@ -2068,6 +2070,7 @@
               // Clear only the scores from events, keep teams and event structure
               const clearedEvents = events.map(event => event ? { ...event, results: [] } : null);
               setEvents(clearedEvents);
+              setCollapsedEvents(collapseAllButFirst(clearedEvents));
 
               // Reset team scores to 0
               const clearedTeams = teams.map(team => team ? {
@@ -2111,6 +2114,7 @@
 
               setTeams(defaultTeams);
               setEvents(defaultEvents);
+              setCollapsedEvents(collapseAllButFirst(defaultEvents));
               setIndividualPointSystem(defaultIndividualPoints);
               setRelayPointSystem(defaultRelayPoints);
               setDivingPointSystem(defaultDivingPoints);
@@ -2279,6 +2283,7 @@
           results: []
         }));
         setEvents(newEvents);
+        setCollapsedEvents(collapseAllButFirst(newEvents));
         recalculateAllScores(dualMeetTeams, newEvents);
         setActiveTemplate('high_school');
         // Track event
@@ -2324,6 +2329,7 @@
           results: []
         }));
         setEvents(newEvents);
+        setCollapsedEvents(collapseAllButFirst(newEvents));
         recalculateAllScores(conferenceTeams, newEvents);
         setActiveTemplate('conference');
         trackEvent('load_template', { template_name: 'conference_meet' });
@@ -2371,6 +2377,7 @@
           results: []
         }));
         setEvents(newEvents);
+        setCollapsedEvents(collapseAllButFirst(newEvents));
         recalculateAllScores(sectionalsTeams, newEvents);
         setActiveTemplate('sectionals');
         trackEvent('load_template', { template_name: 'sectionals_meet' });
@@ -2433,6 +2440,7 @@
             results: []
           }));
         setEvents(newEvents);
+        setCollapsedEvents(collapseAllButFirst(newEvents));
         recalculateAllScores(usaTeams, newEvents);
         setActiveTemplate(`usa_swimming_${lanes}`);
         trackEvent('load_template', { template_name: `usa_swimming_${lanes}_lane` });
@@ -2889,8 +2897,8 @@
                       <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
                         <h5 className={`font-semibold mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>📋 Two Entry Modes</h5>
                         <div className="text-sm space-y-2">
-                          <p><strong>Place-First Mode (Default):</strong> Pick teams for each place using dropdowns. Best for recording ties.</p>
-                          <p><strong>Team-First Mode:</strong> Tap place numbers for each team. Faster dual meets as you can simply select the places for one team and the scores for the other team fill in automatically.</p>
+                          <p><strong>Place Mode (Default):</strong> Pick teams for each place using dropdowns. Best for recording ties.</p>
+                          <p><strong>Team Mode:</strong> Tap place numbers for each team. Faster dual meets as you can simply select the places for one team and the scores for the other team fill in automatically.</p>
                         </div>
                       </div>
                     </section>
@@ -2959,7 +2967,7 @@
                     <section className="mb-8">
                       <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>💡 Tips</h4>
                       <ul className="space-y-2">
-                        <li>• <strong>Team-First Mode:</strong> Toggle "Team-First Mode" next to Events header for faster mobile entry - tap place numbers directly for each team</li>
+                        <li>• <strong>Team Mode:</strong> Toggle "Team Mode" next to Events header for faster mobile entry - tap place numbers directly for each team</li>
                         <li>• <strong>Works Offline:</strong> Once loaded, works without internet - perfect for pools with bad service!</li>
                         <li>• <strong>Save Templates:</strong> Create custom templates for your league's specific scoring rules</li>
                         <li>• <strong>Dark Mode:</strong> Use dark mode for better visibility at indoor pools</li>
@@ -3830,14 +3838,14 @@
                     <div className="flex items-center gap-2 flex-wrap mt-2">
                       {/* Entry Mode Toggle Switch */}
                       <button
-                        onClick={() => { setTeamFirstMode(!teamFirstMode); triggerHaptic('light'); trackEvent('toggle_entry_mode', { mode: !teamFirstMode ? 'team-first' : 'place-first' }); }}
+                        onClick={() => { setTeamFirstMode(!teamFirstMode); triggerHaptic('light'); trackEvent('toggle_entry_mode', { mode: !teamFirstMode ? 'team-mode' : 'place-mode' }); }}
                         className={`flex items-center gap-2 px-1 py-1 rounded-full text-xs font-medium transition cursor-pointer ${darkMode ? 'bg-gray-700 border border-gray-600' : 'bg-gray-200 border border-gray-300'}`}
-                        title={teamFirstMode ? "Switch to Place-First Mode" : "Switch to Team-First Mode"}
+                        title={teamFirstMode ? "Switch to Place Mode" : "Switch to Team Mode"}
                       >
-                        <span className={`px-2.5 py-1 rounded-full transition-all ${!teamFirstMode ? (darkMode ? 'bg-chlorine text-pool-deep font-semibold' : 'bg-cyan-600 text-white font-semibold') : ''}`}>Place-First</span>
-                        <span className={`px-2.5 py-1 rounded-full transition-all ${teamFirstMode ? (darkMode ? 'bg-lane-gold text-pool-deep font-semibold' : 'bg-amber-500 text-white font-semibold') : ''}`}>Team-First</span>
+                        <span className={`px-2.5 py-1 rounded-full transition-all ${!teamFirstMode ? (darkMode ? 'bg-chlorine text-pool-deep font-semibold' : 'bg-cyan-600 text-white font-semibold') : ''}`}>Place Mode</span>
+                        <span className={`px-2.5 py-1 rounded-full transition-all ${teamFirstMode ? (darkMode ? 'bg-lane-gold text-pool-deep font-semibold' : 'bg-amber-500 text-white font-semibold') : ''}`}>Team Mode</span>
                       </button>
-                      {!teamFirstMode && events.length > 0 && (
+                      {events.length > 0 && (
                         <button
                           onClick={toggleAllEvents}
                           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600 border border-gray-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-300'}`}
@@ -3864,7 +3872,7 @@
                       const pointSystem = isDiving ? divingPointSystem : isRelay ? relayPointSystem : individualPointSystem;
                       const numPlaces = isDiving ? numDivingPlaces : isRelay ? numRelayPlaces : numIndividualPlaces;
                       
-                      // Team-First Mode - compact cards
+                      // Team Mode - compact cards
                       if (teamFirstMode) {
                         return (
                           <QuickEntryEventCard
@@ -3883,11 +3891,13 @@
                             heatLockEnabled={heatLockEnabled}
                             aRelayOnly={aRelayOnly}
                             teamPlaceLimitEnabled={teamPlaceLimitEnabled}
+                            isCollapsed={collapsedEvents[event.id]}
+                            onToggle={() => toggleEvent(event.id)}
                           />
                         );
                       }
-                      
-                      // Place-First Mode - dropdowns (collapsible)
+
+                      // Place Mode - dropdowns (collapsible)
                       const isEventCollapsed = collapsedEvents[event.id];
                       return (
                         <div key={event.id} className={`rounded-xl ${darkMode ? 'bg-pool-mid/80 border border-white/10' : 'bg-white border border-slate-200 shadow-sm'} relative`} style={{ zIndex: events.length - index }}>
@@ -3984,7 +3994,7 @@
                         const pointSystem = isDiving ? divingPointSystem : isRelay ? relayPointSystem : individualPointSystem;
                         const numPlaces = isDiving ? numDivingPlaces : isRelay ? numRelayPlaces : numIndividualPlaces;
                         
-                        // Team-First Mode - compact cards
+                        // Team Mode - compact cards
                         if (teamFirstMode) {
                           return (
                             <QuickEntryEventCard
@@ -4003,11 +4013,13 @@
                               heatLockEnabled={heatLockEnabled}
                               aRelayOnly={aRelayOnly}
                               teamPlaceLimitEnabled={teamPlaceLimitEnabled}
+                              isCollapsed={collapsedEvents[event.id]}
+                              onToggle={() => toggleEvent(event.id)}
                             />
                           );
                         }
                         
-                        // Place-First Mode - dropdowns (collapsible)
+                        // Place Mode - dropdowns (collapsible)
                         const isEventCollapsed = collapsedEvents[event.id];
                         return (
                           <div key={event.id} className={`rounded-xl ${darkMode ? 'bg-pool-mid/80 border border-white/10' : 'bg-white border border-slate-200 shadow-sm'} relative`} style={{ zIndex: events.length - _index }}>
