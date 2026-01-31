@@ -106,6 +106,18 @@
       </svg>
     );
 
+    const Undo = ({ className }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a5 5 0 015 5v0a5 5 0 01-5 5H10M3 10l4-4M3 10l4 4" />
+      </svg>
+    );
+
+    const Redo = ({ className }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 10H11a5 5 0 00-5 5v0a5 5 0 005 5h3M21 10l-4-4M21 10l-4 4" />
+      </svg>
+    );
+
     const Settings = ({ className }) => (
       <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -1292,6 +1304,7 @@
 
       // State with localStorage initialization
       const CURRENT_VERSION = 4; // Version 4 adds tie support with teamIds array
+      const APP_VERSION = '1.1.0';
       
       // Check and migrate events if needed
       const initializeEvents = () => {
@@ -1382,6 +1395,13 @@
       // Team place limit - prevents one team from occupying all scoring places
       // When enabled, a team can score at most (numPlaces - 1) positions in any event
       const [teamPlaceLimitEnabled, setTeamPlaceLimitEnabled] = useState(() => utils.loadFromStorage('teamPlaceLimitEnabled', true));
+
+      // Undo/Redo history stacks (snapshots of teams + events)
+      const MAX_UNDO_HISTORY = 50;
+      const undoStackRef = useRef([]);
+      const redoStackRef = useRef([]);
+      const [canUndo, setCanUndo] = useState(false);
+      const [canRedo, setCanRedo] = useState(false);
 
       // Track which template is currently active (for visual indicator)
       const [activeTemplate, setActiveTemplate] = useState(() => utils.loadFromStorage('activeTemplate', 'high_school'));
@@ -1672,6 +1692,80 @@
         }
       }, [individualPointSystem, relayPointSystem, divingPointSystem, numIndividualPlaces, numRelayPlaces, numDivingPlaces, teamPlaceLimitEnabled]);
 
+      // Undo/Redo functions (placed after recalculateAllScores)
+      const saveSnapshot = useCallback((label) => {
+        try {
+          undoStackRef.current.push({
+            label: label || 'action',
+            teams: JSON.parse(JSON.stringify(teams)),
+            events: JSON.parse(JSON.stringify(events))
+          });
+          if (undoStackRef.current.length > MAX_UNDO_HISTORY) {
+            undoStackRef.current.shift();
+          }
+          redoStackRef.current = [];
+          setCanUndo(true);
+          setCanRedo(false);
+        } catch (e) {
+          console.error('Error saving undo snapshot:', e);
+        }
+      }, [teams, events]);
+
+      const performUndo = useCallback(() => {
+        if (undoStackRef.current.length === 0) return;
+        try {
+          redoStackRef.current.push({
+            teams: JSON.parse(JSON.stringify(teams)),
+            events: JSON.parse(JSON.stringify(events))
+          });
+          const snapshot = undoStackRef.current.pop();
+          setTeams(snapshot.teams);
+          setEvents(snapshot.events);
+          recalculateAllScores(snapshot.teams, snapshot.events);
+          setCanUndo(undoStackRef.current.length > 0);
+          setCanRedo(true);
+          trackEvent('undo', { label: snapshot.label });
+        } catch (e) {
+          console.error('Error performing undo:', e);
+          setError('Failed to undo. Please try again.');
+        }
+      }, [teams, events, recalculateAllScores]);
+
+      const performRedo = useCallback(() => {
+        if (redoStackRef.current.length === 0) return;
+        try {
+          undoStackRef.current.push({
+            label: 'redo',
+            teams: JSON.parse(JSON.stringify(teams)),
+            events: JSON.parse(JSON.stringify(events))
+          });
+          const snapshot = redoStackRef.current.pop();
+          setTeams(snapshot.teams);
+          setEvents(snapshot.events);
+          recalculateAllScores(snapshot.teams, snapshot.events);
+          setCanUndo(true);
+          setCanRedo(redoStackRef.current.length > 0);
+          trackEvent('redo');
+        } catch (e) {
+          console.error('Error performing redo:', e);
+          setError('Failed to redo. Please try again.');
+        }
+      }, [teams, events, recalculateAllScores]);
+
+      useEffect(() => {
+        const handleKeyDown = (e) => {
+          if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+            e.preventDefault();
+            performUndo();
+          } else if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+            e.preventDefault();
+            performRedo();
+          }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+      }, [performUndo, performRedo]);
+
       const addTeam = () => {
         const validation = utils.validateTeamName(newTeamName);
         if (!validation.valid) {
@@ -1716,8 +1810,9 @@
           setError('At least one team is required.');
           return;
         }
-        
+
         try {
+          saveSnapshot('remove team');
           const newTeams = teams.filter(t => t && t.id !== id);
           setTeams(newTeams);
           recalculateAllScores(newTeams, events);
@@ -1846,6 +1941,7 @@
           message: 'Are you sure you want to delete this event? All results for this event will be lost.',
           onConfirm: () => {
             try {
+              saveSnapshot('remove event');
               const newEvents = events.filter(e => e && e.id !== id);
               setEvents(newEvents);
               recalculateAllScores(teams, newEvents);
@@ -2005,6 +2101,7 @@
           // Validate inputs
           if (!eventId || !place || place < 1) return;
           if (teamId && !teams.some(t => t && t.id == teamId)) return; // Validate team exists
+          saveSnapshot('update result');
 
           // Find the event to check if it's a relay
           const targetEvent = events.find(e => e && e.id === eventId);
@@ -2097,7 +2194,8 @@
       const bulkUpdateEventResults = (eventId, newResults) => {
         try {
           if (!eventId) return;
-          
+          saveSnapshot('bulk update results');
+
           const newEvents = events.map(event => {
             if (event && event.id === eventId) {
               return { ...event, results: newResults };
@@ -2118,6 +2216,7 @@
           message: 'Clear all scores but keep your teams, events, and saved templates?',
           onConfirm: () => {
             try {
+              saveSnapshot('clear scores');
               // Clear only the scores from events, keep teams and event structure
               const clearedEvents = events.map(event => event ? { ...event, results: [] } : null);
               setEvents(clearedEvents);
@@ -2150,9 +2249,10 @@
 
       const clearAllDataAndTemplates = () => {
         setShowConfirmDialog({
-          message: 'Clear ALL data including saved templates? This cannot be undone.',
+          message: 'Clear ALL data including saved templates? You can undo this action.',
           onConfirm: () => {
             try {
+              saveSnapshot('clear all data');
               // Clear only swimMeetScore-prefixed keys (preserve analytics queue and other data)
               const keysToRemove = [];
               for (let i = 0; i < localStorage.length; i++) {
@@ -3199,6 +3299,9 @@
                     >
                       Got It!
                     </button>
+                    <p className={`text-center text-xs mt-3 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                      Version {APP_VERSION}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -3903,6 +4006,24 @@
                         <Mail className="w-4 h-4" />
                         Email Results
                       </button>
+                      <div className="flex items-center gap-1 ml-auto sm:ml-2">
+                        <button
+                          onClick={performUndo}
+                          disabled={!canUndo}
+                          title="Undo (Ctrl+Z)"
+                          className={`p-1.5 rounded-lg transition ${canUndo ? (darkMode ? 'bg-pool-light/50 hover:bg-pool-light text-white border border-white/10' : 'bg-cyan-50 hover:bg-cyan-100 text-cyan-700 border border-cyan-200') : (darkMode ? 'bg-pool-light/20 text-white/20 border border-white/5 cursor-not-allowed' : 'bg-gray-100 text-gray-300 border border-gray-200 cursor-not-allowed')}`}
+                        >
+                          <Undo className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={performRedo}
+                          disabled={!canRedo}
+                          title="Redo (Ctrl+Y)"
+                          className={`p-1.5 rounded-lg transition ${canRedo ? (darkMode ? 'bg-pool-light/50 hover:bg-pool-light text-white border border-white/10' : 'bg-cyan-50 hover:bg-cyan-100 text-cyan-700 border border-cyan-200') : (darkMode ? 'bg-pool-light/20 text-white/20 border border-white/5 cursor-not-allowed' : 'bg-gray-100 text-gray-300 border border-gray-200 cursor-not-allowed')}`}
+                        >
+                          <Redo className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap mt-2">
                       {/* Entry Mode Toggle Switch */}

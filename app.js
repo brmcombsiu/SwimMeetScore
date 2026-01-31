@@ -154,6 +154,32 @@ const X = ({
   strokeWidth: 2,
   d: "M6 18L18 6M6 6l12 12"
 }));
+const Undo = ({
+  className
+}) => /*#__PURE__*/React.createElement("svg", {
+  className: className,
+  fill: "none",
+  stroke: "currentColor",
+  viewBox: "0 0 24 24"
+}, /*#__PURE__*/React.createElement("path", {
+  strokeLinecap: "round",
+  strokeLinejoin: "round",
+  strokeWidth: 2,
+  d: "M3 10h10a5 5 0 015 5v0a5 5 0 01-5 5H10M3 10l4-4M3 10l4 4"
+}));
+const Redo = ({
+  className
+}) => /*#__PURE__*/React.createElement("svg", {
+  className: className,
+  fill: "none",
+  stroke: "currentColor",
+  viewBox: "0 0 24 24"
+}, /*#__PURE__*/React.createElement("path", {
+  strokeLinecap: "round",
+  strokeLinejoin: "round",
+  strokeWidth: 2,
+  d: "M21 10H11a5 5 0 00-5 5v0a5 5 0 005 5h3M21 10l-4-4M21 10l-4 4"
+}));
 const Settings = ({
   className
 }) => /*#__PURE__*/React.createElement("svg", {
@@ -473,6 +499,7 @@ const NumberInput = ({
       minHeight: '44px'
     },
     id: id || undefined,
+    name: id || undefined,
     "aria-label": label
   }), /*#__PURE__*/React.createElement("button", {
     type: "button",
@@ -515,6 +542,7 @@ const PointInput = ({
   return /*#__PURE__*/React.createElement("div", {
     className: `p-1.5 sm:p-2 rounded-lg ${darkMode ? 'bg-gray-600' : 'bg-white'}`
   }, /*#__PURE__*/React.createElement("label", {
+    htmlFor: `point-input-${place}`,
     className: `text-xs font-medium block mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`
   }, placeLabel), /*#__PURE__*/React.createElement("div", {
     className: "flex items-center justify-center"
@@ -535,6 +563,8 @@ const PointInput = ({
     className: "w-3 h-3"
   })), /*#__PURE__*/React.createElement("input", {
     type: "number",
+    id: `point-input-${place}`,
+    name: `point-input-${place}`,
     inputMode: "numeric",
     pattern: "[0-9]*",
     min: "0",
@@ -631,7 +661,7 @@ const PlaceSelector = ({
   if (consumedByTie) {
     return /*#__PURE__*/React.createElement("div", {
       className: `p-1 rounded opacity-50 ${darkMode ? 'bg-gray-800' : 'bg-gray-200'}`
-    }, /*#__PURE__*/React.createElement("label", {
+    }, /*#__PURE__*/React.createElement("span", {
       className: `text-xs font-medium block ${darkMode ? 'text-gray-500' : 'text-gray-400'}`
     }, placeLabel, isBFinals && /*#__PURE__*/React.createElement("span", {
       className: `ml-0.5 ${darkMode ? 'text-amber-400/50' : 'text-amber-600/50'}`
@@ -642,7 +672,7 @@ const PlaceSelector = ({
   return /*#__PURE__*/React.createElement("div", {
     className: `p-1 rounded ${darkMode ? 'bg-gray-600' : 'bg-white'} ${numTied > 1 ? darkMode ? 'ring-2 ring-yellow-500' : 'ring-2 ring-yellow-400' : ''}`,
     ref: dropdownRef
-  }, /*#__PURE__*/React.createElement("label", {
+  }, /*#__PURE__*/React.createElement("span", {
     className: `text-xs font-medium block ${darkMode ? 'text-gray-300' : 'text-gray-600'}`
   }, placeLabel, isBFinals && /*#__PURE__*/React.createElement("span", {
     className: `ml-0.5 ${darkMode ? 'text-amber-400' : 'text-amber-600'}`
@@ -674,6 +704,8 @@ const PlaceSelector = ({
       className: `flex items-center gap-2 px-3 py-2 cursor-pointer transition-colors ${isChecked ? darkMode ? 'bg-cyan-700' : 'bg-blue-100' : darkMode ? 'hover:bg-gray-600' : 'hover:bg-gray-100'}`
     }, /*#__PURE__*/React.createElement("input", {
       type: "checkbox",
+      id: `team-select-${team.id}`,
+      name: `team-select-${team.id}`,
       checked: isChecked,
       onChange: e => handleTeamToggle(team.id, e.target.checked),
       className: "w-4 h-4 rounded flex-shrink-0"
@@ -1168,6 +1200,8 @@ const BulkEntryModal = ({
     className: "flex items-center gap-2 cursor-pointer"
   }, /*#__PURE__*/React.createElement("input", {
     type: "checkbox",
+    id: "auto-fill-toggle",
+    name: "auto-fill-toggle",
     checked: autoFillEnabled,
     onChange: e => {
       setAutoFillEnabled(e.target.checked);
@@ -1508,6 +1542,7 @@ function SwimMeetScore() {
 
   // State with localStorage initialization
   const CURRENT_VERSION = 4; // Version 4 adds tie support with teamIds array
+  const APP_VERSION = '1.1.0';
 
   // Check and migrate events if needed
   const initializeEvents = () => {
@@ -1598,6 +1633,13 @@ function SwimMeetScore() {
   // Team place limit - prevents one team from occupying all scoring places
   // When enabled, a team can score at most (numPlaces - 1) positions in any event
   const [teamPlaceLimitEnabled, setTeamPlaceLimitEnabled] = useState(() => utils.loadFromStorage('teamPlaceLimitEnabled', true));
+
+  // Undo/Redo history stacks (snapshots of teams + events)
+  const MAX_UNDO_HISTORY = 50;
+  const undoStackRef = useRef([]);
+  const redoStackRef = useRef([]);
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
 
   // Track which template is currently active (for visual indicator)
   const [activeTemplate, setActiveTemplate] = useState(() => utils.loadFromStorage('activeTemplate', 'high_school'));
@@ -1860,6 +1902,79 @@ function SwimMeetScore() {
       setError('Error calculating scores. Please refresh the page.');
     }
   }, [individualPointSystem, relayPointSystem, divingPointSystem, numIndividualPlaces, numRelayPlaces, numDivingPlaces, teamPlaceLimitEnabled]);
+
+  // Undo/Redo functions (placed after recalculateAllScores)
+  const saveSnapshot = useCallback(label => {
+    try {
+      undoStackRef.current.push({
+        label: label || 'action',
+        teams: JSON.parse(JSON.stringify(teams)),
+        events: JSON.parse(JSON.stringify(events))
+      });
+      if (undoStackRef.current.length > MAX_UNDO_HISTORY) {
+        undoStackRef.current.shift();
+      }
+      redoStackRef.current = [];
+      setCanUndo(true);
+      setCanRedo(false);
+    } catch (e) {
+      console.error('Error saving undo snapshot:', e);
+    }
+  }, [teams, events]);
+  const performUndo = useCallback(() => {
+    if (undoStackRef.current.length === 0) return;
+    try {
+      redoStackRef.current.push({
+        teams: JSON.parse(JSON.stringify(teams)),
+        events: JSON.parse(JSON.stringify(events))
+      });
+      const snapshot = undoStackRef.current.pop();
+      setTeams(snapshot.teams);
+      setEvents(snapshot.events);
+      recalculateAllScores(snapshot.teams, snapshot.events);
+      setCanUndo(undoStackRef.current.length > 0);
+      setCanRedo(true);
+      trackEvent('undo', {
+        label: snapshot.label
+      });
+    } catch (e) {
+      console.error('Error performing undo:', e);
+      setError('Failed to undo. Please try again.');
+    }
+  }, [teams, events, recalculateAllScores]);
+  const performRedo = useCallback(() => {
+    if (redoStackRef.current.length === 0) return;
+    try {
+      undoStackRef.current.push({
+        label: 'redo',
+        teams: JSON.parse(JSON.stringify(teams)),
+        events: JSON.parse(JSON.stringify(events))
+      });
+      const snapshot = redoStackRef.current.pop();
+      setTeams(snapshot.teams);
+      setEvents(snapshot.events);
+      recalculateAllScores(snapshot.teams, snapshot.events);
+      setCanUndo(true);
+      setCanRedo(redoStackRef.current.length > 0);
+      trackEvent('redo');
+    } catch (e) {
+      console.error('Error performing redo:', e);
+      setError('Failed to redo. Please try again.');
+    }
+  }, [teams, events, recalculateAllScores]);
+  useEffect(() => {
+    const handleKeyDown = e => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        performUndo();
+      } else if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || e.key === 'z' && e.shiftKey)) {
+        e.preventDefault();
+        performRedo();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [performUndo, performRedo]);
   const addTeam = () => {
     const validation = utils.validateTeamName(newTeamName);
     if (!validation.valid) {
@@ -1905,6 +2020,7 @@ function SwimMeetScore() {
       return;
     }
     try {
+      saveSnapshot('remove team');
       const newTeams = teams.filter(t => t && t.id !== id);
       setTeams(newTeams);
       recalculateAllScores(newTeams, events);
@@ -2029,6 +2145,7 @@ function SwimMeetScore() {
       message: 'Are you sure you want to delete this event? All results for this event will be lost.',
       onConfirm: () => {
         try {
+          saveSnapshot('remove event');
           const newEvents = events.filter(e => e && e.id !== id);
           setEvents(newEvents);
           recalculateAllScores(teams, newEvents);
@@ -2190,6 +2307,7 @@ function SwimMeetScore() {
       // Validate inputs
       if (!eventId || !place || place < 1) return;
       if (teamId && !teams.some(t => t && t.id == teamId)) return; // Validate team exists
+      saveSnapshot('update result');
 
       // Find the event to check if it's a relay
       const targetEvent = events.find(e => e && e.id === eventId);
@@ -2304,6 +2422,7 @@ function SwimMeetScore() {
   const bulkUpdateEventResults = (eventId, newResults) => {
     try {
       if (!eventId) return;
+      saveSnapshot('bulk update results');
       const newEvents = events.map(event => {
         if (event && event.id === eventId) {
           return {
@@ -2325,6 +2444,7 @@ function SwimMeetScore() {
       message: 'Clear all scores but keep your teams, events, and saved templates?',
       onConfirm: () => {
         try {
+          saveSnapshot('clear scores');
           // Clear only the scores from events, keep teams and event structure
           const clearedEvents = events.map(event => event ? {
             ...event,
@@ -2357,9 +2477,10 @@ function SwimMeetScore() {
   };
   const clearAllDataAndTemplates = () => {
     setShowConfirmDialog({
-      message: 'Clear ALL data including saved templates? This cannot be undone.',
+      message: 'Clear ALL data including saved templates? You can undo this action.',
       onConfirm: () => {
         try {
+          saveSnapshot('clear all data');
           // Clear only swimMeetScore-prefixed keys (preserve analytics queue and other data)
           const keysToRemove = [];
           for (let i = 0; i < localStorage.length; i++) {
@@ -3597,7 +3718,9 @@ function SwimMeetScore() {
   }, /*#__PURE__*/React.createElement("button", {
     onClick: () => setShowAbout(false),
     className: `w-full py-3 rounded-lg font-semibold transition ${darkMode ? 'bg-cyan-600 hover:bg-cyan-700 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'}`
-  }, "Got It!")))), /*#__PURE__*/React.createElement("div", {
+  }, "Got It!"), /*#__PURE__*/React.createElement("p", {
+    className: `text-center text-xs mt-3 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`
+  }, "Version ", APP_VERSION)))), /*#__PURE__*/React.createElement("div", {
     className: `rounded-2xl shadow-xl p-4 sm:p-6 mb-6 backdrop-blur-sm ${darkMode ? 'bg-pool-mid/80 border border-chlorine/20' : 'bg-white/90 border border-cyan-200'}`
   }, /*#__PURE__*/React.createElement("div", {
     className: "flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3"
@@ -3775,6 +3898,8 @@ function SwimMeetScore() {
     className: "flex flex-col gap-2"
   }, /*#__PURE__*/React.createElement("input", {
     type: "text",
+    id: "template-name",
+    name: "template-name",
     value: newTemplateName,
     onChange: e => setNewTemplateName(e.target.value),
     onKeyDown: e => e.key === 'Enter' && saveTemplate(),
@@ -3810,6 +3935,8 @@ function SwimMeetScore() {
     className: "flex flex-col gap-2 mb-3"
   }, /*#__PURE__*/React.createElement("input", {
     type: "text",
+    id: "new-team-name",
+    name: "new-team-name",
     value: newTeamName,
     onChange: e => setNewTeamName(e.target.value),
     onKeyDown: e => e.key === 'Enter' && addTeam(),
@@ -3828,6 +3955,8 @@ function SwimMeetScore() {
     className: `flex items-center gap-2 px-3 py-2 rounded-lg ${darkMode ? 'bg-gray-600 text-white' : 'bg-white border border-gray-200'}`
   }, settingsEditingTeamId === team.id ? /*#__PURE__*/React.createElement("input", {
     type: "text",
+    id: `settings-edit-team-${team.id}`,
+    name: "settings-edit-team-name",
     value: settingsEditingTeamName,
     onChange: e => setSettingsEditingTeamName(e.target.value),
     onFocus: e => e.target.select(),
@@ -3867,6 +3996,8 @@ function SwimMeetScore() {
     className: `flex items-center gap-3 cursor-pointer p-3 rounded-lg transition ${darkMode ? 'hover:bg-gray-700/50' : 'hover:bg-amber-50'}`
   }, /*#__PURE__*/React.createElement("input", {
     type: "checkbox",
+    id: "team-place-limit",
+    name: "team-place-limit",
     checked: teamPlaceLimitEnabled,
     onChange: e => {
       setActiveTemplate(null);
@@ -3881,6 +4012,8 @@ function SwimMeetScore() {
     className: `flex items-center gap-3 cursor-pointer p-3 rounded-lg transition ${darkMode ? 'hover:bg-gray-700/50' : 'hover:bg-amber-50'}`
   }, /*#__PURE__*/React.createElement("input", {
     type: "checkbox",
+    id: "heat-lock",
+    name: "heat-lock",
     checked: heatLockEnabled,
     onChange: e => {
       setActiveTemplate(null);
@@ -3895,6 +4028,8 @@ function SwimMeetScore() {
     className: `flex items-center gap-3 cursor-pointer p-3 rounded-lg transition ${darkMode ? 'hover:bg-gray-700/50' : 'hover:bg-amber-50'}`
   }, /*#__PURE__*/React.createElement("input", {
     type: "checkbox",
+    id: "a-relay-only",
+    name: "a-relay-only",
     checked: aRelayOnly,
     onChange: e => {
       setActiveTemplate(null);
@@ -4056,6 +4191,8 @@ function SwimMeetScore() {
     className: `flex items-center gap-3 cursor-pointer p-2 rounded-lg transition ${darkMode ? 'hover:bg-gray-700/50' : 'hover:bg-gray-100'}`
   }, /*#__PURE__*/React.createElement("input", {
     type: "checkbox",
+    id: "dark-mode",
+    name: "dark-mode",
     checked: darkMode,
     onChange: e => setDarkMode(e.target.checked),
     className: "w-5 h-5 rounded accent-cyan-500"
@@ -4129,6 +4266,8 @@ function SwimMeetScore() {
     className: `text-base sm:text-2xl font-bold flex-shrink-0 ${index === 0 ? darkMode ? 'text-lane-gold' : 'text-amber-500' : darkMode ? 'text-slate-500' : 'text-slate-400'}`
   }, "#", index + 1), editingTeamId === team.id ? /*#__PURE__*/React.createElement("input", {
     type: "text",
+    id: `scoreboard-edit-team-${team.id}`,
+    name: "scoreboard-edit-team-name",
     value: editingTeamName,
     onChange: e => setEditingTeamName(e.target.value),
     onFocus: e => e.target.select(),
@@ -4175,7 +4314,23 @@ function SwimMeetScore() {
     title: "Email full results"
   }, /*#__PURE__*/React.createElement(Mail, {
     className: "w-4 h-4"
-  }), "Email Results")), /*#__PURE__*/React.createElement("div", {
+  }), "Email Results"), /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-1 ml-auto sm:ml-2"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: performUndo,
+    disabled: !canUndo,
+    title: "Undo (Ctrl+Z)",
+    className: `p-1.5 rounded-lg transition ${canUndo ? darkMode ? 'bg-pool-light/50 hover:bg-pool-light text-white border border-white/10' : 'bg-cyan-50 hover:bg-cyan-100 text-cyan-700 border border-cyan-200' : darkMode ? 'bg-pool-light/20 text-white/20 border border-white/5 cursor-not-allowed' : 'bg-gray-100 text-gray-300 border border-gray-200 cursor-not-allowed'}`
+  }, /*#__PURE__*/React.createElement(Undo, {
+    className: "w-4 h-4"
+  })), /*#__PURE__*/React.createElement("button", {
+    onClick: performRedo,
+    disabled: !canRedo,
+    title: "Redo (Ctrl+Y)",
+    className: `p-1.5 rounded-lg transition ${canRedo ? darkMode ? 'bg-pool-light/50 hover:bg-pool-light text-white border border-white/10' : 'bg-cyan-50 hover:bg-cyan-100 text-cyan-700 border border-cyan-200' : darkMode ? 'bg-pool-light/20 text-white/20 border border-white/5 cursor-not-allowed' : 'bg-gray-100 text-gray-300 border border-gray-200 cursor-not-allowed'}`
+  }, /*#__PURE__*/React.createElement(Redo, {
+    className: "w-4 h-4"
+  })))), /*#__PURE__*/React.createElement("div", {
     className: "flex items-center gap-2 flex-wrap mt-2"
   }, /*#__PURE__*/React.createElement("button", {
     onClick: () => {
@@ -4421,6 +4576,8 @@ function SwimMeetScore() {
     className: "flex flex-col sm:flex-row gap-2 mb-2"
   }, /*#__PURE__*/React.createElement("input", {
     type: "text",
+    id: "new-event-name",
+    name: "new-event-name",
     value: newEventName,
     onChange: e => setNewEventName(e.target.value),
     onKeyDown: e => e.key === 'Enter' && addEvent(),
@@ -4431,6 +4588,8 @@ function SwimMeetScore() {
   }), /*#__PURE__*/React.createElement("div", {
     className: "flex gap-2 flex-wrap"
   }, /*#__PURE__*/React.createElement("select", {
+    id: "new-event-type",
+    name: "new-event-type",
     value: newEventType,
     onChange: e => {
       setNewEventType(e.target.value);
@@ -4445,6 +4604,8 @@ function SwimMeetScore() {
   }, "Relay"), /*#__PURE__*/React.createElement("option", {
     value: "diving"
   }, "Diving")), /*#__PURE__*/React.createElement("select", {
+    id: "new-event-gender",
+    name: "new-event-gender",
     value: newEventGender,
     onChange: e => setNewEventGender(e.target.value),
     "aria-label": "Event gender",
