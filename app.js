@@ -1282,7 +1282,10 @@ function SwimMeetScore() {
 
   // Track online/offline status with periodic check for mobile reliability
   useEffect(() => {
-    const handleOnline = () => setIsOffline(false);
+    const handleOnline = () => {
+      setIsOffline(false);
+      setOfflineDismissed(false);
+    };
     const handleOffline = () => setIsOffline(true);
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
@@ -1299,7 +1302,10 @@ function SwimMeetScore() {
       fetch('/favicon.ico', {
         method: 'HEAD',
         cache: 'no-store'
-      }).then(() => setIsOffline(false)).catch(() => setIsOffline(true));
+      }).then(() => {
+        setIsOffline(false);
+        setOfflineDismissed(false);
+      }).catch(() => setIsOffline(true));
     };
 
     // Check connectivity every 30 seconds on mobile
@@ -1596,6 +1602,7 @@ function SwimMeetScore() {
   const [showAbout, setShowAbout] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  const [offlineDismissed, setOfflineDismissed] = useState(false);
   const [newTeamName, setNewTeamName] = useState('');
   const [darkMode, setDarkMode] = useState(() => utils.loadFromStorage('darkMode', true));
   const [scoringMode, setScoringMode] = useState(() => utils.loadFromStorage('scoringMode', 'combined'));
@@ -3415,13 +3422,21 @@ function SwimMeetScore() {
     className: "fixed top-4 left-4 right-4 z-50 flex justify-center animate-fade-slide-up"
   }, /*#__PURE__*/React.createElement("div", {
     className: `max-w-lg w-full p-4 rounded-lg flex items-center gap-3 shadow-lg ${darkMode ? 'bg-green-900 text-green-100 border border-green-700' : 'bg-green-100 text-green-800 border border-green-300'}`
-  }, /*#__PURE__*/React.createElement("span", null, "\u2713 Scores copied to clipboard!"))), isOffline && /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("span", null, "\u2713 Scores copied to clipboard!"))), isOffline && !offlineDismissed && /*#__PURE__*/React.createElement("div", {
     className: "fixed top-4 left-4 right-4 z-50 flex justify-center"
   }, /*#__PURE__*/React.createElement("div", {
     className: `max-w-lg w-full p-3 rounded-lg flex items-center gap-3 shadow-lg ${darkMode ? 'bg-cyan-900/70 text-cyan-100 border border-cyan-700' : 'bg-cyan-100 text-cyan-800 border border-cyan-300'}`
   }, /*#__PURE__*/React.createElement("span", {
     className: "text-lg"
-  }, "\uD83D\uDCF6"), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("strong", null, "Offline Mode"), " \u2014 No worries! The app works offline. Your data is saved locally."))), /*#__PURE__*/React.createElement("div", {
+  }, "\uD83D\uDCF6"), /*#__PURE__*/React.createElement("span", {
+    className: "flex-1"
+  }, /*#__PURE__*/React.createElement("strong", null, "Offline Mode"), " \u2014 No worries! The app works offline. Your data is saved locally."), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setOfflineDismissed(true),
+    className: `ml-1 p-1 rounded-full transition-colors ${darkMode ? 'hover:bg-cyan-800 text-cyan-300' : 'hover:bg-cyan-200 text-cyan-600'}`,
+    "aria-label": "Dismiss offline notification"
+  }, /*#__PURE__*/React.createElement(X, {
+    className: "w-4 h-4"
+  })))), /*#__PURE__*/React.createElement("div", {
     className: "max-w-6xl mx-auto"
   }, showConfirmDialog && /*#__PURE__*/React.createElement("div", {
     className: "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"

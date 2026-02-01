@@ -1205,7 +1205,7 @@
 
       // Track online/offline status with periodic check for mobile reliability
       useEffect(() => {
-        const handleOnline = () => setIsOffline(false);
+        const handleOnline = () => { setIsOffline(false); setOfflineDismissed(false); };
         const handleOffline = () => setIsOffline(true);
         
         window.addEventListener('online', handleOnline);
@@ -1221,7 +1221,7 @@
           
           // Try to fetch a tiny resource to confirm actual connectivity
           fetch('/favicon.ico', { method: 'HEAD', cache: 'no-store' })
-            .then(() => setIsOffline(false))
+            .then(() => { setIsOffline(false); setOfflineDismissed(false); })
             .catch(() => setIsOffline(true));
         };
         
@@ -1358,6 +1358,7 @@
       const [showAbout, setShowAbout] = useState(false);
       const [deferredPrompt, setDeferredPrompt] = useState(null);
       const [isOffline, setIsOffline] = useState(!navigator.onLine);
+      const [offlineDismissed, setOfflineDismissed] = useState(false);
       const [newTeamName, setNewTeamName] = useState('');
       const [darkMode, setDarkMode] = useState(() => utils.loadFromStorage('darkMode', true));
       const [scoringMode, setScoringMode] = useState(() => utils.loadFromStorage('scoringMode', 'combined'));
@@ -2874,11 +2875,18 @@
           )}
 
           {/* Fixed Offline Indicator */}
-          {isOffline && (
+          {isOffline && !offlineDismissed && (
             <div className="fixed top-4 left-4 right-4 z-50 flex justify-center">
               <div className={`max-w-lg w-full p-3 rounded-lg flex items-center gap-3 shadow-lg ${darkMode ? 'bg-cyan-900/70 text-cyan-100 border border-cyan-700' : 'bg-cyan-100 text-cyan-800 border border-cyan-300'}`}>
                 <span className="text-lg">📶</span>
-                <span><strong>Offline Mode</strong> — No worries! The app works offline. Your data is saved locally.</span>
+                <span className="flex-1"><strong>Offline Mode</strong> — No worries! The app works offline. Your data is saved locally.</span>
+                <button
+                  onClick={() => setOfflineDismissed(true)}
+                  className={`ml-1 p-1 rounded-full transition-colors ${darkMode ? 'hover:bg-cyan-800 text-cyan-300' : 'hover:bg-cyan-200 text-cyan-600'}`}
+                  aria-label="Dismiss offline notification"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
             </div>
           )}
