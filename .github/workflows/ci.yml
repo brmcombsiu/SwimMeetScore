@@ -223,7 +223,5 @@ jobs:
         with:
           node-version: 20
 
-      - name: Run existing tests
-        run: |
-          node tests/notification-positioning.test.js
-          node tests/template-events.test.js
+      - name: Run tests
+        run: node tests/app-logic.test.js

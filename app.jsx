@@ -2876,8 +2876,8 @@
 
           {/* Fixed Offline Indicator */}
           {isOffline && !offlineDismissed && (
-            <div className="fixed top-4 left-4 right-4 z-50 flex justify-center">
-              <div className={`max-w-lg w-full p-3 rounded-lg flex items-center gap-3 shadow-lg ${darkMode ? 'bg-cyan-900/70 text-cyan-100 border border-cyan-700' : 'bg-cyan-100 text-cyan-800 border border-cyan-300'}`}>
+            <div className="fixed top-4 left-4 right-4 z-50 flex justify-center pointer-events-none">
+              <div className={`max-w-lg w-full p-3 rounded-lg flex items-center gap-3 shadow-lg pointer-events-auto ${darkMode ? 'bg-cyan-900/70 text-cyan-100 border border-cyan-700' : 'bg-cyan-100 text-cyan-800 border border-cyan-300'}`}>
                 <span className="text-lg">📶</span>
                 <span className="flex-1"><strong>Offline Mode</strong> — No worries! The app works offline. Your data is saved locally.</span>
                 <button

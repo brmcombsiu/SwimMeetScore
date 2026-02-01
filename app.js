@@ -3423,9 +3423,9 @@ function SwimMeetScore() {
   }, /*#__PURE__*/React.createElement("div", {
     className: `max-w-lg w-full p-4 rounded-lg flex items-center gap-3 shadow-lg ${darkMode ? 'bg-green-900 text-green-100 border border-green-700' : 'bg-green-100 text-green-800 border border-green-300'}`
   }, /*#__PURE__*/React.createElement("span", null, "\u2713 Scores copied to clipboard!"))), isOffline && !offlineDismissed && /*#__PURE__*/React.createElement("div", {
-    className: "fixed top-4 left-4 right-4 z-50 flex justify-center"
+    className: "fixed top-4 left-4 right-4 z-50 flex justify-center pointer-events-none"
   }, /*#__PURE__*/React.createElement("div", {
-    className: `max-w-lg w-full p-3 rounded-lg flex items-center gap-3 shadow-lg ${darkMode ? 'bg-cyan-900/70 text-cyan-100 border border-cyan-700' : 'bg-cyan-100 text-cyan-800 border border-cyan-300'}`
+    className: `max-w-lg w-full p-3 rounded-lg flex items-center gap-3 shadow-lg pointer-events-auto ${darkMode ? 'bg-cyan-900/70 text-cyan-100 border border-cyan-700' : 'bg-cyan-100 text-cyan-800 border border-cyan-300'}`
   }, /*#__PURE__*/React.createElement("span", {
     className: "text-lg"
   }, "\uD83D\uDCF6"), /*#__PURE__*/React.createElement("span", {
