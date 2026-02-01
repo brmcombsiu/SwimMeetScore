@@ -527,71 +527,53 @@
     }
   </script>
 
-  <!-- Load scripts - service worker will serve from cache when offline -->
+  <!-- Load scripts - uses Cache API directly as fallback when SW isn't controlling -->
   <script>
-    // Load a script with one retry (no cache-busting query string so SW cache matches)
+    // Load a script: try fetch (goes through SW if controlling), then try Cache API directly
     function loadScript(src) {
-      return new Promise(function(resolve, reject) {
-        var s = document.createElement('script');
-        s.src = src;
-        s.crossOrigin = 'anonymous';
-        s.referrerPolicy = 'no-referrer';
-        s.onload = resolve;
-        s.onerror = function() {
-          // Retry once after a short delay (gives SW time to claim the page)
-          setTimeout(function() {
-            var s2 = document.createElement('script');
-            s2.src = src;
-            s2.crossOrigin = 'anonymous';
-            s2.referrerPolicy = 'no-referrer';
-            s2.onload = resolve;
-            s2.onerror = reject;
-            document.head.appendChild(s2);
-          }, 500);
-        };
-        document.head.appendChild(s);
-      });
+      // Resolve relative URLs for cache matching (Cache API needs full URLs)
+      var fullUrl = src.startsWith('http') ? src : new URL(src, location.href).href;
+      return fetch(src, { mode: src.startsWith('http') ? 'cors' : 'same-origin' })
+        .catch(function() {
+          // Network failed and SW not intercepting - read from cache directly
+          return caches.match(fullUrl);
+        })
+        .then(function(response) {
+          if (!response || !response.ok) {
+            // Response bad or missing - try cache as last resort
+            return caches.match(fullUrl).then(function(cached) {
+              if (cached) return cached;
+              throw new Error('Script not available offline: ' + src);
+            });
+          }
+          return response;
+        })
+        .then(function(response) {
+          return response.text();
+        })
+        .then(function(code) {
+          // Execute as inline script (works regardless of SW state)
+          var s = document.createElement('script');
+          s.textContent = code;
+          document.head.appendChild(s);
+        });
     }
 
-    // Wait for SW to be ready if available, then load React
-    (function() {
-      var loaded = false;
-      function loadReactScripts() {
-        if (loaded) return;
-        loaded = true;
-        return loadScript('https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js')
-          .then(function() {
-            return loadScript('https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js');
-          })
-          .then(function() {
-            // Load the app after React is ready
-            return loadScript('./app.js');
-          })
-          .catch(function(err) {
-            console.error('SwimMeetScore: Failed to load scripts', err);
-            var ls = document.getElementById('loading-screen');
-            if (ls) {
-              var txt = ls.querySelector('.loading-text');
-              if (txt) txt.textContent = 'Offline – please reload';
-            }
-          });
-      }
-
-      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-        // SW already controls the page (normal case for returning users), load immediately
-        loadReactScripts();
-      } else if ('serviceWorker' in navigator) {
-        // SW not yet controlling — wait for it to claim the page
-        navigator.serviceWorker.addEventListener('controllerchange', function() {
-          loadReactScripts();
-        });
-        // Fallback: if online or SW never claims, load after a short delay anyway
-        setTimeout(loadReactScripts, 1500);
-      } else {
-        // No SW support, load directly
-        loadReactScripts();
-      }
-    })();
+    loadScript('https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js')
+      .then(function() {
+        return loadScript('https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js');
+      })
+      .then(function() {
+        return loadScript('./app.js');
+      })
+      .catch(function(err) {
+        console.error('SwimMeetScore: Failed to load scripts', err);
+        var ls = document.getElementById('loading-screen');
+        if (ls) {
+          var txt = ls.querySelector('.loading-text');
+          if (txt) txt.textContent = 'Offline – please reload';
+        }
+      });
   </script>
   <style>
     body { 
