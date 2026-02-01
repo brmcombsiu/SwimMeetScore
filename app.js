@@ -826,7 +826,6 @@ const QuickEntryEventCard = ({
     const team0Places = getTeamPlaces(teams[0].id);
     const team1Places = getTeamPlaces(teams[1].id);
     const oneHasPlaces = team0Places.length > 0 && team1Places.length === 0 || team0Places.length === 0 && team1Places.length > 0;
-    const assignedTeam = team0Places.length > 0 ? teams[0] : teams[1];
     const unassignedTeam = team0Places.length > 0 ? teams[1] : teams[0];
     const assignedPlaces = team0Places.length > 0 ? team0Places : team1Places;
     if (oneHasPlaces) {
