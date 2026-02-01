@@ -503,78 +503,9 @@
     }
   </style>
   
-  <!-- Service Worker Registration (before script loading for offline support) -->
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
-        .then(function(registration) {
-          console.log('SwimMeetScore: Service Worker registered successfully');
-          setInterval(function() { registration.update(); }, 5 * 60 * 1000);
-          registration.addEventListener('updatefound', function() {
-            var newWorker = registration.installing;
-            if (newWorker) {
-              newWorker.addEventListener('statechange', function() {
-                if (newWorker.state === 'activated') {
-                  console.log('SwimMeetScore: New version activated');
-                }
-              });
-            }
-          });
-        })
-        .catch(function(error) {
-          console.log('SwimMeetScore: Service Worker registration failed:', error);
-        });
-    }
-  </script>
-
-  <!-- Load scripts - uses Cache API directly as fallback when SW isn't controlling -->
-  <script>
-    // Load a script: try fetch (goes through SW if controlling), then try Cache API directly
-    function loadScript(src) {
-      // Resolve relative URLs for cache matching (Cache API needs full URLs)
-      var fullUrl = src.startsWith('http') ? src : new URL(src, location.href).href;
-      return fetch(src, { mode: src.startsWith('http') ? 'cors' : 'same-origin' })
-        .catch(function() {
-          // Network failed and SW not intercepting - read from cache directly
-          return caches.match(fullUrl);
-        })
-        .then(function(response) {
-          if (!response || !response.ok) {
-            // Response bad or missing - try cache as last resort
-            return caches.match(fullUrl).then(function(cached) {
-              if (cached) return cached;
-              throw new Error('Script not available offline: ' + src);
-            });
-          }
-          return response;
-        })
-        .then(function(response) {
-          return response.text();
-        })
-        .then(function(code) {
-          // Execute as inline script (works regardless of SW state)
-          var s = document.createElement('script');
-          s.textContent = code;
-          document.head.appendChild(s);
-        });
-    }
-
-    loadScript('https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js')
-      .then(function() {
-        return loadScript('https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js');
-      })
-      .then(function() {
-        return loadScript('./app.js');
-      })
-      .catch(function(err) {
-        console.error('SwimMeetScore: Failed to load scripts', err);
-        var ls = document.getElementById('loading-screen');
-        if (ls) {
-          var txt = ls.querySelector('.loading-text');
-          if (txt) txt.textContent = 'Offline – please reload';
-        }
-      });
-  </script>
+  <!-- Load React from CDN (service worker serves from cache when offline) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <style>
     body { 
       margin: 0; 
@@ -693,5 +624,38 @@
   
   <noscript>This app requires JavaScript to run. Please enable JavaScript in your browser settings.</noscript>
   <div id="root"></div>
+  <script src="./app.js"></script>
+
+  <!-- Service Worker Registration for Offline Support -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
+          .then((registration) => {
+            console.log('SwimMeetScore: Service Worker registered successfully');
+
+            // Check for updates every 5 minutes
+            setInterval(() => {
+              registration.update();
+            }, 5 * 60 * 1000);
+
+            // When a new SW is waiting, activate it immediately
+            registration.addEventListener('updatefound', () => {
+              const newWorker = registration.installing;
+              if (newWorker) {
+                newWorker.addEventListener('statechange', () => {
+                  if (newWorker.state === 'activated') {
+                    console.log('SwimMeetScore: New version activated');
+                  }
+                });
+              }
+            });
+          })
+          .catch((error) => {
+            console.log('SwimMeetScore: Service Worker registration failed:', error);
+          });
+      });
+    }
+  </script>
 </body>
 </html>

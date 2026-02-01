@@ -1,5 +1,5 @@
 // SwimMeetScore Service Worker
-const CACHE_NAME = 'swimmeetscore-v17';
+const CACHE_NAME = 'swimmeetscore-v18';
 
 // Files to cache for offline use
 const CACHE_FILES = [
