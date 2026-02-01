@@ -1,0 +1,23 @@
+# Security headers (applied to all pages)
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+
+# Cache HTML for offline resilience (browser HTTP cache as fallback when SW fails)
+/
+  Cache-Control: max-age=3600, stale-while-revalidate=86400
+
+/index.html
+  Cache-Control: max-age=3600, stale-while-revalidate=86400
+
+# Cache static assets longer
+/app.js
+  Cache-Control: max-age=3600, stale-while-revalidate=86400
+
+/app.css
+  Cache-Control: max-age=3600, stale-while-revalidate=86400
+
+# SW should always be fresh
+/sw.js
+  Cache-Control: no-cache
