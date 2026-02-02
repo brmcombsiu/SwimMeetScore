@@ -2971,7 +2971,7 @@
                       <p className="mb-3">
                         Swim Meet Score is a free, ad-free tool for tracking scores during swim meets. Perfect for coaches, parents, and officials at high school and competitive swimming events.
                       </p>
-                      
+
                       {/* QR Code for Spectators - Meet Organizers */}
                       <div className={`p-4 rounded-lg ${darkMode ? 'bg-cyan-900/50 border border-cyan-700' : 'bg-cyan-50 border border-cyan-200'}`}>
                         <h5 className={`font-semibold mb-1 ${darkMode ? 'text-cyan-400' : 'text-cyan-700'}`}>📱 For Meet Organizers: QR Code Poster</h5>
@@ -2987,16 +2987,67 @@
                           Print QR Code Poster
                         </button>
                       </div>
-                      
+
                       <p className={`mt-6 text-sm ${darkMode ? 'text-cyan-400' : 'text-cyan-700'}`}>
                         📶 <strong>Works at pools with poor cell service!</strong> Once loaded, the app works completely offline.
                       </p>
                     </section>
 
+                    {/* ========== GETTING STARTED ========== */}
+                    <div className={`mb-8 pb-2 border-b-2 ${darkMode ? 'border-cyan-600' : 'border-blue-400'}`}>
+                      <h4 className={`text-lg font-bold ${darkMode ? 'text-cyan-400' : 'text-blue-600'}`}>Getting Started</h4>
+                      <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Everything you need to score your first meet</p>
+                    </div>
+
+                    {/* Quick Start: Scoring a Dual Meet */}
+                    <section className="mb-8">
+                      <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>⚡ Quick Start — Get scoring a Dual Meet in Under a Minute</h4>
+                      <p className={`mb-3 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>When you first open the app, it's already set up for a high school dual meet with default team names (Home Team and Away Team). Just follow these quick steps:</p>
+                      <ol className="list-decimal list-inside space-y-2">
+                        <li><strong>Confirm the "High School Dual Meet" template</strong> — Standard events and 6-4-3-2-1 scoring are preloaded.</li>
+                        <li><strong>Rename the teams</strong> — Click Home Team and Away Team to enter your actual team names.</li>
+                        <li><strong>Enter results</strong> — As each event finishes, tap the places for each team.</li>
+                        <li><strong>Watch the scoreboard update live</strong> — Scores calculate instantly as you go.</li>
+                      </ol>
+                      <div className={`mt-3 p-3 rounded-lg text-sm ${darkMode ? 'bg-green-900/30 border border-green-700/50' : 'bg-green-50 border border-green-200'}`}>
+                        <p className={`${darkMode ? 'text-green-400' : 'text-green-700'}`}>
+                          💡 <strong>Tip:</strong> Turn on "Team Mode" (toggle next to Events header) for the fastest way to enter results at dual meets — just tap place numbers directly for each team!
+                        </p>
+                      </div>
+                    </section>
+
+                    {/* How Scoring Works */}
+                    <section className="mb-8">
+                      <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>🏊 How Scoring Works</h4>
+                      <div className={`p-4 rounded-lg mb-4 ${darkMode ? 'bg-gray-700' : 'bg-blue-50'}`}>
+                        <p className="text-sm mb-3">In a swim meet, teams earn points based on where their swimmers finish in each event. Higher place = more points. At the end, the team with the most total points wins.</p>
+                        <div className={`text-sm p-3 rounded ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                          <p className="font-medium mb-1">Standard Dual Meet Scoring (6-4-3-2-1):</p>
+                          <p>• 1st place = 6 pts, 2nd = 4 pts, 3rd = 3 pts, 4th = 2 pts, 5th = 1 pt</p>
+                          <p className="mt-2 font-medium mb-1">Relay events use different points (8-4-2):</p>
+                          <p>• 1st place = 8 pts, 2nd = 4 pts, 3rd = 2 pts</p>
+                        </div>
+                        <p className={`text-xs mt-3 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                          Don't worry about memorizing points — just pick the "High School Dual Meet" template and the app handles it all!
+                        </p>
+                      </div>
+                    </section>
+
+                    {/* Two Entry Modes */}
+                    <section className="mb-8">
+                      <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>📋 Two Entry Modes</h5>
+                        <div className="text-sm space-y-2">
+                          <p><strong>Place Mode (Default):</strong> Pick teams for each place using dropdowns. Best for recording ties and meets with 3+ teams.</p>
+                          <p><strong>Team Mode:</strong> Toggle "Team Mode" next to Events header for faster mobile entry at dual meets — tap place numbers directly for each team. When you assign places for one team, the other team's places fill in automatically.</p>
+                        </div>
+                      </div>
+                    </section>
+
                     {/* Install on Phone */}
                     <section className="mb-8">
-                      <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>→📱 Install on Your Phone</h4>
-                      
+                      <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>📱 Install on Your Phone</h4>
+
                       <div className={`p-4 rounded-lg mb-4 ${darkMode ? 'bg-gray-700' : 'bg-blue-50'}`}>
                         <h5 className={`font-semibold mb-2 ${darkMode ? 'text-blue-400' : 'text-blue-700'}`}>iPhone / iPad (Safari)</h5>
                         <ol className="list-decimal list-inside space-y-1 text-sm">
@@ -3009,7 +3060,7 @@
 
                       <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-green-50'}`}>
                         <h5 className={`font-semibold mb-2 ${darkMode ? 'text-green-400' : 'text-green-700'}`}>Android (Chrome)</h5>
-                        
+
                         {deferredPrompt ? (
                           <div className="mb-3">
                             <button
@@ -3031,7 +3082,7 @@
                             <p className="text-xs">The install button appears automatically on Android Chrome. If you don't see it, you may have already installed the app, or try the manual steps below.</p>
                           </div>
                         )}
-                        
+
                         <p className={`text-xs font-medium mb-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Or install manually:</p>
                         <ol className="list-decimal list-inside space-y-1 text-sm">
                           <li>Open swimmeetscore.com in Chrome</li>
@@ -3042,28 +3093,27 @@
                       </div>
                     </section>
 
-                    {/* How to Use */}
+                    {/* Tips */}
                     <section className="mb-8">
-                      <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>🏊 How to Use</h4>
-                      <ol className="list-decimal list-inside space-y-2">
-                        <li><strong>Add Teams:</strong> Go to Settings and add your competing teams</li>
-                        <li><strong>Choose a Template:</strong> Select a preset template like "High School Dual Meet," "Conference Meet," or "Sectionals" for preset events and point systems, or customize your own</li>
-                        <li><strong>Record Results:</strong> For each event, select the team(s) that placed 1st, 2nd, 3rd, etc.</li>
-                        <li><strong>View Scores:</strong> The scoreboard updates automatically as you enter results</li>
-                      </ol>
+                      <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>💡 Tips</h4>
+                      <ul className="space-y-2">
+                        <li>• <strong>Auto-fill in Team Mode:</strong> When there are exactly 2 teams and one team has places assigned, an "Auto-fill" button appears in each event card. Pressing it assigns all remaining unoccupied places to the other team.</li>
+                        <li>• <strong>Works Offline:</strong> Once loaded, works without internet — perfect for pools with bad service!</li>
+                        <li>• <strong>Save Templates:</strong> Create custom templates for your league's specific scoring rules</li>
+                        <li>• <strong>Dark Mode:</strong> Use dark mode for better visibility at indoor pools</li>
+                        <li>• <strong>Data Persists:</strong> Your data stays saved even if you close the browser</li>
+                        <li>• <strong>Share Scores:</strong> Tap the Share button on the Scoreboard to quickly send team standings via text or social media</li>
+                        <li>• <strong>Email Results:</strong> Tap the Email Results button next to Events to send a complete meet report including final standings and all event-by-event results with places</li>
+                        <li>• <strong>Scoring Modes:</strong> Switch between Combined, Girls Only, or Boys Only scoring views</li>
+                        <li>• <strong>Clear Data:</strong> Start fresh anytime from Settings → Clear Data</li>
+                      </ul>
                     </section>
 
-                    {/* Two Entry Modes */}
-                    <section className="mb-8">
-                      <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
-                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>📋 Two Entry Modes</h5>
-                        <div className="text-sm space-y-2">
-                          <p><strong>Place Mode (Default):</strong> Pick teams for each place using dropdowns. Best for recording ties.</p>
-                          <p><strong>Team Mode:</strong> Tap place numbers for each team. Faster dual meets as you can simply select the places for one team and the scores for the other team fill in automatically.</p>
-                          <p className="mt-2"><strong>Auto-fill in Team Mode:</strong> When there are exactly 2 teams and one team has places assigned, an "Auto-fill [team name]" button appears in each event card. Pressing it assigns all remaining unoccupied places to the other team.</p>
-                        </div>
-                      </div>
-                    </section>
+                    {/* ========== ADVANCED TOPICS ========== */}
+                    <div className={`mb-8 pb-2 border-b-2 ${darkMode ? 'border-gray-600' : 'border-gray-300'}`}>
+                      <h4 className={`text-lg font-bold ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Advanced Topics</h4>
+                      <p className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>Ties, championship meets, special rules, and more</p>
+                    </div>
 
                     {/* Tie Handling */}
                     <section className="mb-8">
@@ -3071,7 +3121,7 @@
                       <p className="mb-3">
                         Swim Meet Score follows official tie-breaking rules used in competitive swimming:
                       </p>
-                      
+
                       {/* How to Record a Tie */}
                       <div className={`p-4 rounded-lg mb-4 ${darkMode ? 'bg-cyan-900/50 border border-cyan-700' : 'bg-cyan-50 border border-cyan-200'}`}>
                         <h5 className={`font-semibold mb-2 ${darkMode ? 'text-cyan-400' : 'text-cyan-700'}`}>📝 How to Record a Tie</h5>
@@ -3084,7 +3134,7 @@
                           💡 You'll see a yellow highlight and "TIE" indicator when multiple teams are selected
                         </p>
                       </div>
-                      
+
                       <div className={`p-4 rounded-lg mb-4 ${darkMode ? 'bg-gray-700' : 'bg-yellow-50'}`}>
                         <h5 className={`font-semibold mb-2 ${darkMode ? 'text-yellow-400' : 'text-yellow-700'}`}>➗ Point Splitting</h5>
                         <p className="text-sm mb-2">When swimmers tie, the points for the tied places are added together and split evenly.</p>
@@ -3125,28 +3175,13 @@
                       </div>
                     </section>
 
-                    {/* Tips */}
-                    <section className="mb-8">
-                      <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>💡 Tips</h4>
-                      <ul className="space-y-2">
-                        <li>• <strong>Team Mode:</strong> Toggle "Team Mode" next to Events header for faster mobile entry - tap place numbers directly for each team</li>
-                        <li>• <strong>Works Offline:</strong> Once loaded, works without internet - perfect for pools with bad service!</li>
-                        <li>• <strong>Save Templates:</strong> Create custom templates for your league's specific scoring rules</li>
-                        <li>• <strong>Dark Mode:</strong> Use dark mode for better visibility at indoor pools</li>
-                        <li>• <strong>Data Persists:</strong> Your data stays saved even if you close the browser</li>
-                        <li>• <strong>Share Scores:</strong> Tap the Share button on the Scoreboard to quickly send team standings via text or social media</li>
-                        <li>• <strong>Email Results:</strong> Tap the Email Results button next to Events to send a complete meet report including final standings and all event-by-event results with places</li>
-                        <li>• <strong>Clear Data:</strong> Start fresh anytime from Settings → Clear Data</li>
-                      </ul>
-                    </section>
-
                     {/* Conference/Sectionals Templates */}
                     <section className="mb-8">
                       <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>🏅 Conference & Sectionals Templates</h4>
                       <p className="mb-3">
                         These templates are designed for championship-style meets with prelims/finals heat structures.
                       </p>
-                      
+
                       <div className={`p-4 rounded-lg mb-4 ${darkMode ? 'bg-amber-900/30 border border-amber-700/50' : 'bg-amber-50 border border-amber-200'}`}>
                         <h5 className={`font-semibold mb-2 ${darkMode ? 'text-amber-400' : 'text-amber-700'}`}>Conference Meet Template</h5>
                         <ul className={`text-sm space-y-1 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
@@ -3156,7 +3191,7 @@
                           <li>• <strong>Heat Lock enabled:</strong> B Finals swimmers locked to places 9-16</li>
                         </ul>
                       </div>
-                      
+
                       <div className={`p-4 rounded-lg mb-4 ${darkMode ? 'bg-teal-900/30 border border-teal-700/50' : 'bg-teal-50 border border-teal-200'}`}>
                         <h5 className={`font-semibold mb-2 ${darkMode ? 'text-teal-400' : 'text-teal-700'}`}>Sectionals Template</h5>
                         <ul className={`text-sm space-y-1 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
@@ -3166,7 +3201,7 @@
                           <li>• <strong>Heat Lock enabled:</strong> B Finals swimmers locked to places 9-16</li>
                         </ul>
                       </div>
-                      
+
                       <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
                         <h5 className={`font-semibold mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Key Difference: Conference vs Sectionals</h5>
                         <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
@@ -3181,7 +3216,7 @@
                       <p className="mb-3">
                         Found in Settings under "Special Scoring Rules". These are visual reminders for championship meet scoring rules.
                       </p>
-                      
+
                       <div className={`p-4 rounded-lg mb-4 ${darkMode ? 'bg-amber-900/30 border border-amber-700/50' : 'bg-amber-50 border border-amber-200'}`}>
                         <h5 className={`font-semibold mb-2 ${darkMode ? 'text-amber-400' : 'text-amber-700'}`}>🔒 Heat Lock (B Finals/A Finals)</h5>
                         <p className={`text-sm mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
@@ -3191,7 +3226,7 @@
                           <strong>Note:</strong> This is a visual reminder - you still manually enter which places each team earned.
                         </p>
                       </div>
-                      
+
                       <div className={`p-4 rounded-lg ${darkMode ? 'bg-teal-900/30 border border-teal-700/50' : 'bg-teal-50 border border-teal-200'}`}>
                         <h5 className={`font-semibold mb-2 ${darkMode ? 'text-teal-400' : 'text-teal-700'}`}>🅰️ Relay Only Scoring</h5>
                         <p className={`text-sm mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
@@ -3258,20 +3293,10 @@
                       </div>
                     </section>
 
-                    {/* Scoring Modes */}
-                    <section className="mb-8">
-                      <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>📊 Scoring Modes</h4>
-                      <ul className="space-y-2">
-                        <li>• <strong>Combined:</strong> Shows total team scores (boys + girls)</li>
-                        <li>• <strong>Girls Only:</strong> Shows only girls' events and scores</li>
-                        <li>• <strong>Boys Only:</strong> Shows only boys' events and scores</li>
-                      </ul>
-                    </section>
-
                     {/* Sharing & Emailing */}
                     <section>
                       <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>📤 Sharing & Emailing Results</h4>
-                      
+
                       <div className={`p-4 rounded-lg mb-4 ${darkMode ? 'bg-cyan-900/30 border border-cyan-700/50' : 'bg-cyan-50 border border-cyan-200'}`}>
                         <h5 className={`font-semibold mb-2 ${darkMode ? 'text-cyan-400' : 'text-cyan-700'}`}>Share Button (Quick Share)</h5>
                         <p className={`text-sm mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
@@ -3281,7 +3306,7 @@
                           Best for: Quick updates during the meet, social media posts
                         </p>
                       </div>
-                      
+
                       <div className={`p-4 rounded-lg ${darkMode ? 'bg-amber-900/30 border border-amber-700/50' : 'bg-amber-50 border border-amber-200'}`}>
                         <h5 className={`font-semibold mb-2 ${darkMode ? 'text-amber-400' : 'text-amber-700'}`}>Email Results Button (Full Report)</h5>
                         <p className={`text-sm mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
