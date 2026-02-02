@@ -3004,8 +3004,8 @@
                       <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>⚡ Quick Start: Scoring a Dual Meet</h4>
                       <p className={`mb-3 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Most high school meets are dual meets (2 teams). Here's how to get scoring in under a minute:</p>
                       <ol className="list-decimal list-inside space-y-2">
-                        <li><strong>Add Your Two Teams:</strong> Go to Settings and type in both team names</li>
                         <li><strong>Pick "High School Dual Meet" Template:</strong> This loads standard events and 6-4-3-2-1 scoring automatically</li>
+                        <li><strong>Enter team names:</strong> Click on each team name and type in both names</li>
                         <li><strong>Enter Results:</strong> As each event finishes, tap the places for each team</li>
                         <li><strong>Watch the Scoreboard:</strong> Scores update live as you go!</li>
                       </ol>
@@ -3040,7 +3040,6 @@
                         <div className="text-sm space-y-2">
                           <p><strong>Place Mode (Default):</strong> Pick teams for each place using dropdowns. Best for recording ties and meets with 3+ teams.</p>
                           <p><strong>Team Mode:</strong> Toggle "Team Mode" next to Events header for faster mobile entry at dual meets — tap place numbers directly for each team. When you assign places for one team, the other team's places fill in automatically.</p>
-                          <p className="mt-2"><strong>Auto-fill in Team Mode:</strong> When there are exactly 2 teams and one team has places assigned, an "Auto-fill [team name]" button appears in each event card. Pressing it assigns all remaining unoccupied places to the other team.</p>
                         </div>
                       </div>
                     </section>
@@ -3098,7 +3097,7 @@
                     <section className="mb-8">
                       <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>💡 Tips</h4>
                       <ul className="space-y-2">
-                        <li>• <strong>Team Mode:</strong> Toggle "Team Mode" next to Events header for faster mobile entry at dual meets — tap place numbers directly for each team</li>
+                        <li>• <strong>Auto-fill in Team Mode:</strong> When there are exactly 2 teams and one team has places assigned, an "Auto-fill" button appears in each event card. Pressing it assigns all remaining unoccupied places to the other team.</li>
                         <li>• <strong>Works Offline:</strong> Once loaded, works without internet — perfect for pools with bad service!</li>
                         <li>• <strong>Save Templates:</strong> Create custom templates for your league's specific scoring rules</li>
                         <li>• <strong>Dark Mode:</strong> Use dark mode for better visibility at indoor pools</li>
