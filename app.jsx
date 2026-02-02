@@ -1317,7 +1317,7 @@
 
       // State with localStorage initialization
       const CURRENT_VERSION = 4; // Version 4 adds tie support with teamIds array
-      const APP_VERSION = '1.2.1';
+      const APP_VERSION = '1.2.2';
       
       // Check and migrate events if needed
       const initializeEvents = () => {
@@ -4245,6 +4245,7 @@
                               numPlaces={numPlaces}
                               pointSystem={pointSystem}
                               onUpdate={updateEventResult}
+                              onBulkUpdate={bulkUpdateEventResults}
                               onMoveUp={() => moveEventUp(actualIndex)}
                               onMoveDown={() => moveEventDown(actualIndex)}
                               onRemove={() => removeEvent(event.id)}
