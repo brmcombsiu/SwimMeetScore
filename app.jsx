@@ -3001,13 +3001,13 @@
 
                     {/* Quick Start: Scoring a Dual Meet */}
                     <section className="mb-8">
-                      <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>⚡ Quick Start: Scoring a Dual Meet</h4>
-                      <p className={`mb-3 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Most high school meets are dual meets (2 teams). Here's how to get scoring in under a minute:</p>
+                      <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>⚡ Quick Start — Get scoring a Dual Meet in Under a Minute</h4>
+                      <p className={`mb-3 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>When you first open the app, it's already set up for a high school dual meet with default team names (Home Team and Away Team). Just follow these quick steps:</p>
                       <ol className="list-decimal list-inside space-y-2">
-                        <li><strong>Pick "High School Dual Meet" Template:</strong> This loads standard events and 6-4-3-2-1 scoring automatically</li>
-                        <li><strong>Enter team names:</strong> Click on each team name and type in both names</li>
-                        <li><strong>Enter Results:</strong> As each event finishes, tap the places for each team</li>
-                        <li><strong>Watch the Scoreboard:</strong> Scores update live as you go!</li>
+                        <li><strong>Confirm the "High School Dual Meet" template</strong> — Standard events and 6-4-3-2-1 scoring are preloaded.</li>
+                        <li><strong>Rename the teams</strong> — Click Home Team and Away Team to enter your actual team names.</li>
+                        <li><strong>Enter results</strong> — As each event finishes, tap the places for each team.</li>
+                        <li><strong>Watch the scoreboard update live</strong> — Scores calculate instantly as you go.</li>
                       </ol>
                       <div className={`mt-3 p-3 rounded-lg text-sm ${darkMode ? 'bg-green-900/30 border border-green-700/50' : 'bg-green-50 border border-green-200'}`}>
                         <p className={`${darkMode ? 'text-green-400' : 'text-green-700'}`}>
