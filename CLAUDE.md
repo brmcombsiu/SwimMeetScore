@@ -2,9 +2,10 @@
 
 ## Version Bumping
 
-Always bump the app version when making code changes:
+Always bump the app version when making code changes. Update **all three** locations in the same commit:
 - `package.json` → `"version"` field
 - `app.jsx` → `APP_VERSION` constant
+- `index.html` → `"softwareVersion"` in the JSON-LD schema
 
 Use semantic versioning: patch for fixes, minor for features, major for breaking changes.
 
