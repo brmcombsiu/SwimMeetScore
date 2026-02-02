@@ -517,7 +517,8 @@ const PointInput = ({
   onChange,
   onBlur,
   place,
-  darkMode
+  darkMode,
+  idPrefix = ''
 }) => {
   const handleDecrement = () => {
     const newValue = Math.max(0, (parseInt(value, 10) || 0) - 1);
@@ -542,7 +543,7 @@ const PointInput = ({
   return /*#__PURE__*/React.createElement("div", {
     className: `p-1.5 sm:p-2 rounded-lg ${darkMode ? 'bg-gray-600' : 'bg-white'}`
   }, /*#__PURE__*/React.createElement("label", {
-    htmlFor: `point-input-${place}`,
+    htmlFor: `point-input-${idPrefix}${place}`,
     className: `text-xs font-medium block mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`
   }, placeLabel), /*#__PURE__*/React.createElement("div", {
     className: "flex items-center justify-center"
@@ -563,8 +564,8 @@ const PointInput = ({
     className: "w-3 h-3"
   })), /*#__PURE__*/React.createElement("input", {
     type: "number",
-    id: `point-input-${place}`,
-    name: `point-input-${place}`,
+    id: `point-input-${idPrefix}${place}`,
+    name: `point-input-${idPrefix}${place}`,
     inputMode: "numeric",
     pattern: "[0-9]*",
     min: "0",
@@ -1014,6 +1015,19 @@ const BulkEntryModal = ({
   });
   const [selectedTeam, setSelectedTeam] = useState(teams[0]?.id || null);
   const [autoFillEnabled, setAutoFillEnabled] = useState(teams.length === 2);
+
+  // Sync state when teams prop changes (e.g., after clearing data)
+  useEffect(() => {
+    setAutoFillEnabled(teams.length === 2);
+    setSelectedTeam(teams[0]?.id || null);
+    setAllSelections(prev => {
+      const updated = {};
+      teams.forEach(t => {
+        updated[t.id] = prev[t.id] || [];
+      });
+      return updated;
+    });
+  }, [teams.map(t => t.id).join(',')]);
   const selectedPlaces = allSelections[selectedTeam] || [];
   const togglePlace = place => {
     triggerHaptic('light');
@@ -1548,7 +1562,7 @@ function SwimMeetScore() {
 
   // State with localStorage initialization
   const CURRENT_VERSION = 4; // Version 4 adds tie support with teamIds array
-  const APP_VERSION = '1.2.0';
+  const APP_VERSION = '1.2.1';
 
   // Check and migrate events if needed
   const initializeEvents = () => {
@@ -3502,11 +3516,53 @@ function SwimMeetScore() {
     className: "w-5 h-5"
   }), "Print QR Code Poster")), /*#__PURE__*/React.createElement("p", {
     className: `mt-6 text-sm ${darkMode ? 'text-cyan-400' : 'text-cyan-700'}`
-  }, "\uD83D\uDCF6 ", /*#__PURE__*/React.createElement("strong", null, "Works at pools with poor cell service!"), " Once loaded, the app works completely offline.")), /*#__PURE__*/React.createElement("section", {
+  }, "\uD83D\uDCF6 ", /*#__PURE__*/React.createElement("strong", null, "Works at pools with poor cell service!"), " Once loaded, the app works completely offline.")), /*#__PURE__*/React.createElement("div", {
+    className: `mb-8 pb-2 border-b-2 ${darkMode ? 'border-cyan-600' : 'border-blue-400'}`
+  }, /*#__PURE__*/React.createElement("h4", {
+    className: `text-lg font-bold ${darkMode ? 'text-cyan-400' : 'text-blue-600'}`
+  }, "Getting Started"), /*#__PURE__*/React.createElement("p", {
+    className: `text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`
+  }, "Everything you need to score your first meet")), /*#__PURE__*/React.createElement("section", {
     className: "mb-8"
   }, /*#__PURE__*/React.createElement("h4", {
     className: `text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`
-  }, "\u2192\uD83D\uDCF1 Install on Your Phone"), /*#__PURE__*/React.createElement("div", {
+  }, "\u26A1 Quick Start \u2014 Get scoring a Dual Meet in Under a Minute"), /*#__PURE__*/React.createElement("p", {
+    className: `mb-3 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`
+  }, "When you first open the app, it's already set up for a high school dual meet with default team names (Home Team and Away Team). Just follow these quick steps:"), /*#__PURE__*/React.createElement("ol", {
+    className: "list-decimal list-inside space-y-2"
+  }, /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("strong", null, "Confirm the \"High School Dual Meet\" template"), " \u2014 Standard events and 6-4-3-2-1 scoring are preloaded."), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("strong", null, "Rename the teams"), " \u2014 Click Home Team and Away Team to enter your actual team names."), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("strong", null, "Enter results"), " \u2014 As each event finishes, tap the places for each team."), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("strong", null, "Watch the scoreboard update live"), " \u2014 Scores calculate instantly as you go.")), /*#__PURE__*/React.createElement("div", {
+    className: `mt-3 p-3 rounded-lg text-sm ${darkMode ? 'bg-green-900/30 border border-green-700/50' : 'bg-green-50 border border-green-200'}`
+  }, /*#__PURE__*/React.createElement("p", {
+    className: `${darkMode ? 'text-green-400' : 'text-green-700'}`
+  }, "\uD83D\uDCA1 ", /*#__PURE__*/React.createElement("strong", null, "Tip:"), " Turn on \"Team Mode\" (toggle next to Events header) for the fastest way to enter results at dual meets \u2014 just tap place numbers directly for each team!"))), /*#__PURE__*/React.createElement("section", {
+    className: "mb-8"
+  }, /*#__PURE__*/React.createElement("h4", {
+    className: `text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`
+  }, "\uD83C\uDFCA How Scoring Works"), /*#__PURE__*/React.createElement("div", {
+    className: `p-4 rounded-lg mb-4 ${darkMode ? 'bg-gray-700' : 'bg-blue-50'}`
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "text-sm mb-3"
+  }, "In a swim meet, teams earn points based on where their swimmers finish in each event. Higher place = more points. At the end, the team with the most total points wins."), /*#__PURE__*/React.createElement("div", {
+    className: `text-sm p-3 rounded ${darkMode ? 'bg-gray-800' : 'bg-white'}`
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "font-medium mb-1"
+  }, "Standard Dual Meet Scoring (6-4-3-2-1):"), /*#__PURE__*/React.createElement("p", null, "\u2022 1st place = 6 pts, 2nd = 4 pts, 3rd = 3 pts, 4th = 2 pts, 5th = 1 pt"), /*#__PURE__*/React.createElement("p", {
+    className: "mt-2 font-medium mb-1"
+  }, "Relay events use different points (8-4-2):"), /*#__PURE__*/React.createElement("p", null, "\u2022 1st place = 8 pts, 2nd = 4 pts, 3rd = 2 pts")), /*#__PURE__*/React.createElement("p", {
+    className: `text-xs mt-3 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`
+  }, "Don't worry about memorizing points \u2014 just pick the \"High School Dual Meet\" template and the app handles it all!"))), /*#__PURE__*/React.createElement("section", {
+    className: "mb-8"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: `p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`
+  }, /*#__PURE__*/React.createElement("h5", {
+    className: `font-semibold mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`
+  }, "\uD83D\uDCCB Two Entry Modes"), /*#__PURE__*/React.createElement("div", {
+    className: "text-sm space-y-2"
+  }, /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("strong", null, "Place Mode (Default):"), " Pick teams for each place using dropdowns. Best for recording ties and meets with 3+ teams."), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("strong", null, "Team Mode:"), " Toggle \"Team Mode\" next to Events header for faster mobile entry at dual meets \u2014 tap place numbers directly for each team. When you assign places for one team, the other team's places fill in automatically.")))), /*#__PURE__*/React.createElement("section", {
+    className: "mb-8"
+  }, /*#__PURE__*/React.createElement("h4", {
+    className: `text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`
+  }, "\uD83D\uDCF1 Install on Your Phone"), /*#__PURE__*/React.createElement("div", {
     className: `p-4 rounded-lg mb-4 ${darkMode ? 'bg-gray-700' : 'bg-blue-50'}`
   }, /*#__PURE__*/React.createElement("h5", {
     className: `font-semibold mb-2 ${darkMode ? 'text-blue-400' : 'text-blue-700'}`
@@ -3547,19 +3603,15 @@ function SwimMeetScore() {
     className: "mb-8"
   }, /*#__PURE__*/React.createElement("h4", {
     className: `text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`
-  }, "\uD83C\uDFCA How to Use"), /*#__PURE__*/React.createElement("ol", {
-    className: "list-decimal list-inside space-y-2"
-  }, /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("strong", null, "Add Teams:"), " Go to Settings and add your competing teams"), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("strong", null, "Choose a Template:"), " Select a preset template like \"High School Dual Meet,\" \"Conference Meet,\" or \"Sectionals\" for preset events and point systems, or customize your own"), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("strong", null, "Record Results:"), " For each event, select the team(s) that placed 1st, 2nd, 3rd, etc."), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("strong", null, "View Scores:"), " The scoreboard updates automatically as you enter results"))), /*#__PURE__*/React.createElement("section", {
-    className: "mb-8"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: `p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`
-  }, /*#__PURE__*/React.createElement("h5", {
-    className: `font-semibold mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`
-  }, "\uD83D\uDCCB Two Entry Modes"), /*#__PURE__*/React.createElement("div", {
-    className: "text-sm space-y-2"
-  }, /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("strong", null, "Place Mode (Default):"), " Pick teams for each place using dropdowns. Best for recording ties."), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("strong", null, "Team Mode:"), " Tap place numbers for each team. Faster dual meets as you can simply select the places for one team and the scores for the other team fill in automatically."), /*#__PURE__*/React.createElement("p", {
-    className: "mt-2"
-  }, /*#__PURE__*/React.createElement("strong", null, "Auto-fill in Team Mode:"), " When there are exactly 2 teams and one team has places assigned, an \"Auto-fill [team name]\" button appears in each event card. Pressing it assigns all remaining unoccupied places to the other team.")))), /*#__PURE__*/React.createElement("section", {
+  }, "\uD83D\uDCA1 Tips"), /*#__PURE__*/React.createElement("ul", {
+    className: "space-y-2"
+  }, /*#__PURE__*/React.createElement("li", null, "\u2022 ", /*#__PURE__*/React.createElement("strong", null, "Auto-fill in Team Mode:"), " When there are exactly 2 teams and one team has places assigned, an \"Auto-fill\" button appears in each event card. Pressing it assigns all remaining unoccupied places to the other team."), /*#__PURE__*/React.createElement("li", null, "\u2022 ", /*#__PURE__*/React.createElement("strong", null, "Works Offline:"), " Once loaded, works without internet \u2014 perfect for pools with bad service!"), /*#__PURE__*/React.createElement("li", null, "\u2022 ", /*#__PURE__*/React.createElement("strong", null, "Save Templates:"), " Create custom templates for your league's specific scoring rules"), /*#__PURE__*/React.createElement("li", null, "\u2022 ", /*#__PURE__*/React.createElement("strong", null, "Dark Mode:"), " Use dark mode for better visibility at indoor pools"), /*#__PURE__*/React.createElement("li", null, "\u2022 ", /*#__PURE__*/React.createElement("strong", null, "Data Persists:"), " Your data stays saved even if you close the browser"), /*#__PURE__*/React.createElement("li", null, "\u2022 ", /*#__PURE__*/React.createElement("strong", null, "Share Scores:"), " Tap the Share button on the Scoreboard to quickly send team standings via text or social media"), /*#__PURE__*/React.createElement("li", null, "\u2022 ", /*#__PURE__*/React.createElement("strong", null, "Email Results:"), " Tap the Email Results button next to Events to send a complete meet report including final standings and all event-by-event results with places"), /*#__PURE__*/React.createElement("li", null, "\u2022 ", /*#__PURE__*/React.createElement("strong", null, "Scoring Modes:"), " Switch between Combined, Girls Only, or Boys Only scoring views"), /*#__PURE__*/React.createElement("li", null, "\u2022 ", /*#__PURE__*/React.createElement("strong", null, "Clear Data:"), " Start fresh anytime from Settings \u2192 Clear Data"))), /*#__PURE__*/React.createElement("div", {
+    className: `mb-8 pb-2 border-b-2 ${darkMode ? 'border-gray-600' : 'border-gray-300'}`
+  }, /*#__PURE__*/React.createElement("h4", {
+    className: `text-lg font-bold ${darkMode ? 'text-gray-400' : 'text-gray-500'}`
+  }, "Advanced Topics"), /*#__PURE__*/React.createElement("p", {
+    className: `text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'}`
+  }, "Ties, championship meets, special rules, and more")), /*#__PURE__*/React.createElement("section", {
     className: "mb-8"
   }, /*#__PURE__*/React.createElement("h4", {
     className: `text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`
@@ -3610,12 +3662,6 @@ function SwimMeetScore() {
   }, "(skipped - consumed by tie)")), /*#__PURE__*/React.createElement("p", null, "\u2022 3rd Place: Team A \u2192 Gets 3 pts"), /*#__PURE__*/React.createElement("p", null, "\u2022 4th Place: Team B \u2192 Gets 2 pts"), /*#__PURE__*/React.createElement("p", null, "\u2022 5th Place: Team A \u2192 Gets 1 pt"), /*#__PURE__*/React.createElement("p", {
     className: "mt-2 font-medium"
   }, "Final: Team A = 9 pts, Team B = 7 pts")))), /*#__PURE__*/React.createElement("section", {
-    className: "mb-8"
-  }, /*#__PURE__*/React.createElement("h4", {
-    className: `text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`
-  }, "\uD83D\uDCA1 Tips"), /*#__PURE__*/React.createElement("ul", {
-    className: "space-y-2"
-  }, /*#__PURE__*/React.createElement("li", null, "\u2022 ", /*#__PURE__*/React.createElement("strong", null, "Team Mode:"), " Toggle \"Team Mode\" next to Events header for faster mobile entry - tap place numbers directly for each team"), /*#__PURE__*/React.createElement("li", null, "\u2022 ", /*#__PURE__*/React.createElement("strong", null, "Works Offline:"), " Once loaded, works without internet - perfect for pools with bad service!"), /*#__PURE__*/React.createElement("li", null, "\u2022 ", /*#__PURE__*/React.createElement("strong", null, "Save Templates:"), " Create custom templates for your league's specific scoring rules"), /*#__PURE__*/React.createElement("li", null, "\u2022 ", /*#__PURE__*/React.createElement("strong", null, "Dark Mode:"), " Use dark mode for better visibility at indoor pools"), /*#__PURE__*/React.createElement("li", null, "\u2022 ", /*#__PURE__*/React.createElement("strong", null, "Data Persists:"), " Your data stays saved even if you close the browser"), /*#__PURE__*/React.createElement("li", null, "\u2022 ", /*#__PURE__*/React.createElement("strong", null, "Share Scores:"), " Tap the Share button on the Scoreboard to quickly send team standings via text or social media"), /*#__PURE__*/React.createElement("li", null, "\u2022 ", /*#__PURE__*/React.createElement("strong", null, "Email Results:"), " Tap the Email Results button next to Events to send a complete meet report including final standings and all event-by-event results with places"), /*#__PURE__*/React.createElement("li", null, "\u2022 ", /*#__PURE__*/React.createElement("strong", null, "Clear Data:"), " Start fresh anytime from Settings \u2192 Clear Data"))), /*#__PURE__*/React.createElement("section", {
     className: "mb-8"
   }, /*#__PURE__*/React.createElement("h4", {
     className: `text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`
@@ -3703,13 +3749,7 @@ function SwimMeetScore() {
     className: `text-sm mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`
   }, "When Team Place Limit is enabled, after advancing places due to a DQ in a relay, the team limit rule still applies."), /*#__PURE__*/React.createElement("p", {
     className: `text-xs mt-2 ${darkMode ? 'text-purple-300' : 'text-purple-600'}`
-  }, /*#__PURE__*/React.createElement("strong", null, "Key point:"), " The app automatically recalculates scoring whenever you change place assignments. Just update the placements after the DQ and the limit rules will be applied automatically."))), /*#__PURE__*/React.createElement("section", {
-    className: "mb-8"
-  }, /*#__PURE__*/React.createElement("h4", {
-    className: `text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`
-  }, "\uD83D\uDCCA Scoring Modes"), /*#__PURE__*/React.createElement("ul", {
-    className: "space-y-2"
-  }, /*#__PURE__*/React.createElement("li", null, "\u2022 ", /*#__PURE__*/React.createElement("strong", null, "Combined:"), " Shows total team scores (boys + girls)"), /*#__PURE__*/React.createElement("li", null, "\u2022 ", /*#__PURE__*/React.createElement("strong", null, "Girls Only:"), " Shows only girls' events and scores"), /*#__PURE__*/React.createElement("li", null, "\u2022 ", /*#__PURE__*/React.createElement("strong", null, "Boys Only:"), " Shows only boys' events and scores"))), /*#__PURE__*/React.createElement("section", null, /*#__PURE__*/React.createElement("h4", {
+  }, /*#__PURE__*/React.createElement("strong", null, "Key point:"), " The app automatically recalculates scoring whenever you change place assignments. Just update the placements after the DQ and the limit rules will be applied automatically."))), /*#__PURE__*/React.createElement("section", null, /*#__PURE__*/React.createElement("h4", {
     className: `text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`
   }, "\uD83D\uDCE4 Sharing & Emailing Results"), /*#__PURE__*/React.createElement("div", {
     className: `p-4 rounded-lg mb-4 ${darkMode ? 'bg-cyan-900/30 border border-cyan-700/50' : 'bg-cyan-50 border border-cyan-200'}`
@@ -4144,6 +4184,7 @@ function SwimMeetScore() {
   }).map(place => /*#__PURE__*/React.createElement(PointInput, {
     key: place,
     place: place,
+    idPrefix: "diving-",
     value: divingPointSystem[place] ?? 0,
     onChange: value => {
       setActiveTemplate(null);
@@ -4164,6 +4205,7 @@ function SwimMeetScore() {
   }).map(place => /*#__PURE__*/React.createElement(PointInput, {
     key: place,
     place: place,
+    idPrefix: "individual-",
     value: individualPointSystem[place] ?? 0,
     onChange: value => {
       setActiveTemplate(null);
@@ -4184,6 +4226,7 @@ function SwimMeetScore() {
   }).map(place => /*#__PURE__*/React.createElement(PointInput, {
     key: place,
     place: place,
+    idPrefix: "relay-",
     value: relayPointSystem[place] ?? 0,
     onChange: value => {
       setActiveTemplate(null);

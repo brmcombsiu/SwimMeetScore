@@ -347,7 +347,7 @@
     };
 
     // Mobile-friendly point input for scoring systems
-    const PointInput = ({ value, onChange, onBlur, place, darkMode }) => {
+    const PointInput = ({ value, onChange, onBlur, place, darkMode, idPrefix = '' }) => {
       const handleDecrement = () => {
         const newValue = Math.max(0, (parseInt(value, 10) || 0) - 1);
         onChange(newValue);
@@ -374,7 +374,7 @@
 
       return (
         <div className={`p-1.5 sm:p-2 rounded-lg ${darkMode ? 'bg-gray-600' : 'bg-white'}`}>
-          <label htmlFor={`point-input-${place}`} className={`text-xs font-medium block mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+          <label htmlFor={`point-input-${idPrefix}${place}`} className={`text-xs font-medium block mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
             {placeLabel}
           </label>
           <div className="flex items-center justify-center">
@@ -393,8 +393,8 @@
             </button>
             <input
               type="number"
-              id={`point-input-${place}`}
-              name={`point-input-${place}`}
+              id={`point-input-${idPrefix}${place}`}
+              name={`point-input-${idPrefix}${place}`}
               inputMode="numeric"
               pattern="[0-9]*"
               min="0"
@@ -885,7 +885,20 @@
       
       const [selectedTeam, setSelectedTeam] = useState(teams[0]?.id || null);
       const [autoFillEnabled, setAutoFillEnabled] = useState(teams.length === 2);
-      
+
+      // Sync state when teams prop changes (e.g., after clearing data)
+      useEffect(() => {
+        setAutoFillEnabled(teams.length === 2);
+        setSelectedTeam(teams[0]?.id || null);
+        setAllSelections(prev => {
+          const updated = {};
+          teams.forEach(t => {
+            updated[t.id] = prev[t.id] || [];
+          });
+          return updated;
+        });
+      }, [teams.map(t => t.id).join(',')]);
+
       const selectedPlaces = allSelections[selectedTeam] || [];
       
       const togglePlace = (place) => {
@@ -1304,7 +1317,7 @@
 
       // State with localStorage initialization
       const CURRENT_VERSION = 4; // Version 4 adds tie support with teamIds array
-      const APP_VERSION = '1.2.0';
+      const APP_VERSION = '1.2.1';
       
       // Check and migrate events if needed
       const initializeEvents = () => {
@@ -3813,6 +3826,7 @@
                             <PointInput
                               key={place}
                               place={place}
+                              idPrefix="diving-"
                               value={divingPointSystem[place] ?? 0}
                               onChange={(value) => {
                                 setActiveTemplate(null);
@@ -3833,6 +3847,7 @@
                             <PointInput
                               key={place}
                               place={place}
+                              idPrefix="individual-"
                               value={individualPointSystem[place] ?? 0}
                               onChange={(value) => {
                                 setActiveTemplate(null);
@@ -3853,6 +3868,7 @@
                             <PointInput
                               key={place}
                               place={place}
+                              idPrefix="relay-"
                               value={relayPointSystem[place] ?? 0}
                               onChange={(value) => {
                                 setActiveTemplate(null);
