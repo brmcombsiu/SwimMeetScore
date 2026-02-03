@@ -1432,7 +1432,7 @@
       });
       const [newTemplateName, setNewTemplateName] = useState('');
       const [showSaveTemplate, setShowSaveTemplate] = useState(false);
-      const [shareSuccess, setShareSuccess] = useState(false);
+      const [shareSuccess, setShareSuccess] = useState(null);
       const [showMeetHistory, setShowMeetHistory] = useState(false);
       const [savedMeets, setSavedMeets] = useState(() => {
         const loaded = utils.loadFromStorage('savedMeets', []);
@@ -2710,9 +2710,8 @@
         try {
           await navigator.clipboard.writeText(text);
           setError(null);
-          // Show success message briefly using error state (we'll style it differently)
-          setShareSuccess(true);
-          setTimeout(() => setShareSuccess(false), 3000);
+          setShareSuccess('Scores copied to clipboard!');
+          setTimeout(() => setShareSuccess(null), 3000);
         } catch (err) {
           setError('Failed to copy to clipboard');
         }
@@ -2976,7 +2975,7 @@
         html += 'tr:nth-child(even) { background: #f8fffe; }';
         html += '.tie { font-style: italic; color: #666; }';
         html += '.footer { text-align: center; margin-top: 32px; padding-top: 16px; border-top: 1px solid #ddd; color: #888; font-size: 12px; }';
-        html += '@media print { body { padding: 0; } }';
+        html += '@page { size: auto; margin: 0.5in; } @media print { body { padding: 0; } }';
         html += '</style></head><body>';
 
         html += '<h1>Swim Meet Results' + modeLabel + '</h1>';
@@ -3116,8 +3115,8 @@
                 if (s.teamPlaceLimitEnabled !== undefined) setTeamPlaceLimitEnabled(s.teamPlaceLimitEnabled);
                 if (s.activeTemplate) setActiveTemplate(s.activeTemplate);
               }
-              setShareSuccess(true);
-              setTimeout(() => setShareSuccess(false), 3000);
+              setShareSuccess('Meet loaded successfully!');
+              setTimeout(() => setShareSuccess(null), 3000);
             } catch (err) {
               setError('Could not read meet file. Make sure it is a valid .json file.');
             }
@@ -3156,8 +3155,8 @@
         const updated = [meetEntry, ...savedMeets].slice(0, 20); // Keep max 20 meets
         setSavedMeets(updated);
         utils.saveToStorage('savedMeets', updated);
-        setShareSuccess(true);
-        setTimeout(() => setShareSuccess(false), 3000);
+        setShareSuccess('Meet saved to history!');
+        setTimeout(() => setShareSuccess(null), 3000);
       };
 
       // Load a meet from history
@@ -3243,7 +3242,7 @@
           {shareSuccess && (
             <div className="fixed top-4 left-4 right-4 z-50 flex justify-center animate-fade-slide-up">
               <div className={`max-w-lg w-full p-4 rounded-lg flex items-center gap-3 shadow-lg ${darkMode ? 'bg-green-900 text-green-100 border border-green-700' : 'bg-green-100 text-green-800 border border-green-300'}`}>
-                <span>✓ Scores copied to clipboard!</span>
+                <span>✓ {shareSuccess}</span>
               </div>
             </div>
           )}
@@ -3552,7 +3551,7 @@
 
                     {/* Conference/Sectionals Templates */}
                     <section className="mb-8">
-                      <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>🏅 Conference & Sectionals Templates</h4>
+                      <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>🏅 Conference & Sectionals/State Templates</h4>
                       <p className="mb-3">
                         These templates are designed for championship-style meets with prelims/finals heat structures.
                       </p>
@@ -3568,7 +3567,7 @@
                       </div>
 
                       <div className={`p-4 rounded-lg mb-4 ${darkMode ? 'bg-teal-900/30 border border-teal-700/50' : 'bg-teal-50 border border-teal-200'}`}>
-                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-teal-400' : 'text-teal-700'}`}>Sectionals Template</h5>
+                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-teal-400' : 'text-teal-700'}`}>Sectionals/State Template</h5>
                         <ul className={`text-sm space-y-1 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                           <li>• <strong>Individual Events:</strong> 16 places scored (20-17-16-15-14-13-12-11-9-7-6-5-4-3-2-1)</li>
                           <li>• <strong>Relays:</strong> A-relay only, places = number of teams, double points</li>
@@ -3578,9 +3577,9 @@
                       </div>
 
                       <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
-                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Key Difference: Conference vs Sectionals</h5>
+                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Key Difference: Conference vs Sectionals/State</h5>
                         <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                          Conference scores relays to a fixed 8 places. Sectionals relay places dynamically match the number of teams (since only A-relays are allowed). Both use double points for relays compared to individual events.
+                          Conference scores relays to a fixed 8 places. Sectionals/State relay places dynamically match the number of teams (since only A-relays are allowed). Both use double points for relays compared to individual events.
                         </p>
                       </div>
                     </section>
@@ -3697,6 +3696,51 @@
                           Best for: Post-meet reports to coaches, parents, athletic directors
                         </p>
                       </div>
+
+                      <div className={`p-4 rounded-lg ${darkMode ? 'bg-green-900/30 border border-green-700/50' : 'bg-green-50 border border-green-200'}`}>
+                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-green-400' : 'text-green-700'}`}>Export (PDF & CSV)</h5>
+                        <p className={`text-sm mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                          The Export button next to Email Results lets you download meet results in different formats:
+                        </p>
+                        <ul className={`text-sm space-y-1 ml-4 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                          <li>• <strong>PDF:</strong> Opens a printable report you can save as PDF or print for officials</li>
+                          <li>• <strong>CSV:</strong> Downloads a spreadsheet file compatible with Excel, Google Sheets, TeamUnify, or Hy-Tek</li>
+                          <li>• <strong>Save Meet File:</strong> Downloads meet data as a .json file for backup</li>
+                        </ul>
+                        <p className={`text-xs mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                          Best for: Printing results, uploading to team management software, backing up data
+                        </p>
+                      </div>
+
+                      <div className={`p-4 rounded-lg ${darkMode ? 'bg-purple-900/30 border border-purple-700/50' : 'bg-purple-50 border border-purple-200'}`}>
+                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-purple-400' : 'text-purple-700'}`}>Save/Load Meet Files</h5>
+                        <p className={`text-sm mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                          Found in Settings under Export & Save. Protects your data from being lost if you clear your browser cache:
+                        </p>
+                        <ul className={`text-sm space-y-1 ml-4 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                          <li>• <strong>Save Meet to File:</strong> Downloads your entire meet (teams, events, scores, settings) as a .json file</li>
+                          <li>• <strong>Load Meet from File:</strong> Restores a previously saved meet file — great for moving data between devices</li>
+                        </ul>
+                        <p className={`text-xs mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                          Best for: Backing up before clearing cache, transferring a meet from phone to laptop
+                        </p>
+                      </div>
+
+                      <div className={`p-4 rounded-lg ${darkMode ? 'bg-indigo-900/30 border border-indigo-700/50' : 'bg-indigo-50 border border-indigo-200'}`}>
+                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-indigo-400' : 'text-indigo-700'}`}>Meet History</h5>
+                        <p className={`text-sm mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                          Found in Settings under Meet History. Lets you save and review past meets without leaving the app:
+                        </p>
+                        <ul className={`text-sm space-y-1 ml-4 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                          <li>• Save up to 20 past meets in your browser</li>
+                          <li>• Each entry shows team names, date, and current leader</li>
+                          <li>• Load any saved meet to review or continue scoring</li>
+                          <li>• Delete old meets you no longer need</li>
+                        </ul>
+                        <p className={`text-xs mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                          Best for: Keeping a record of your season, reviewing past results
+                        </p>
+                      </div>
                     </section>
                   </div>
 
@@ -3802,7 +3846,7 @@
                   <CollapsibleSection
                     id="scoring-templates"
                     title="Scoring Templates"
-                    description={activeTemplate ? `Using: ${{high_school:'HS Dual Meet',conference:'Conference',sectionals:'Sectionals'}[activeTemplate] || (activeTemplate.startsWith('usa_swimming_') ? 'USA Swimming ' + activeTemplate.split('_')[2] + '-Lane' : activeTemplate.startsWith('custom_') ? (savedTemplates.find(t => 'custom_' + t.id === activeTemplate) || {}).name || 'Custom' : activeTemplate.replace(/_/g, ' '))}` : "Quick presets for common meets"}
+                    description={activeTemplate ? `Using: ${{high_school:'HS Dual Meet',conference:'Conference',sectionals:'Sectionals/State'}[activeTemplate] || (activeTemplate.startsWith('usa_swimming_') ? 'USA Swimming ' + activeTemplate.split('_')[2] + '-Lane' : activeTemplate.startsWith('custom_') ? (savedTemplates.find(t => 'custom_' + t.id === activeTemplate) || {}).name || 'Custom' : activeTemplate.replace(/_/g, ' '))}` : "Quick presets for common meets"}
                     isCollapsed={collapsedSections['scoring-templates']}
                     onToggle={toggleSection}
                     darkMode={darkMode}
@@ -3817,7 +3861,7 @@
                         {[
                           { label: 'HS Dual Meet', key: 'high_school', onClick: loadHighSchoolMeet, desc: '2 teams · 5 places', color: 'pink' },
                           { label: 'Conference', key: 'conference', onClick: loadConferenceMeet, desc: '8 teams · 16 places', color: 'amber' },
-                          { label: 'Sectionals', key: 'sectionals', onClick: loadSectionalsMeet, desc: '10 teams · 16 places', color: 'teal' },
+                          { label: 'Sectionals/State', key: 'sectionals', onClick: loadSectionalsMeet, desc: '10 teams · 16 places', color: 'teal' },
                         ].map(tmpl => {
                           const isActive = activeTemplate === tmpl.key;
                           const colorMap = {

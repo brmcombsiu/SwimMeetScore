@@ -1720,7 +1720,7 @@ function SwimMeetScore() {
   });
   const [newTemplateName, setNewTemplateName] = useState('');
   const [showSaveTemplate, setShowSaveTemplate] = useState(false);
-  const [shareSuccess, setShareSuccess] = useState(false);
+  const [shareSuccess, setShareSuccess] = useState(null);
   const [showMeetHistory, setShowMeetHistory] = useState(false);
   const [savedMeets, setSavedMeets] = useState(() => {
     const loaded = utils.loadFromStorage('savedMeets', []);
@@ -3365,9 +3365,8 @@ function SwimMeetScore() {
     try {
       await navigator.clipboard.writeText(text);
       setError(null);
-      // Show success message briefly using error state (we'll style it differently)
-      setShareSuccess(true);
-      setTimeout(() => setShareSuccess(false), 3000);
+      setShareSuccess('Scores copied to clipboard!');
+      setTimeout(() => setShareSuccess(null), 3000);
     } catch (err) {
       setError('Failed to copy to clipboard');
     }
@@ -3596,7 +3595,7 @@ function SwimMeetScore() {
     html += 'tr:nth-child(even) { background: #f8fffe; }';
     html += '.tie { font-style: italic; color: #666; }';
     html += '.footer { text-align: center; margin-top: 32px; padding-top: 16px; border-top: 1px solid #ddd; color: #888; font-size: 12px; }';
-    html += '@media print { body { padding: 0; } }';
+    html += '@page { size: auto; margin: 0.5in; } @media print { body { padding: 0; } }';
     html += '</style></head><body>';
     html += '<h1>Swim Meet Results' + modeLabel + '</h1>';
     html += '<h2>Final Standings</h2>';
@@ -3735,8 +3734,8 @@ function SwimMeetScore() {
             if (s.teamPlaceLimitEnabled !== undefined) setTeamPlaceLimitEnabled(s.teamPlaceLimitEnabled);
             if (s.activeTemplate) setActiveTemplate(s.activeTemplate);
           }
-          setShareSuccess(true);
-          setTimeout(() => setShareSuccess(false), 3000);
+          setShareSuccess('Meet loaded successfully!');
+          setTimeout(() => setShareSuccess(null), 3000);
         } catch (err) {
           setError('Could not read meet file. Make sure it is a valid .json file.');
         }
@@ -3775,8 +3774,8 @@ function SwimMeetScore() {
     const updated = [meetEntry, ...savedMeets].slice(0, 20); // Keep max 20 meets
     setSavedMeets(updated);
     utils.saveToStorage('savedMeets', updated);
-    setShareSuccess(true);
-    setTimeout(() => setShareSuccess(false), 3000);
+    setShareSuccess('Meet saved to history!');
+    setTimeout(() => setShareSuccess(null), 3000);
   };
 
   // Load a meet from history
@@ -3853,7 +3852,7 @@ function SwimMeetScore() {
     className: "fixed top-4 left-4 right-4 z-50 flex justify-center animate-fade-slide-up"
   }, /*#__PURE__*/React.createElement("div", {
     className: `max-w-lg w-full p-4 rounded-lg flex items-center gap-3 shadow-lg ${darkMode ? 'bg-green-900 text-green-100 border border-green-700' : 'bg-green-100 text-green-800 border border-green-300'}`
-  }, /*#__PURE__*/React.createElement("span", null, "\u2713 Scores copied to clipboard!"))), isOffline && !offlineDismissed && /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("span", null, "\u2713 ", shareSuccess))), isOffline && !offlineDismissed && /*#__PURE__*/React.createElement("div", {
     className: "fixed top-4 left-4 right-4 z-50 flex justify-center pointer-events-none"
   }, /*#__PURE__*/React.createElement("div", {
     className: `max-w-lg w-full p-3 rounded-lg flex items-center gap-3 shadow-lg pointer-events-auto ${darkMode ? 'bg-cyan-900/70 text-cyan-100 border border-cyan-700' : 'bg-cyan-100 text-cyan-800 border border-cyan-300'}`
@@ -4083,7 +4082,7 @@ function SwimMeetScore() {
     className: "mb-8"
   }, /*#__PURE__*/React.createElement("h4", {
     className: `text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`
-  }, "\uD83C\uDFC5 Conference & Sectionals Templates"), /*#__PURE__*/React.createElement("p", {
+  }, "\uD83C\uDFC5 Conference & Sectionals/State Templates"), /*#__PURE__*/React.createElement("p", {
     className: "mb-3"
   }, "These templates are designed for championship-style meets with prelims/finals heat structures."), /*#__PURE__*/React.createElement("div", {
     className: `p-4 rounded-lg mb-4 ${darkMode ? 'bg-amber-900/30 border border-amber-700/50' : 'bg-amber-50 border border-amber-200'}`
@@ -4095,15 +4094,15 @@ function SwimMeetScore() {
     className: `p-4 rounded-lg mb-4 ${darkMode ? 'bg-teal-900/30 border border-teal-700/50' : 'bg-teal-50 border border-teal-200'}`
   }, /*#__PURE__*/React.createElement("h5", {
     className: `font-semibold mb-2 ${darkMode ? 'text-teal-400' : 'text-teal-700'}`
-  }, "Sectionals Template"), /*#__PURE__*/React.createElement("ul", {
+  }, "Sectionals/State Template"), /*#__PURE__*/React.createElement("ul", {
     className: `text-sm space-y-1 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`
   }, /*#__PURE__*/React.createElement("li", null, "\u2022 ", /*#__PURE__*/React.createElement("strong", null, "Individual Events:"), " 16 places scored (20-17-16-15-14-13-12-11-9-7-6-5-4-3-2-1)"), /*#__PURE__*/React.createElement("li", null, "\u2022 ", /*#__PURE__*/React.createElement("strong", null, "Relays:"), " A-relay only, places = number of teams, double points"), /*#__PURE__*/React.createElement("li", null, "\u2022 ", /*#__PURE__*/React.createElement("strong", null, "Dynamic relay places:"), " Since each team enters one A-relay, relay places automatically match team count (e.g., 11 teams = 11 relay places)"), /*#__PURE__*/React.createElement("li", null, "\u2022 ", /*#__PURE__*/React.createElement("strong", null, "Heat Lock enabled:"), " B Finals swimmers locked to places 9-16"))), /*#__PURE__*/React.createElement("div", {
     className: `p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`
   }, /*#__PURE__*/React.createElement("h5", {
     className: `font-semibold mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`
-  }, "Key Difference: Conference vs Sectionals"), /*#__PURE__*/React.createElement("p", {
+  }, "Key Difference: Conference vs Sectionals/State"), /*#__PURE__*/React.createElement("p", {
     className: `text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`
-  }, "Conference scores relays to a fixed 8 places. Sectionals relay places dynamically match the number of teams (since only A-relays are allowed). Both use double points for relays compared to individual events."))), /*#__PURE__*/React.createElement("section", {
+  }, "Conference scores relays to a fixed 8 places. Sectionals/State relay places dynamically match the number of teams (since only A-relays are allowed). Both use double points for relays compared to individual events."))), /*#__PURE__*/React.createElement("section", {
     className: "mb-8"
   }, /*#__PURE__*/React.createElement("h4", {
     className: `text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`
@@ -4187,7 +4186,37 @@ function SwimMeetScore() {
     className: `text-sm space-y-1 ml-4 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`
   }, /*#__PURE__*/React.createElement("li", null, "\u2022 Final team standings with points"), /*#__PURE__*/React.createElement("li", null, "\u2022 Gender breakdown (Combined mode)"), /*#__PURE__*/React.createElement("li", null, "\u2022 Event-by-event results with all places"), /*#__PURE__*/React.createElement("li", null, "\u2022 Tie indicators where applicable")), /*#__PURE__*/React.createElement("p", {
     className: `text-xs mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`
-  }, "Best for: Post-meet reports to coaches, parents, athletic directors")))), /*#__PURE__*/React.createElement("div", {
+  }, "Best for: Post-meet reports to coaches, parents, athletic directors")), /*#__PURE__*/React.createElement("div", {
+    className: `p-4 rounded-lg ${darkMode ? 'bg-green-900/30 border border-green-700/50' : 'bg-green-50 border border-green-200'}`
+  }, /*#__PURE__*/React.createElement("h5", {
+    className: `font-semibold mb-2 ${darkMode ? 'text-green-400' : 'text-green-700'}`
+  }, "Export (PDF & CSV)"), /*#__PURE__*/React.createElement("p", {
+    className: `text-sm mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`
+  }, "The Export button next to Email Results lets you download meet results in different formats:"), /*#__PURE__*/React.createElement("ul", {
+    className: `text-sm space-y-1 ml-4 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`
+  }, /*#__PURE__*/React.createElement("li", null, "\u2022 ", /*#__PURE__*/React.createElement("strong", null, "PDF:"), " Opens a printable report you can save as PDF or print for officials"), /*#__PURE__*/React.createElement("li", null, "\u2022 ", /*#__PURE__*/React.createElement("strong", null, "CSV:"), " Downloads a spreadsheet file compatible with Excel, Google Sheets, TeamUnify, or Hy-Tek"), /*#__PURE__*/React.createElement("li", null, "\u2022 ", /*#__PURE__*/React.createElement("strong", null, "Save Meet File:"), " Downloads meet data as a .json file for backup")), /*#__PURE__*/React.createElement("p", {
+    className: `text-xs mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`
+  }, "Best for: Printing results, uploading to team management software, backing up data")), /*#__PURE__*/React.createElement("div", {
+    className: `p-4 rounded-lg ${darkMode ? 'bg-purple-900/30 border border-purple-700/50' : 'bg-purple-50 border border-purple-200'}`
+  }, /*#__PURE__*/React.createElement("h5", {
+    className: `font-semibold mb-2 ${darkMode ? 'text-purple-400' : 'text-purple-700'}`
+  }, "Save/Load Meet Files"), /*#__PURE__*/React.createElement("p", {
+    className: `text-sm mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`
+  }, "Found in Settings under Export & Save. Protects your data from being lost if you clear your browser cache:"), /*#__PURE__*/React.createElement("ul", {
+    className: `text-sm space-y-1 ml-4 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`
+  }, /*#__PURE__*/React.createElement("li", null, "\u2022 ", /*#__PURE__*/React.createElement("strong", null, "Save Meet to File:"), " Downloads your entire meet (teams, events, scores, settings) as a .json file"), /*#__PURE__*/React.createElement("li", null, "\u2022 ", /*#__PURE__*/React.createElement("strong", null, "Load Meet from File:"), " Restores a previously saved meet file \u2014 great for moving data between devices")), /*#__PURE__*/React.createElement("p", {
+    className: `text-xs mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`
+  }, "Best for: Backing up before clearing cache, transferring a meet from phone to laptop")), /*#__PURE__*/React.createElement("div", {
+    className: `p-4 rounded-lg ${darkMode ? 'bg-indigo-900/30 border border-indigo-700/50' : 'bg-indigo-50 border border-indigo-200'}`
+  }, /*#__PURE__*/React.createElement("h5", {
+    className: `font-semibold mb-2 ${darkMode ? 'text-indigo-400' : 'text-indigo-700'}`
+  }, "Meet History"), /*#__PURE__*/React.createElement("p", {
+    className: `text-sm mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`
+  }, "Found in Settings under Meet History. Lets you save and review past meets without leaving the app:"), /*#__PURE__*/React.createElement("ul", {
+    className: `text-sm space-y-1 ml-4 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`
+  }, /*#__PURE__*/React.createElement("li", null, "\u2022 Save up to 20 past meets in your browser"), /*#__PURE__*/React.createElement("li", null, "\u2022 Each entry shows team names, date, and current leader"), /*#__PURE__*/React.createElement("li", null, "\u2022 Load any saved meet to review or continue scoring"), /*#__PURE__*/React.createElement("li", null, "\u2022 Delete old meets you no longer need")), /*#__PURE__*/React.createElement("p", {
+    className: `text-xs mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`
+  }, "Best for: Keeping a record of your season, reviewing past results")))), /*#__PURE__*/React.createElement("div", {
     className: `px-6 py-4 border-t ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'}`
   }, /*#__PURE__*/React.createElement("button", {
     onClick: () => setShowAbout(false),
@@ -4279,7 +4308,7 @@ function SwimMeetScore() {
     description: activeTemplate ? `Using: ${{
       high_school: 'HS Dual Meet',
       conference: 'Conference',
-      sectionals: 'Sectionals'
+      sectionals: 'Sectionals/State'
     }[activeTemplate] || (activeTemplate.startsWith('usa_swimming_') ? 'USA Swimming ' + activeTemplate.split('_')[2] + '-Lane' : activeTemplate.startsWith('custom_') ? (savedTemplates.find(t => 'custom_' + t.id === activeTemplate) || {}).name || 'Custom' : activeTemplate.replace(/_/g, ' '))}` : "Quick presets for common meets",
     isCollapsed: collapsedSections['scoring-templates'],
     onToggle: toggleSection,
@@ -4304,7 +4333,7 @@ function SwimMeetScore() {
     desc: '8 teams · 16 places',
     color: 'amber'
   }, {
-    label: 'Sectionals',
+    label: 'Sectionals/State',
     key: 'sectionals',
     onClick: loadSectionalsMeet,
     desc: '10 teams · 16 places',
