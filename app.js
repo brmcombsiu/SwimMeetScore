@@ -1637,7 +1637,7 @@ function SwimMeetScore() {
 
   // State with localStorage initialization
   const CURRENT_VERSION = 4; // Version 4 adds tie support with teamIds array
-  const APP_VERSION = '1.3.3';
+  const APP_VERSION = '1.3.4';
 
   // Check and migrate events if needed
   const initializeEvents = () => {
@@ -3594,8 +3594,8 @@ function SwimMeetScore() {
     html += 'td { padding: 6px 12px; border-bottom: 1px solid #e5e7eb; }';
     html += 'tr:nth-child(even) { background: #f8fffe; }';
     html += '.tie { font-style: italic; color: #666; }';
-    html += '.footer { text-align: center; margin-top: 32px; padding-top: 16px; border-top: 1px solid #ddd; color: #888; font-size: 12px; }';
-    html += '@page { margin: 0; } @media print { body { margin: 0.75in 0.6in; padding: 0; } }';
+    html += '.footer { text-align: center; margin-top: 48px; padding-top: 16px; border-top: 1px solid #ddd; color: #888; font-size: 12px; padding-bottom: 32px; }';
+    html += '@page { margin: 0.75in 0.6in 1in 0.6in; } @media print { body { margin: 0; padding: 0; } }';
     html += '</style></head><body>';
     html += '<h1>Swim Meet Results' + modeLabel + '</h1>';
     html += '<h2>Final Standings</h2>';
