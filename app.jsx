@@ -191,6 +191,38 @@
       </svg>
     );
 
+    const Download = ({ className }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
+      </svg>
+    );
+
+    const Upload = ({ className }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" />
+      </svg>
+    );
+
+    const FileText = ({ className }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 2v6h6M16 13H8M16 17H8M10 9H8" />
+      </svg>
+    );
+
+    const Clock = ({ className }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10" strokeWidth={2} />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6l4 2" />
+      </svg>
+    );
+
+    const Trash = ({ className }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+      </svg>
+    );
+
     // Collapsible settings section component for mobile-friendly UI
     const CollapsibleSection = ({ id, title, description, icon: Icon, isCollapsed, onToggle, darkMode, children, accentColor = 'cyan' }) => {
       const contentRef = useRef(null);
@@ -1317,7 +1349,7 @@
 
       // State with localStorage initialization
       const CURRENT_VERSION = 4; // Version 4 adds tie support with teamIds array
-      const APP_VERSION = '1.2.2';
+      const APP_VERSION = '1.3.5';
       
       // Check and migrate events if needed
       const initializeEvents = () => {
@@ -1400,7 +1432,14 @@
       });
       const [newTemplateName, setNewTemplateName] = useState('');
       const [showSaveTemplate, setShowSaveTemplate] = useState(false);
-      const [shareSuccess, setShareSuccess] = useState(false);
+      const [shareSuccess, setShareSuccess] = useState(null);
+      const [showMeetHistory, setShowMeetHistory] = useState(false);
+      const [savedMeets, setSavedMeets] = useState(() => {
+        const loaded = utils.loadFromStorage('savedMeets', []);
+        return Array.isArray(loaded) ? loaded : [];
+      });
+      const [showExportMenu, setShowExportMenu] = useState(false);
+      const exportMenuRef = useRef(null);
       
       // Conference/Sectionals specific settings
       const [heatLockEnabled, setHeatLockEnabled] = useState(() => utils.loadFromStorage('heatLockEnabled', false));
@@ -1432,7 +1471,9 @@
           'scoring-places': true,
           'data-management': true,
           'point-systems': true,
-          'appearance': true
+          'appearance': true,
+          'export-share': true,
+          'meet-history': true
         };
       });
 
@@ -2669,9 +2710,8 @@
         try {
           await navigator.clipboard.writeText(text);
           setError(null);
-          // Show success message briefly using error state (we'll style it differently)
-          setShareSuccess(true);
-          setTimeout(() => setShareSuccess(false), 3000);
+          setShareSuccess('Scores copied to clipboard!');
+          setTimeout(() => setShareSuccess(null), 3000);
         } catch (err) {
           setError('Failed to copy to clipboard');
         }
@@ -2841,6 +2881,327 @@
         window.location.href = mailtoLink;
       };
 
+      // Generate results text for reuse across export functions
+      const generateResultsText = () => {
+        const modeLabel = scoringMode === 'combined' ? '' : scoringMode === 'girls' ? ' (Girls Only)' : ' (Boys Only)';
+        const sortedTeams = [...teams].sort((a, b) => {
+          const scoreA = scoringMode === 'girls' ? a.girlsScore : scoringMode === 'boys' ? a.boysScore : a.score;
+          const scoreB = scoringMode === 'girls' ? b.girlsScore : scoringMode === 'boys' ? b.boysScore : b.score;
+          return scoreB - scoreA;
+        });
+        const filteredEvents = scoringMode === 'combined' ? events : events.filter(e => e.gender === scoringMode);
+        return { modeLabel, sortedTeams, filteredEvents };
+      };
+
+      // Export to CSV
+      const exportToCSV = () => {
+        trackEvent('export_csv', { scoring_mode: scoringMode });
+        const { modeLabel, sortedTeams, filteredEvents } = generateResultsText();
+
+        let csv = 'Swim Meet Results' + modeLabel + '\n\n';
+        csv += 'FINAL STANDINGS\n';
+        csv += 'Place,Team,Score\n';
+        sortedTeams.forEach((team, index) => {
+          const score = scoringMode === 'girls' ? team.girlsScore : scoringMode === 'boys' ? team.boysScore : team.score;
+          csv += (index + 1) + ',"' + team.name.replace(/"/g, '""') + '",' + score + '\n';
+        });
+
+        if (scoringMode === 'combined' && sortedTeams.length > 0) {
+          csv += '\nGIRLS SCORES\n';
+          csv += 'Place,Team,Score\n';
+          [...teams].sort((a, b) => b.girlsScore - a.girlsScore).forEach((team, i) => {
+            csv += (i + 1) + ',"' + team.name.replace(/"/g, '""') + '",' + team.girlsScore + '\n';
+          });
+          csv += '\nBOYS SCORES\n';
+          csv += 'Place,Team,Score\n';
+          [...teams].sort((a, b) => b.boysScore - a.boysScore).forEach((team, i) => {
+            csv += (i + 1) + ',"' + team.name.replace(/"/g, '""') + '",' + team.boysScore + '\n';
+          });
+        }
+
+        csv += '\nEVENT RESULTS\n';
+        csv += 'Event,Gender,Place,Team(s),Points\n';
+        filteredEvents.forEach((event) => {
+          const isDiving = event.name === 'Diving';
+          const isRelay = event.name.includes('Relay');
+          const evtPointSystem = isDiving ? divingPointSystem : isRelay ? relayPointSystem : individualPointSystem;
+          const gender = event.gender === 'girls' ? 'Girls' : 'Boys';
+
+          if (event.results && event.results.length > 0) {
+            [...event.results].sort((a, b) => a.place - b.place).forEach((result) => {
+              const numTied = result.teamIds.length;
+              let points;
+              if (numTied > 1) {
+                let totalPoints = 0;
+                for (let i = 0; i < numTied; i++) { totalPoints += (evtPointSystem[result.place + i]) || 0; }
+                points = (totalPoints / numTied).toFixed(1).replace(/\.0$/, '');
+              } else {
+                points = evtPointSystem[result.place] ?? 0;
+              }
+              const teamNames = result.teamIds.map(id => {
+                const team = teams.find(t => String(t.id) === String(id));
+                return team ? team.name : 'Unknown';
+              }).join(' / ');
+              csv += '"' + event.name.replace(/"/g, '""') + '",' + gender + ',' + result.place + ',"' + teamNames.replace(/"/g, '""') + '",' + points + (numTied > 1 ? ' each' : '') + '\n';
+            });
+          } else {
+            csv += '"' + event.name.replace(/"/g, '""') + '",' + gender + ',,,No results\n';
+          }
+        });
+
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'swim-meet-results' + (modeLabel ? '-' + scoringMode : '') + '.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+      };
+
+      // Export to PDF (uses browser print with styled content)
+      const exportToPDF = () => {
+        trackEvent('export_pdf', { scoring_mode: scoringMode });
+        const { modeLabel, sortedTeams, filteredEvents } = generateResultsText();
+
+        let html = '<!DOCTYPE html><html><head><title>Swim Meet Results</title>';
+        html += '<style>';
+        html += 'body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; color: #1a1a1a; }';
+        html += 'h1 { text-align: center; color: #0e4d64; border-bottom: 3px solid #00d4aa; padding-bottom: 10px; }';
+        html += 'h2 { color: #0e4d64; margin-top: 24px; border-bottom: 1px solid #ddd; padding-bottom: 4px; }';
+        html += 'h3 { color: #164e6e; margin-top: 16px; }';
+        html += 'table { width: 100%; border-collapse: collapse; margin: 8px 0 16px 0; }';
+        html += 'th { background: #0e4d64; color: white; text-align: left; padding: 8px 12px; }';
+        html += 'td { padding: 6px 12px; border-bottom: 1px solid #e5e7eb; }';
+        html += 'tr:nth-child(even) { background: #f8fffe; }';
+        html += '.tie { font-style: italic; color: #666; }';
+        html += '.footer { text-align: center; margin-top: 24px; padding-top: 12px; border-top: 1px solid #ddd; color: #888; font-size: 12px; }';
+        html += '@page { margin: 0.75in 0.6in 0.75in 0.6in; } @media print { body { margin: 0; padding: 0; } }';
+        html += '</style></head><body>';
+
+        html += '<h1>Swim Meet Results' + modeLabel + '</h1>';
+        html += '<h2>Final Standings</h2>';
+        html += '<table><tr><th>Place</th><th>Team</th><th>Score</th></tr>';
+        sortedTeams.forEach((team, index) => {
+          const score = scoringMode === 'girls' ? team.girlsScore : scoringMode === 'boys' ? team.boysScore : team.score;
+          html += '<tr><td>' + (index + 1) + '</td><td>' + team.name + '</td><td>' + score + '</td></tr>';
+        });
+        html += '</table>';
+
+        if (scoringMode === 'combined' && sortedTeams.length > 0) {
+          html += '<h3>Girls Scores</h3><table><tr><th>Place</th><th>Team</th><th>Score</th></tr>';
+          [...teams].sort((a, b) => b.girlsScore - a.girlsScore).forEach((team, i) => {
+            html += '<tr><td>' + (i + 1) + '</td><td>' + team.name + '</td><td>' + team.girlsScore + '</td></tr>';
+          });
+          html += '</table>';
+          html += '<h3>Boys Scores</h3><table><tr><th>Place</th><th>Team</th><th>Score</th></tr>';
+          [...teams].sort((a, b) => b.boysScore - a.boysScore).forEach((team, i) => {
+            html += '<tr><td>' + (i + 1) + '</td><td>' + team.name + '</td><td>' + team.boysScore + '</td></tr>';
+          });
+          html += '</table>';
+        }
+
+        html += '<h2>Event-by-Event Results</h2>';
+        filteredEvents.forEach((event) => {
+          const genderPrefix = scoringMode === 'combined' ? (event.gender === 'girls' ? 'Girls ' : 'Boys ') : '';
+          const isDiving = event.name === 'Diving';
+          const isRelay = event.name.includes('Relay');
+          const evtPointSystem = isDiving ? divingPointSystem : isRelay ? relayPointSystem : individualPointSystem;
+          html += '<h3>' + genderPrefix + event.name + '</h3>';
+
+          if (event.results && event.results.length > 0) {
+            html += '<table><tr><th>Place</th><th>Team</th><th>Points</th></tr>';
+            [...event.results].sort((a, b) => a.place - b.place).forEach((result) => {
+              const numTied = result.teamIds.length;
+              let points;
+              if (numTied > 1) {
+                let totalPoints = 0;
+                for (let i = 0; i < numTied; i++) { totalPoints += (evtPointSystem[result.place + i]) || 0; }
+                points = (totalPoints / numTied).toFixed(1).replace(/\.0$/, '');
+              } else {
+                points = evtPointSystem[result.place] ?? 0;
+              }
+              const teamNames = result.teamIds.map(id => {
+                const team = teams.find(t => String(t.id) === String(id));
+                return team ? team.name : 'Unknown';
+              }).join(', ');
+              const tieLabel = numTied > 1 ? ' <span class="tie">(TIE - ' + points + ' pts each)</span>' : '';
+              html += '<tr><td>' + result.place + '</td><td>' + teamNames + tieLabel + '</td><td>' + points + '</td></tr>';
+            });
+            html += '</table>';
+          } else {
+            html += '<p style="color:#888;margin-left:16px;">No results recorded</p>';
+          }
+        });
+
+        html += '<div class="footer">Scored with SwimMeetScore.com &bull; https://swimmeetscore.com</div>';
+        html += '</body></html>';
+
+        const blob = new Blob([html], { type: 'text/html' });
+        const blobUrl = URL.createObjectURL(blob);
+        const printWindow = window.open(blobUrl, '_blank');
+        if (printWindow) {
+          printWindow.onload = () => { printWindow.document.title = 'SwimMeetScore.com'; printWindow.print(); URL.revokeObjectURL(blobUrl); };
+        } else {
+          setError('Pop-up blocked. Please allow pop-ups to export PDF.');
+        }
+      };
+
+      // Save current meet to JSON file
+      const saveMeetToFile = () => {
+        trackEvent('save_meet_file');
+        const meetData = {
+          version: CURRENT_VERSION,
+          appVersion: APP_VERSION,
+          exportedAt: new Date().toISOString(),
+          teams,
+          events,
+          settings: {
+            scoringMode,
+            numIndividualPlaces,
+            numRelayPlaces,
+            numDivingPlaces,
+            individualPointSystem,
+            relayPointSystem,
+            divingPointSystem,
+            heatLockEnabled,
+            aRelayOnly,
+            teamPlaceLimitEnabled,
+            activeTemplate
+          }
+        };
+        const blob = new Blob([JSON.stringify(meetData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const dateStr = new Date().toISOString().slice(0, 10);
+        const teamNames = teams.map(t => t.name).join('-vs-').replace(/[^a-zA-Z0-9-]/g, '');
+        a.download = 'swim-meet-' + (teamNames || 'results') + '-' + dateStr + '.json';
+        a.click();
+        URL.revokeObjectURL(url);
+      };
+
+      // Load meet from JSON file
+      const loadMeetFromFile = () => {
+        trackEvent('load_meet_file');
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.onchange = (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            try {
+              const meetData = JSON.parse(ev.target.result);
+              if (!meetData.teams || !meetData.events) {
+                setError('Invalid meet file. Missing teams or events data.');
+                return;
+              }
+              if (!confirm('Loading this file will replace your current meet data. Continue?')) return;
+
+              setTeams(meetData.teams);
+              setEvents(meetData.events);
+              if (meetData.settings) {
+                const s = meetData.settings;
+                if (s.scoringMode) setScoringMode(s.scoringMode);
+                if (s.numIndividualPlaces) setNumIndividualPlaces(s.numIndividualPlaces);
+                if (s.numRelayPlaces) setNumRelayPlaces(s.numRelayPlaces);
+                if (s.numDivingPlaces) setNumDivingPlaces(s.numDivingPlaces);
+                if (s.individualPointSystem) setIndividualPointSystem(s.individualPointSystem);
+                if (s.relayPointSystem) setRelayPointSystem(s.relayPointSystem);
+                if (s.divingPointSystem) setDivingPointSystem(s.divingPointSystem);
+                if (s.heatLockEnabled !== undefined) setHeatLockEnabled(s.heatLockEnabled);
+                if (s.aRelayOnly !== undefined) setARelayOnly(s.aRelayOnly);
+                if (s.teamPlaceLimitEnabled !== undefined) setTeamPlaceLimitEnabled(s.teamPlaceLimitEnabled);
+                if (s.activeTemplate) setActiveTemplate(s.activeTemplate);
+              }
+              setShareSuccess('Meet loaded successfully!');
+              setTimeout(() => setShareSuccess(null), 3000);
+            } catch (err) {
+              setError('Could not read meet file. Make sure it is a valid .json file.');
+            }
+          };
+          reader.readAsText(file);
+        };
+        input.click();
+      };
+
+      // Save current meet to history
+      const saveMeetToHistory = () => {
+        trackEvent('save_meet_history');
+        const teamNames = teams.map(t => t.name).join(' vs ');
+        const topTeam = [...teams].sort((a, b) => b.score - a.score)[0];
+        const meetEntry = {
+          id: Date.now(),
+          savedAt: new Date().toISOString(),
+          label: teamNames || 'Unnamed Meet',
+          summary: topTeam ? topTeam.name + ' leads with ' + topTeam.score + ' pts' : 'No scores',
+          teams: JSON.parse(JSON.stringify(teams)),
+          events: JSON.parse(JSON.stringify(events)),
+          settings: {
+            scoringMode,
+            numIndividualPlaces,
+            numRelayPlaces,
+            numDivingPlaces,
+            individualPointSystem,
+            relayPointSystem,
+            divingPointSystem,
+            heatLockEnabled,
+            aRelayOnly,
+            teamPlaceLimitEnabled,
+            activeTemplate
+          }
+        };
+        const updated = [meetEntry, ...savedMeets].slice(0, 20); // Keep max 20 meets
+        setSavedMeets(updated);
+        utils.saveToStorage('savedMeets', updated);
+        setShareSuccess('Meet saved to history!');
+        setTimeout(() => setShareSuccess(null), 3000);
+      };
+
+      // Load a meet from history
+      const loadMeetFromHistory = (meetEntry) => {
+        if (!confirm('Loading this meet will replace your current data. Continue?')) return;
+        trackEvent('load_meet_history');
+        setTeams(meetEntry.teams);
+        setEvents(meetEntry.events);
+        if (meetEntry.settings) {
+          const s = meetEntry.settings;
+          if (s.scoringMode) setScoringMode(s.scoringMode);
+          if (s.numIndividualPlaces) setNumIndividualPlaces(s.numIndividualPlaces);
+          if (s.numRelayPlaces) setNumRelayPlaces(s.numRelayPlaces);
+          if (s.numDivingPlaces) setNumDivingPlaces(s.numDivingPlaces);
+          if (s.individualPointSystem) setIndividualPointSystem(s.individualPointSystem);
+          if (s.relayPointSystem) setRelayPointSystem(s.relayPointSystem);
+          if (s.divingPointSystem) setDivingPointSystem(s.divingPointSystem);
+          if (s.heatLockEnabled !== undefined) setHeatLockEnabled(s.heatLockEnabled);
+          if (s.aRelayOnly !== undefined) setARelayOnly(s.aRelayOnly);
+          if (s.teamPlaceLimitEnabled !== undefined) setTeamPlaceLimitEnabled(s.teamPlaceLimitEnabled);
+          if (s.activeTemplate) setActiveTemplate(s.activeTemplate);
+        }
+        setShowMeetHistory(false);
+      };
+
+      // Delete a meet from history
+      const deleteMeetFromHistory = (meetId) => {
+        const updated = savedMeets.filter(m => m.id !== meetId);
+        setSavedMeets(updated);
+        utils.saveToStorage('savedMeets', updated);
+      };
+
+      // Close export menu when clicking outside
+      useEffect(() => {
+        const handleClickOutside = (e) => {
+          if (exportMenuRef.current && !exportMenuRef.current.contains(e.target)) {
+            setShowExportMenu(false);
+          }
+        };
+        if (showExportMenu) {
+          document.addEventListener('mousedown', handleClickOutside);
+          return () => document.removeEventListener('mousedown', handleClickOutside);
+        }
+      }, [showExportMenu]);
+
       return (
         <div className={`min-h-screen p-4 font-outfit ${darkMode ? 'bg-pool-deep' : 'bg-gradient-to-b from-sky-100 via-cyan-50 to-blue-100'}`} style={darkMode ? {background: 'linear-gradient(180deg, #0c1929 0%, #0f2942 50%, #164e6e 100%)'} : {}}>
           {/* Pool lane pattern overlay for dark mode */}
@@ -2881,7 +3242,7 @@
           {shareSuccess && (
             <div className="fixed top-4 left-4 right-4 z-50 flex justify-center animate-fade-slide-up">
               <div className={`max-w-lg w-full p-4 rounded-lg flex items-center gap-3 shadow-lg ${darkMode ? 'bg-green-900 text-green-100 border border-green-700' : 'bg-green-100 text-green-800 border border-green-300'}`}>
-                <span>✓ Scores copied to clipboard!</span>
+                <span>✓ {shareSuccess}</span>
               </div>
             </div>
           )}
@@ -3190,9 +3551,9 @@
 
                     {/* Conference/Sectionals Templates */}
                     <section className="mb-8">
-                      <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>🏅 Conference & Sectionals Templates</h4>
+                      <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>🏅 Conference & Sectionals/State Templates</h4>
                       <p className="mb-3">
-                        These templates are designed for championship-style meets with prelims/finals heat structures.
+                        These templates are designed for championship-style meets with B-final/A-final heat structures.
                       </p>
 
                       <div className={`p-4 rounded-lg mb-4 ${darkMode ? 'bg-amber-900/30 border border-amber-700/50' : 'bg-amber-50 border border-amber-200'}`}>
@@ -3206,7 +3567,7 @@
                       </div>
 
                       <div className={`p-4 rounded-lg mb-4 ${darkMode ? 'bg-teal-900/30 border border-teal-700/50' : 'bg-teal-50 border border-teal-200'}`}>
-                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-teal-400' : 'text-teal-700'}`}>Sectionals Template</h5>
+                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-teal-400' : 'text-teal-700'}`}>Sectionals/State Template</h5>
                         <ul className={`text-sm space-y-1 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                           <li>• <strong>Individual Events:</strong> 16 places scored (20-17-16-15-14-13-12-11-9-7-6-5-4-3-2-1)</li>
                           <li>• <strong>Relays:</strong> A-relay only, places = number of teams, double points</li>
@@ -3216,9 +3577,9 @@
                       </div>
 
                       <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
-                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Key Difference: Conference vs Sectionals</h5>
+                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Key Difference: Conference vs Sectionals/State</h5>
                         <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                          Conference scores relays to a fixed 8 places. Sectionals relay places dynamically match the number of teams (since only A-relays are allowed). Both use double points for relays compared to individual events.
+                          Conference scores relays to a fixed 8 places. Sectionals/State relay places dynamically match the number of teams (since only A-relays are allowed). Both use double points for relays compared to individual events.
                         </p>
                       </div>
                     </section>
@@ -3335,6 +3696,51 @@
                           Best for: Post-meet reports to coaches, parents, athletic directors
                         </p>
                       </div>
+
+                      <div className={`p-4 rounded-lg ${darkMode ? 'bg-green-900/30 border border-green-700/50' : 'bg-green-50 border border-green-200'}`}>
+                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-green-400' : 'text-green-700'}`}>Export (PDF & CSV)</h5>
+                        <p className={`text-sm mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                          The Export button next to Email Results lets you download meet results in different formats:
+                        </p>
+                        <ul className={`text-sm space-y-1 ml-4 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                          <li>• <strong>PDF:</strong> Opens a printable report you can save as PDF or print for officials</li>
+                          <li>• <strong>CSV:</strong> Downloads a spreadsheet file compatible with Excel, Google Sheets, TeamUnify, or Hy-Tek</li>
+                          <li>• <strong>Save Meet File:</strong> Downloads meet data as a .json file for backup</li>
+                        </ul>
+                        <p className={`text-xs mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                          Best for: Printing results, uploading to team management software, backing up data
+                        </p>
+                      </div>
+
+                      <div className={`p-4 rounded-lg ${darkMode ? 'bg-purple-900/30 border border-purple-700/50' : 'bg-purple-50 border border-purple-200'}`}>
+                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-purple-400' : 'text-purple-700'}`}>Save/Load Meet Files</h5>
+                        <p className={`text-sm mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                          Found in Settings under Export & Save. Protects your data from being lost if you clear your browser cache:
+                        </p>
+                        <ul className={`text-sm space-y-1 ml-4 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                          <li>• <strong>Save Meet to File:</strong> Downloads your entire meet (teams, events, scores, settings) as a .json file</li>
+                          <li>• <strong>Load Meet from File:</strong> Restores a previously saved meet file — great for moving data between devices</li>
+                        </ul>
+                        <p className={`text-xs mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                          Best for: Backing up before clearing cache, transferring a meet from phone to laptop
+                        </p>
+                      </div>
+
+                      <div className={`p-4 rounded-lg ${darkMode ? 'bg-indigo-900/30 border border-indigo-700/50' : 'bg-indigo-50 border border-indigo-200'}`}>
+                        <h5 className={`font-semibold mb-2 ${darkMode ? 'text-indigo-400' : 'text-indigo-700'}`}>Meet History</h5>
+                        <p className={`text-sm mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                          Found in Settings under Meet History. Lets you save and review past meets without leaving the app:
+                        </p>
+                        <ul className={`text-sm space-y-1 ml-4 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                          <li>• Save up to 20 past meets in your browser</li>
+                          <li>• Each entry shows team names, date, and current leader</li>
+                          <li>• Load any saved meet to review or continue scoring</li>
+                          <li>• Delete old meets you no longer need</li>
+                        </ul>
+                        <p className={`text-xs mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                          Best for: Keeping a record of your season, reviewing past results
+                        </p>
+                      </div>
                     </section>
                   </div>
 
@@ -3440,7 +3846,7 @@
                   <CollapsibleSection
                     id="scoring-templates"
                     title="Scoring Templates"
-                    description={activeTemplate ? `Using: ${{high_school:'HS Dual Meet',conference:'Conference',sectionals:'Sectionals'}[activeTemplate] || (activeTemplate.startsWith('usa_swimming_') ? 'USA Swimming ' + activeTemplate.split('_')[2] + '-Lane' : activeTemplate.startsWith('custom_') ? (savedTemplates.find(t => 'custom_' + t.id === activeTemplate) || {}).name || 'Custom' : activeTemplate.replace(/_/g, ' '))}` : "Quick presets for common meets"}
+                    description={activeTemplate ? `Using: ${{high_school:'HS Dual Meet',conference:'Conference',sectionals:'Sectionals/State'}[activeTemplate] || (activeTemplate.startsWith('usa_swimming_') ? 'USA Swimming ' + activeTemplate.split('_')[2] + '-Lane' : activeTemplate.startsWith('custom_') ? (savedTemplates.find(t => 'custom_' + t.id === activeTemplate) || {}).name || 'Custom' : activeTemplate.replace(/_/g, ' '))}` : "Quick presets for common meets"}
                     isCollapsed={collapsedSections['scoring-templates']}
                     onToggle={toggleSection}
                     darkMode={darkMode}
@@ -3455,7 +3861,7 @@
                         {[
                           { label: 'HS Dual Meet', key: 'high_school', onClick: loadHighSchoolMeet, desc: '2 teams · 5 places', color: 'pink' },
                           { label: 'Conference', key: 'conference', onClick: loadConferenceMeet, desc: '8 teams · 16 places', color: 'amber' },
-                          { label: 'Sectionals', key: 'sectionals', onClick: loadSectionalsMeet, desc: '10 teams · 16 places', color: 'teal' },
+                          { label: 'Sectionals/State', key: 'sectionals', onClick: loadSectionalsMeet, desc: '10 teams · 16 places', color: 'teal' },
                         ].map(tmpl => {
                           const isActive = activeTemplate === tmpl.key;
                           const colorMap = {
@@ -3779,6 +4185,109 @@
                     </div>
                   </CollapsibleSection>
 
+                  {/* Export & Save Section */}
+                  <CollapsibleSection
+                    id="export-share"
+                    title="Export & Save"
+                    description="Export results or save/load meet files"
+                    isCollapsed={collapsedSections['export-share']}
+                    onToggle={toggleSection}
+                    darkMode={darkMode}
+                    accentColor="green"
+                  >
+                    <p className={`text-sm mb-3 ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                      Export your results or save/load meet data as a file for backup.
+                    </p>
+                    <div className="flex flex-col gap-3">
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          onClick={exportToPDF}
+                          className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition ${darkMode ? 'bg-chlorine/20 text-chlorine border border-chlorine/30 hover:bg-chlorine/30' : 'bg-cyan-600 hover:bg-cyan-700 text-white'}`}
+                        >
+                          <FileText className="w-4 h-4" />
+                          PDF
+                        </button>
+                        <button
+                          onClick={exportToCSV}
+                          className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition ${darkMode ? 'bg-chlorine/20 text-chlorine border border-chlorine/30 hover:bg-chlorine/30' : 'bg-cyan-600 hover:bg-cyan-700 text-white'}`}
+                        >
+                          <Download className="w-4 h-4" />
+                          CSV
+                        </button>
+                      </div>
+                      <button
+                        onClick={saveMeetToFile}
+                        className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition ${darkMode ? 'bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/30' : 'bg-green-600 hover:bg-green-700 text-white'}`}
+                      >
+                        <Download className="w-4 h-4" />
+                        Save Meet to File (.json)
+                      </button>
+                      <button
+                        onClick={loadMeetFromFile}
+                        className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition ${darkMode ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:bg-amber-500/30' : 'bg-amber-600 hover:bg-amber-700 text-white'}`}
+                      >
+                        <Upload className="w-4 h-4" />
+                        Load Meet from File
+                      </button>
+                    </div>
+                  </CollapsibleSection>
+
+                  {/* Meet History Section */}
+                  <CollapsibleSection
+                    id="meet-history"
+                    title="Meet History"
+                    description="Save and review past meets"
+                    isCollapsed={collapsedSections['meet-history']}
+                    onToggle={toggleSection}
+                    darkMode={darkMode}
+                    accentColor="purple"
+                  >
+                    <p className={`text-sm mb-3 ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                      Save your current meet to history so you can review it later. Up to 20 meets are stored in your browser.
+                    </p>
+                    <button
+                      onClick={saveMeetToHistory}
+                      className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition mb-3 ${darkMode ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30 hover:bg-purple-500/30' : 'bg-purple-600 hover:bg-purple-700 text-white'}`}
+                    >
+                      <Plus className="w-4 h-4" />
+                      Save Current Meet to History
+                    </button>
+                    {savedMeets.length > 0 ? (
+                      <div className="flex flex-col gap-2 max-h-64 overflow-y-auto">
+                        {savedMeets.map((meet) => (
+                          <div key={meet.id} className={`flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg ${darkMode ? 'bg-pool-deep/50 border border-white/5' : 'bg-gray-50 border border-gray-200'}`}>
+                            <div className="flex-1 min-w-0">
+                              <div className={`text-sm font-medium truncate ${darkMode ? 'text-white' : 'text-gray-800'}`}>{meet.label}</div>
+                              <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                {new Date(meet.savedAt).toLocaleDateString()} &bull; {meet.summary}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1 flex-shrink-0">
+                              <button
+                                onClick={() => loadMeetFromHistory(meet)}
+                                className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition ${darkMode ? 'bg-chlorine/20 text-chlorine hover:bg-chlorine/30' : 'bg-cyan-100 text-cyan-700 hover:bg-cyan-200'}`}
+                                title="Load this meet"
+                              >
+                                Load
+                              </button>
+                              <button
+                                onClick={() => deleteMeetFromHistory(meet.id)}
+                                className={`p-1.5 rounded-lg transition ${darkMode ? 'text-red-400 hover:bg-red-500/20' : 'text-red-500 hover:bg-red-50'}`}
+                                title="Delete from history"
+                              >
+                                <Trash className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className={`text-sm text-center py-4 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                        No saved meets yet. Save your current meet to start building your history.
+                      </p>
+                    )}
+                  </CollapsibleSection>
+
                   {/* Data Management Section */}
                   <CollapsibleSection
                     id="data-management"
@@ -4056,6 +4565,40 @@
                         <Mail className="w-4 h-4" />
                         Email Results
                       </button>
+                      <div className="relative" ref={exportMenuRef}>
+                        <button
+                          onClick={() => setShowExportMenu(!showExportMenu)}
+                          className={`flex items-center px-2 py-1.5 rounded-lg text-xs font-medium transition ${darkMode ? 'bg-pool-light/60 text-white hover:bg-pool-light border border-white/10' : 'bg-slate-600 text-white hover:bg-slate-700'}`}
+                          title="Export results"
+                        >
+                          <Download className="w-4 h-4" />
+                        </button>
+                        {showExportMenu && (
+                          <div className={`absolute top-full left-0 mt-1 z-40 rounded-lg shadow-lg border min-w-[160px] ${darkMode ? 'bg-pool-mid border-white/10' : 'bg-white border-gray-200'}`}>
+                            <button
+                              onClick={() => { exportToPDF(); setShowExportMenu(false); }}
+                              className={`flex items-center gap-2 w-full px-4 py-2.5 text-xs font-medium rounded-t-lg transition ${darkMode ? 'text-white hover:bg-pool-light/50' : 'text-gray-700 hover:bg-gray-50'}`}
+                            >
+                              <FileText className="w-4 h-4" />
+                              Download PDF
+                            </button>
+                            <button
+                              onClick={() => { exportToCSV(); setShowExportMenu(false); }}
+                              className={`flex items-center gap-2 w-full px-4 py-2.5 text-xs font-medium transition ${darkMode ? 'text-white hover:bg-pool-light/50' : 'text-gray-700 hover:bg-gray-50'}`}
+                            >
+                              <Download className="w-4 h-4" />
+                              Download CSV
+                            </button>
+                            <button
+                              onClick={() => { saveMeetToFile(); setShowExportMenu(false); }}
+                              className={`flex items-center gap-2 w-full px-4 py-2.5 text-xs font-medium rounded-b-lg transition ${darkMode ? 'text-white hover:bg-pool-light/50' : 'text-gray-700 hover:bg-gray-50'}`}
+                            >
+                              <Download className="w-4 h-4" />
+                              Save Meet File
+                            </button>
+                          </div>
+                        )}
+                      </div>
                       <div className="flex items-center gap-1 ml-auto sm:ml-2">
                         <button
                           onClick={performUndo}
