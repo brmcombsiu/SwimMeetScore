@@ -1349,7 +1349,7 @@
 
       // State with localStorage initialization
       const CURRENT_VERSION = 4; // Version 4 adds tie support with teamIds array
-      const APP_VERSION = '1.3.0';
+      const APP_VERSION = '1.3.1';
       
       // Check and migrate events if needed
       const initializeEvents = () => {
@@ -3036,11 +3036,11 @@
         html += '<div class="footer">Scored with SwimMeetScore.com &bull; https://swimmeetscore.com</div>';
         html += '</body></html>';
 
-        const printWindow = window.open('', '_blank');
+        const blob = new Blob([html], { type: 'text/html' });
+        const blobUrl = URL.createObjectURL(blob);
+        const printWindow = window.open(blobUrl, '_blank');
         if (printWindow) {
-          printWindow.document.write(html);
-          printWindow.document.close();
-          printWindow.onload = () => { printWindow.print(); };
+          printWindow.onload = () => { printWindow.document.title = 'SwimMeetScore.com'; printWindow.print(); URL.revokeObjectURL(blobUrl); };
         } else {
           setError('Pop-up blocked. Please allow pop-ups to export PDF.');
         }
@@ -3553,7 +3553,7 @@
                     <section className="mb-8">
                       <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>🏅 Conference & Sectionals/State Templates</h4>
                       <p className="mb-3">
-                        These templates are designed for championship-style meets with prelims/finals heat structures.
+                        These templates are designed for championship-style meets with B-final/A-final heat structures.
                       </p>
 
                       <div className={`p-4 rounded-lg mb-4 ${darkMode ? 'bg-amber-900/30 border border-amber-700/50' : 'bg-amber-50 border border-amber-200'}`}>
