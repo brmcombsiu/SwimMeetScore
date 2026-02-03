@@ -1349,7 +1349,7 @@
 
       // State with localStorage initialization
       const CURRENT_VERSION = 4; // Version 4 adds tie support with teamIds array
-      const APP_VERSION = '1.3.1';
+      const APP_VERSION = '1.3.2';
       
       // Check and migrate events if needed
       const initializeEvents = () => {
@@ -2975,7 +2975,7 @@
         html += 'tr:nth-child(even) { background: #f8fffe; }';
         html += '.tie { font-style: italic; color: #666; }';
         html += '.footer { text-align: center; margin-top: 32px; padding-top: 16px; border-top: 1px solid #ddd; color: #888; font-size: 12px; }';
-        html += '@page { size: auto; margin: 0.5in; } @media print { body { padding: 0; } }';
+        html += '@page { margin: 0; } @media print { body { margin: 0.5in; padding: 0; } }';
         html += '</style></head><body>';
 
         html += '<h1>Swim Meet Results' + modeLabel + '</h1>';
