@@ -1637,7 +1637,7 @@ function SwimMeetScore() {
 
   // State with localStorage initialization
   const CURRENT_VERSION = 4; // Version 4 adds tie support with teamIds array
-  const APP_VERSION = '1.3.4';
+  const APP_VERSION = '1.3.5';
 
   // Check and migrate events if needed
   const initializeEvents = () => {
@@ -3594,8 +3594,8 @@ function SwimMeetScore() {
     html += 'td { padding: 6px 12px; border-bottom: 1px solid #e5e7eb; }';
     html += 'tr:nth-child(even) { background: #f8fffe; }';
     html += '.tie { font-style: italic; color: #666; }';
-    html += '.footer { text-align: center; margin-top: 48px; padding-top: 16px; border-top: 1px solid #ddd; color: #888; font-size: 12px; padding-bottom: 32px; }';
-    html += '@page { margin: 0.75in 0.6in 1in 0.6in; } @media print { body { margin: 0; padding: 0; } }';
+    html += '.footer { text-align: center; margin-top: 24px; padding-top: 12px; border-top: 1px solid #ddd; color: #888; font-size: 12px; }';
+    html += '@page { margin: 0.75in 0.6in 0.75in 0.6in; } @media print { body { margin: 0; padding: 0; } }';
     html += '</style></head><body>';
     html += '<h1>Swim Meet Results' + modeLabel + '</h1>';
     html += '<h2>Final Standings</h2>';
@@ -4903,11 +4903,11 @@ function SwimMeetScore() {
     ref: exportMenuRef
   }, /*#__PURE__*/React.createElement("button", {
     onClick: () => setShowExportMenu(!showExportMenu),
-    className: `flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${darkMode ? 'bg-pool-light/60 text-white hover:bg-pool-light border border-white/10' : 'bg-slate-600 text-white hover:bg-slate-700'}`,
+    className: `flex items-center px-2 py-1.5 rounded-lg text-xs font-medium transition ${darkMode ? 'bg-pool-light/60 text-white hover:bg-pool-light border border-white/10' : 'bg-slate-600 text-white hover:bg-slate-700'}`,
     title: "Export results"
   }, /*#__PURE__*/React.createElement(Download, {
     className: "w-4 h-4"
-  }), "Export"), showExportMenu && /*#__PURE__*/React.createElement("div", {
+  })), showExportMenu && /*#__PURE__*/React.createElement("div", {
     className: `absolute top-full left-0 mt-1 z-40 rounded-lg shadow-lg border min-w-[160px] ${darkMode ? 'bg-pool-mid border-white/10' : 'bg-white border-gray-200'}`
   }, /*#__PURE__*/React.createElement("button", {
     onClick: () => {
