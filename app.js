@@ -1637,7 +1637,7 @@ function SwimMeetScore() {
 
   // State with localStorage initialization
   const CURRENT_VERSION = 4; // Version 4 adds tie support with teamIds array
-  const APP_VERSION = '1.3.5';
+  const APP_VERSION = '1.3.6';
 
   // Check and migrate events if needed
   const initializeEvents = () => {
