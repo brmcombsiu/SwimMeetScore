@@ -3032,7 +3032,8 @@
                 setError('Invalid meet file. Expected a JSON object.');
                 return;
               }
-              if ('__proto__' in meetData || 'constructor' in meetData || 'prototype' in meetData) {
+              const hasOwn = Object.prototype.hasOwnProperty;
+              if (hasOwn.call(meetData, '__proto__') || hasOwn.call(meetData, 'constructor') || hasOwn.call(meetData, 'prototype')) {
                 setError('Invalid meet file. Contains disallowed keys.');
                 return;
               }
