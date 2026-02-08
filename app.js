@@ -113,6 +113,11 @@ const utils = {
     if (isNaN(num)) return defaultValue;
     return Math.max(min, Math.min(max, num));
   },
+  // Escape HTML special characters to prevent XSS
+  escapeHtml: str => {
+    const s = String(str);
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  },
   // Debounce function for localStorage writes
   debounce: (func, wait) => {
     let timeout;
@@ -1637,7 +1642,7 @@ function SwimMeetScore() {
 
   // State with localStorage initialization
   const CURRENT_VERSION = 4; // Version 4 adds tie support with teamIds array
-  const APP_VERSION = '1.3.7';
+  const APP_VERSION = '1.4.0';
 
   // Check and migrate events if needed
   const initializeEvents = () => {
@@ -1919,88 +1924,22 @@ function SwimMeetScore() {
   const recalculateAllScores = useCallback((teamsList, eventsList) => {
     if (!Array.isArray(teamsList) || !Array.isArray(eventsList)) return;
     try {
-      const scores = {};
-      const girlsScores = {};
-      const boysScores = {};
-      teamsList.forEach(team => {
-        if (team && team.id) {
-          scores[team.id] = 0;
-          girlsScores[team.id] = 0;
-          boysScores[team.id] = 0;
-        }
-      });
-      eventsList.forEach(event => {
-        if (!event || !event.results || !Array.isArray(event.results)) return;
-        const isDiving = event.name === 'Diving';
-        const isRelay = event.name && event.name.includes('Relay');
-        const pointSystem = isDiving ? divingPointSystem : isRelay ? relayPointSystem : individualPointSystem;
-        const numPlaces = isDiving ? numDivingPlaces : isRelay ? numRelayPlaces : numIndividualPlaces;
-
-        // Calculate max scoring places per team when limit is enabled (relays only)
-        // A team can score at most (numPlaces - 1) places to prevent sweeping all places
-        const applyTeamLimit = teamPlaceLimitEnabled && isRelay;
-        const maxTeamPlaces = applyTeamLimit ? Math.max(1, numPlaces - 1) : numPlaces;
-
-        // Track how many scoring places each team has occupied in this event
-        const teamScoringPlaceCount = {};
-
-        // Group results by place to find ties
-        const resultsByPlace = {};
-        event.results.forEach(result => {
-          if (!result || !result.place || !result.teamIds || !Array.isArray(result.teamIds)) return;
-          resultsByPlace[result.place] = result.teamIds;
-        });
-
-        // Calculate points with tie handling
-        // Places are consumed as we go - ties consume multiple places
-        let currentPlace = 1;
-        while (currentPlace <= numPlaces) {
-          const teamsAtPlace = resultsByPlace[currentPlace];
-          if (teamsAtPlace && teamsAtPlace.length > 0) {
-            const numTied = teamsAtPlace.length;
-
-            // Filter teams that haven't exceeded their place limit (relays only)
-            const eligibleTeams = teamsAtPlace.filter(teamId => {
-              if (!applyTeamLimit) return true;
-              const currentCount = teamScoringPlaceCount[teamId] || 0;
-              return currentCount < maxTeamPlaces;
-            });
-            if (eligibleTeams.length > 0) {
-              // Sum up points for places consumed by eligible teams
-              let totalPoints = 0;
-              for (let i = 0; i < eligibleTeams.length && currentPlace + i <= numPlaces; i++) {
-                totalPoints += pointSystem && pointSystem[currentPlace + i] || 0;
-              }
-
-              // Split points evenly among eligible tied teams
-              const pointsPerTeam = totalPoints / eligibleTeams.length;
-              eligibleTeams.forEach(teamId => {
-                if (teamId) {
-                  scores[teamId] = (scores[teamId] || 0) + pointsPerTeam;
-                  if (event.gender === 'girls') {
-                    girlsScores[teamId] = (girlsScores[teamId] || 0) + pointsPerTeam;
-                  } else if (event.gender === 'boys') {
-                    boysScores[teamId] = (boysScores[teamId] || 0) + pointsPerTeam;
-                  }
-
-                  // Track that this team has earned a scoring place
-                  teamScoringPlaceCount[teamId] = (teamScoringPlaceCount[teamId] || 0) + 1;
-                }
-              });
-            }
-
-            // Skip places consumed by this tie (use original numTied, not eligible count)
-            currentPlace += numTied;
-          } else {
-            currentPlace++;
-          }
-        }
+      const scoresByTeam = window.ScoringLib.calculateScores({
+        teams: teamsList,
+        events: eventsList,
+        individualPointSystem,
+        relayPointSystem,
+        divingPointSystem,
+        numIndividualPlaces,
+        numRelayPlaces,
+        numDivingPlaces,
+        teamPlaceLimitEnabled
       });
       setTeams(teamsList.map(team => ({
         ...team,
-        score: Math.round((scores[team.id] || 0) * 100) / 100,
-        girlsScore: Math.round((girlsScores[team.id] || 0) * 100) / 100,
-        boysScore: Math.round((boysScores[team.id] || 0) * 100) / 100
+        score: scoresByTeam[team.id] && scoresByTeam[team.id].score || 0,
+        girlsScore: scoresByTeam[team.id] && scoresByTeam[team.id].girlsScore || 0,
+        boysScore: scoresByTeam[team.id] && scoresByTeam[team.id].boysScore || 0
       })));
     } catch (e) {
       console.error('Error recalculating scores:', e);
@@ -3597,23 +3536,24 @@ function SwimMeetScore() {
     html += '.footer { text-align: center; margin-top: 24px; padding-top: 12px; border-top: 1px solid #ddd; color: #888; font-size: 12px; }';
     html += '@page { margin: 0.75in 0.6in 0.75in 0.6in; } @media print { body { margin: 0; padding: 0; } }';
     html += '</style></head><body>';
-    html += '<h1>Swim Meet Results' + modeLabel + '</h1>';
+    const esc = utils.escapeHtml;
+    html += '<h1>Swim Meet Results' + esc(modeLabel) + '</h1>';
     html += '<h2>Final Standings</h2>';
     html += '<table><tr><th>Place</th><th>Team</th><th>Score</th></tr>';
     sortedTeams.forEach((team, index) => {
       const score = scoringMode === 'girls' ? team.girlsScore : scoringMode === 'boys' ? team.boysScore : team.score;
-      html += '<tr><td>' + (index + 1) + '</td><td>' + team.name + '</td><td>' + score + '</td></tr>';
+      html += '<tr><td>' + (index + 1) + '</td><td>' + esc(team.name) + '</td><td>' + score + '</td></tr>';
     });
     html += '</table>';
     if (scoringMode === 'combined' && sortedTeams.length > 0) {
       html += '<h3>Girls Scores</h3><table><tr><th>Place</th><th>Team</th><th>Score</th></tr>';
       [...teams].sort((a, b) => b.girlsScore - a.girlsScore).forEach((team, i) => {
-        html += '<tr><td>' + (i + 1) + '</td><td>' + team.name + '</td><td>' + team.girlsScore + '</td></tr>';
+        html += '<tr><td>' + (i + 1) + '</td><td>' + esc(team.name) + '</td><td>' + team.girlsScore + '</td></tr>';
       });
       html += '</table>';
       html += '<h3>Boys Scores</h3><table><tr><th>Place</th><th>Team</th><th>Score</th></tr>';
       [...teams].sort((a, b) => b.boysScore - a.boysScore).forEach((team, i) => {
-        html += '<tr><td>' + (i + 1) + '</td><td>' + team.name + '</td><td>' + team.boysScore + '</td></tr>';
+        html += '<tr><td>' + (i + 1) + '</td><td>' + esc(team.name) + '</td><td>' + team.boysScore + '</td></tr>';
       });
       html += '</table>';
     }
@@ -3623,7 +3563,7 @@ function SwimMeetScore() {
       const isDiving = event.name === 'Diving';
       const isRelay = event.name.includes('Relay');
       const evtPointSystem = isDiving ? divingPointSystem : isRelay ? relayPointSystem : individualPointSystem;
-      html += '<h3>' + genderPrefix + event.name + '</h3>';
+      html += '<h3>' + esc(genderPrefix + event.name) + '</h3>';
       if (event.results && event.results.length > 0) {
         html += '<table><tr><th>Place</th><th>Team</th><th>Points</th></tr>';
         [...event.results].sort((a, b) => a.place - b.place).forEach(result => {
@@ -3640,7 +3580,7 @@ function SwimMeetScore() {
           }
           const teamNames = result.teamIds.map(id => {
             const team = teams.find(t => String(t.id) === String(id));
-            return team ? team.name : 'Unknown';
+            return team ? esc(team.name) : 'Unknown';
           }).join(', ');
           const tieLabel = numTied > 1 ? ' <span class="tie">(TIE - ' + points + ' pts each)</span>' : '';
           html += '<tr><td>' + result.place + '</td><td>' + teamNames + tieLabel + '</td><td>' + points + '</td></tr>';
@@ -3717,9 +3657,130 @@ function SwimMeetScore() {
       reader.onload = ev => {
         try {
           const meetData = JSON.parse(ev.target.result);
-          if (!meetData.teams || !meetData.events) {
-            setError('Invalid meet file. Missing teams or events data.');
+
+          // Reject prototype pollution vectors
+          if (meetData == null || typeof meetData !== 'object' || Array.isArray(meetData)) {
+            setError('Invalid meet file. Expected a JSON object.');
             return;
+          }
+          const hasOwn = Object.prototype.hasOwnProperty;
+          if (hasOwn.call(meetData, '__proto__') || hasOwn.call(meetData, 'constructor') || hasOwn.call(meetData, 'prototype')) {
+            setError('Invalid meet file. Contains disallowed keys.');
+            return;
+          }
+
+          // Validate teams array structure
+          if (!Array.isArray(meetData.teams) || meetData.teams.length === 0) {
+            setError('Invalid meet file. "teams" must be a non-empty array.');
+            return;
+          }
+          for (const team of meetData.teams) {
+            if (team == null || typeof team !== 'object' || Array.isArray(team)) {
+              setError('Invalid meet file. Each team must be an object.');
+              return;
+            }
+            if (team.id == null || typeof team.id !== 'string' && typeof team.id !== 'number') {
+              setError('Invalid meet file. Each team must have a valid "id".');
+              return;
+            }
+            if (typeof team.name !== 'string' || team.name.trim().length === 0) {
+              setError('Invalid meet file. Each team must have a non-empty "name" string.');
+              return;
+            }
+            if (typeof team.score !== 'undefined' && typeof team.score !== 'number') {
+              setError('Invalid meet file. Team "score" must be a number.');
+              return;
+            }
+          }
+
+          // Validate events array structure
+          if (!Array.isArray(meetData.events)) {
+            setError('Invalid meet file. "events" must be an array.');
+            return;
+          }
+          for (const event of meetData.events) {
+            if (event == null || typeof event !== 'object' || Array.isArray(event)) {
+              setError('Invalid meet file. Each event must be an object.');
+              return;
+            }
+            if (typeof event.name !== 'string' || event.name.trim().length === 0) {
+              setError('Invalid meet file. Each event must have a non-empty "name" string.');
+              return;
+            }
+            if (typeof event.gender !== 'string' || !['girls', 'boys'].includes(event.gender)) {
+              setError('Invalid meet file. Each event must have a "gender" of "girls" or "boys".');
+              return;
+            }
+            if (event.results !== undefined) {
+              if (!Array.isArray(event.results)) {
+                setError('Invalid meet file. Event "results" must be an array.');
+                return;
+              }
+              for (const result of event.results) {
+                if (result == null || typeof result !== 'object' || Array.isArray(result)) {
+                  setError('Invalid meet file. Each result must be an object.');
+                  return;
+                }
+                if (typeof result.place !== 'number' || result.place < 1) {
+                  setError('Invalid meet file. Each result must have a "place" number >= 1.');
+                  return;
+                }
+                if (!Array.isArray(result.teamIds) || result.teamIds.length === 0) {
+                  setError('Invalid meet file. Each result must have a non-empty "teamIds" array.');
+                  return;
+                }
+              }
+            }
+          }
+
+          // Validate settings types if present
+          if (meetData.settings !== undefined) {
+            if (meetData.settings == null || typeof meetData.settings !== 'object' || Array.isArray(meetData.settings)) {
+              setError('Invalid meet file. "settings" must be an object.');
+              return;
+            }
+            const s = meetData.settings;
+            if (s.scoringMode !== undefined && !['combined', 'girls', 'boys'].includes(s.scoringMode)) {
+              setError('Invalid meet file. Invalid scoringMode value.');
+              return;
+            }
+            if (s.numIndividualPlaces !== undefined && (typeof s.numIndividualPlaces !== 'number' || s.numIndividualPlaces < 1 || s.numIndividualPlaces > 20)) {
+              setError('Invalid meet file. numIndividualPlaces must be 1-20.');
+              return;
+            }
+            if (s.numRelayPlaces !== undefined && (typeof s.numRelayPlaces !== 'number' || s.numRelayPlaces < 1 || s.numRelayPlaces > 20)) {
+              setError('Invalid meet file. numRelayPlaces must be 1-20.');
+              return;
+            }
+            if (s.numDivingPlaces !== undefined && (typeof s.numDivingPlaces !== 'number' || s.numDivingPlaces < 1 || s.numDivingPlaces > 20)) {
+              setError('Invalid meet file. numDivingPlaces must be 1-20.');
+              return;
+            }
+            const isPointSystemObj = v => v != null && typeof v === 'object' && !Array.isArray(v);
+            if (s.individualPointSystem !== undefined && !isPointSystemObj(s.individualPointSystem)) {
+              setError('Invalid meet file. individualPointSystem must be an object.');
+              return;
+            }
+            if (s.relayPointSystem !== undefined && !isPointSystemObj(s.relayPointSystem)) {
+              setError('Invalid meet file. relayPointSystem must be an object.');
+              return;
+            }
+            if (s.divingPointSystem !== undefined && !isPointSystemObj(s.divingPointSystem)) {
+              setError('Invalid meet file. divingPointSystem must be an object.');
+              return;
+            }
+            if (s.heatLockEnabled !== undefined && typeof s.heatLockEnabled !== 'boolean') {
+              setError('Invalid meet file. heatLockEnabled must be a boolean.');
+              return;
+            }
+            if (s.aRelayOnly !== undefined && typeof s.aRelayOnly !== 'boolean') {
+              setError('Invalid meet file. aRelayOnly must be a boolean.');
+              return;
+            }
+            if (s.teamPlaceLimitEnabled !== undefined && typeof s.teamPlaceLimitEnabled !== 'boolean') {
+              setError('Invalid meet file. teamPlaceLimitEnabled must be a boolean.');
+              return;
+            }
           }
           if (!confirm('Loading this file will replace your current meet data. Continue?')) return;
           setTeams(meetData.teams);
