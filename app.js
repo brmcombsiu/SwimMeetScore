@@ -415,24 +415,6 @@ const FileText = ({
   strokeWidth: 2,
   d: "M14 2v6h6M16 13H8M16 17H8M10 9H8"
 }));
-const Clock = ({
-  className
-}) => /*#__PURE__*/React.createElement("svg", {
-  className: className,
-  fill: "none",
-  stroke: "currentColor",
-  viewBox: "0 0 24 24"
-}, /*#__PURE__*/React.createElement("circle", {
-  cx: "12",
-  cy: "12",
-  r: "10",
-  strokeWidth: 2
-}), /*#__PURE__*/React.createElement("path", {
-  strokeLinecap: "round",
-  strokeLinejoin: "round",
-  strokeWidth: 2,
-  d: "M12 6v6l4 2"
-}));
 const Trash = ({
   className
 }) => /*#__PURE__*/React.createElement("svg", {
@@ -1769,7 +1751,6 @@ function SwimMeetScore() {
   const [newTemplateName, setNewTemplateName] = useState('');
   const [showSaveTemplate, setShowSaveTemplate] = useState(false);
   const [shareSuccess, setShareSuccess] = useState(null);
-  const [showMeetHistory, setShowMeetHistory] = useState(false);
   const [savedMeets, setSavedMeets] = useState(() => {
     const loaded = utils.loadFromStorage('savedMeets', []);
     return Array.isArray(loaded) ? loaded : [];
@@ -4017,7 +3998,6 @@ function SwimMeetScore() {
       if (s.activeTemplate !== undefined) setActiveTemplate(s.activeTemplate);
     }
     recalculateAllScores(loadedTeams, loadedEvents);
-    setShowMeetHistory(false);
   };
 
   // Delete a meet from history

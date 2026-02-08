@@ -224,13 +224,6 @@
       </svg>
     );
 
-    const Clock = ({ className }) => (
-      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <circle cx="12" cy="12" r="10" strokeWidth={2} />
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6l4 2" />
-      </svg>
-    );
-
     const Trash = ({ className }) => (
       <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -1454,7 +1447,6 @@
       const [newTemplateName, setNewTemplateName] = useState('');
       const [showSaveTemplate, setShowSaveTemplate] = useState(false);
       const [shareSuccess, setShareSuccess] = useState(null);
-      const [showMeetHistory, setShowMeetHistory] = useState(false);
       const [savedMeets, setSavedMeets] = useState(() => {
         const loaded = utils.loadFromStorage('savedMeets', []);
         return Array.isArray(loaded) ? loaded : [];
@@ -3293,7 +3285,6 @@
           if (s.activeTemplate !== undefined) setActiveTemplate(s.activeTemplate);
         }
         recalculateAllScores(loadedTeams, loadedEvents);
-        setShowMeetHistory(false);
       };
 
       // Delete a meet from history
