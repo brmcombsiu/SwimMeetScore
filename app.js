@@ -46,6 +46,12 @@ const utils = {
       return defaultValue;
     }
   },
+  // Ordinal suffix for place numbers (1st, 2nd, 3rd, 11th, 21st, etc.)
+  ordinal: n => {
+    const s = ['th', 'st', 'nd', 'rd'];
+    const v = n % 100;
+    return n + (s[(v - 20) % 10] || s[v] || s[0]);
+  },
   // Generate unique IDs (better than Date.now() for collisions)
   generateId: () => {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
@@ -1670,7 +1676,7 @@ function SwimMeetScore() {
 
   // State with localStorage initialization
   const CURRENT_VERSION = 4; // Version 4 adds tie support with teamIds array
-  const APP_VERSION = '1.5.2';
+  const APP_VERSION = '1.5.3';
 
   // Check and migrate events if needed
   const initializeEvents = () => {
@@ -2605,6 +2611,19 @@ function SwimMeetScore() {
           setTeamPlaceLimitEnabled(true);
           // Reset active template to default (High School)
           setActiveTemplate('high_school');
+          // Reset meet history and collapsed sections state
+          setSavedMeets([]);
+          setCollapsedSections({
+            'manage-teams': true,
+            'scoring-templates': true,
+            'special-scoring': true,
+            'scoring-places': true,
+            'data-management': true,
+            'point-systems': true,
+            'appearance': true,
+            'export-share': true,
+            'meet-history': true
+          });
           utils.saveToStorage('version', CURRENT_VERSION);
           recalculateAllScores(defaultTeams, defaultEvents);
           setShowConfirmDialog(null);
@@ -3339,6 +3358,7 @@ function SwimMeetScore() {
     const newEvents = competitionEvents.filter(e => e.name !== 'Diving').map(e => ({
       id: utils.generateId(),
       name: e.name,
+      type: e.type,
       gender: e.gender,
       results: []
     }));
@@ -3460,7 +3480,7 @@ function SwimMeetScore() {
     sortedTeams.forEach((team, index) => {
       const score = scoringMode === 'girls' ? team.girlsScore : scoringMode === 'boys' ? team.boysScore : team.score;
       const place = index + 1;
-      const placeStr = place === 1 ? '1st' : place === 2 ? '2nd' : place === 3 ? '3rd' : place + 'th';
+      const placeStr = utils.ordinal(place);
       body += placeStr + ' Place: ' + team.name + ' - ' + score + ' points\n';
     });
     if (scoringMode === 'combined' && sortedTeams.length > 0) {
@@ -3492,7 +3512,7 @@ function SwimMeetScore() {
           const sortedResults = [...event.results].sort((a, b) => a.place - b.place);
           sortedResults.forEach(result => {
             const placeNum = result.place;
-            const placeStr = placeNum === 1 ? '1st' : placeNum === 2 ? '2nd' : placeNum === 3 ? '3rd' : placeNum + 'th';
+            const placeStr = utils.ordinal(placeNum);
             const numTied = result.teamIds.length;
             let points;
             if (numTied > 1) {
@@ -3905,18 +3925,19 @@ function SwimMeetScore() {
           setEvents(loadedEvents);
           if (meetData.settings) {
             const s = meetData.settings;
-            if (s.scoringMode) setScoringMode(s.scoringMode);
-            if (s.numIndividualPlaces) setNumIndividualPlaces(s.numIndividualPlaces);
-            if (s.numRelayPlaces) setNumRelayPlaces(s.numRelayPlaces);
-            if (s.numDivingPlaces) setNumDivingPlaces(s.numDivingPlaces);
-            if (s.individualPointSystem) setIndividualPointSystem(s.individualPointSystem);
-            if (s.relayPointSystem) setRelayPointSystem(s.relayPointSystem);
-            if (s.divingPointSystem) setDivingPointSystem(s.divingPointSystem);
+            if (s.scoringMode !== undefined) setScoringMode(s.scoringMode);
+            if (s.numIndividualPlaces !== undefined) setNumIndividualPlaces(s.numIndividualPlaces);
+            if (s.numRelayPlaces !== undefined) setNumRelayPlaces(s.numRelayPlaces);
+            if (s.numDivingPlaces !== undefined) setNumDivingPlaces(s.numDivingPlaces);
+            if (s.individualPointSystem !== undefined) setIndividualPointSystem(s.individualPointSystem);
+            if (s.relayPointSystem !== undefined) setRelayPointSystem(s.relayPointSystem);
+            if (s.divingPointSystem !== undefined) setDivingPointSystem(s.divingPointSystem);
             if (s.heatLockEnabled !== undefined) setHeatLockEnabled(s.heatLockEnabled);
             if (s.aRelayOnly !== undefined) setARelayOnly(s.aRelayOnly);
             if (s.teamPlaceLimitEnabled !== undefined) setTeamPlaceLimitEnabled(s.teamPlaceLimitEnabled);
-            if (s.activeTemplate) setActiveTemplate(s.activeTemplate);
+            if (s.activeTemplate !== undefined) setActiveTemplate(s.activeTemplate);
           }
+          recalculateAllScores(loadedTeams, loadedEvents);
           setShareSuccess('Meet loaded successfully!');
           setTimeout(() => setShareSuccess(null), 3000);
         } catch (err) {
@@ -3983,18 +4004,19 @@ function SwimMeetScore() {
     setEvents(loadedEvents);
     if (meetEntry.settings) {
       const s = meetEntry.settings;
-      if (s.scoringMode) setScoringMode(s.scoringMode);
-      if (s.numIndividualPlaces) setNumIndividualPlaces(s.numIndividualPlaces);
-      if (s.numRelayPlaces) setNumRelayPlaces(s.numRelayPlaces);
-      if (s.numDivingPlaces) setNumDivingPlaces(s.numDivingPlaces);
-      if (s.individualPointSystem) setIndividualPointSystem(s.individualPointSystem);
-      if (s.relayPointSystem) setRelayPointSystem(s.relayPointSystem);
-      if (s.divingPointSystem) setDivingPointSystem(s.divingPointSystem);
+      if (s.scoringMode !== undefined) setScoringMode(s.scoringMode);
+      if (s.numIndividualPlaces !== undefined) setNumIndividualPlaces(s.numIndividualPlaces);
+      if (s.numRelayPlaces !== undefined) setNumRelayPlaces(s.numRelayPlaces);
+      if (s.numDivingPlaces !== undefined) setNumDivingPlaces(s.numDivingPlaces);
+      if (s.individualPointSystem !== undefined) setIndividualPointSystem(s.individualPointSystem);
+      if (s.relayPointSystem !== undefined) setRelayPointSystem(s.relayPointSystem);
+      if (s.divingPointSystem !== undefined) setDivingPointSystem(s.divingPointSystem);
       if (s.heatLockEnabled !== undefined) setHeatLockEnabled(s.heatLockEnabled);
       if (s.aRelayOnly !== undefined) setARelayOnly(s.aRelayOnly);
       if (s.teamPlaceLimitEnabled !== undefined) setTeamPlaceLimitEnabled(s.teamPlaceLimitEnabled);
-      if (s.activeTemplate) setActiveTemplate(s.activeTemplate);
+      if (s.activeTemplate !== undefined) setActiveTemplate(s.activeTemplate);
     }
+    recalculateAllScores(loadedTeams, loadedEvents);
     setShowMeetHistory(false);
   };
 
@@ -4489,7 +4511,7 @@ function SwimMeetScore() {
     className: `text-xs font-medium ${darkMode ? 'text-gray-400' : 'text-gray-500'}`
   }, "Tap sections to expand/collapse"), /*#__PURE__*/React.createElement("button", {
     onClick: () => {
-      const allSections = ['manage-teams', 'scoring-templates', 'special-scoring', 'scoring-places', 'data-management', 'point-systems', 'appearance'];
+      const allSections = ['manage-teams', 'scoring-templates', 'special-scoring', 'scoring-places', 'data-management', 'point-systems', 'appearance', 'export-share', 'meet-history'];
       const anyCollapsed = allSections.some(s => collapsedSections[s]);
       const newState = {};
       allSections.forEach(s => {
