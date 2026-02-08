@@ -132,14 +132,6 @@ const utils = {
   }
 };
 
-// Determine event type from explicit type field or name-based fallback
-const getEventType = event => {
-  if (event && event.type) return event.type;
-  if (event && event.name === 'Diving') return 'diving';
-  if (event && event.name && event.name.includes('Relay')) return 'relay';
-  return 'individual';
-};
-
 // Icon components
 const Plus = ({
   className
