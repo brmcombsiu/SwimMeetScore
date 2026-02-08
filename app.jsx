@@ -99,6 +99,9 @@
       }
     };
 
+    // Import event type helper from scoring library
+    const { getEventType } = window.ScoringLib;
+
     // Icon components
     const Plus = ({ className }) => (
       <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">

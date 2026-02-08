@@ -132,6 +132,11 @@ const utils = {
   }
 };
 
+// Import event type helper from scoring library
+const {
+  getEventType
+} = window.ScoringLib;
+
 // Icon components
 const Plus = ({
   className
