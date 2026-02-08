@@ -132,6 +132,14 @@ const utils = {
   }
 };
 
+// Determine event type from explicit type field or name-based fallback
+const getEventType = event => {
+  if (event && event.type) return event.type;
+  if (event && event.name === 'Diving') return 'diving';
+  if (event && event.name && event.name.includes('Relay')) return 'relay';
+  return 'individual';
+};
+
 // Icon components
 const Plus = ({
   className
@@ -696,8 +704,8 @@ const PlaceSelector = ({
   const dropdownRef = useRef(null);
   const result = event.results.find(r => r.place === place);
   const selectedTeamIds = result?.teamIds || [];
-  const isRelay = event.name.includes('Relay');
-  const isDiving = event.name === 'Diving';
+  const isRelay = getEventType(event) === 'relay';
+  const isDiving = getEventType(event) === 'diving';
   const isBFinals = heatLockEnabled && !isRelay && !isDiving && numPlaces > 10 && place >= 9 && place <= 16;
   const heatPosition = isBFinals ? place - 8 : null;
   const placeLabel = place === 1 ? '1st' : place === 2 ? '2nd' : place === 3 ? '3rd' : `${place}th`;
@@ -831,8 +839,8 @@ const QuickEntryEventCard = ({
   isCollapsed,
   onToggle
 }) => {
-  const isDiving = event.name === 'Diving';
-  const isRelay = event.name.includes('Relay');
+  const isDiving = getEventType(event) === 'diving';
+  const isRelay = getEventType(event) === 'relay';
 
   // Get current selections from event results
   const getTeamPlaces = teamId => {
@@ -1453,123 +1461,147 @@ function SwimMeetScore() {
 
   // Default events match High School Dual Meet template (diving between 50 Free and 100 Fly)
   const defaultEvents = [{
-    id: 1,
+    id: '1',
     name: '200 Medley Relay',
+    type: 'relay',
     results: [],
     gender: 'girls'
   }, {
-    id: 2,
+    id: '2',
     name: '200 Medley Relay',
+    type: 'relay',
     results: [],
     gender: 'boys'
   }, {
-    id: 3,
+    id: '3',
     name: '200 Freestyle',
+    type: 'individual',
     results: [],
     gender: 'girls'
   }, {
-    id: 4,
+    id: '4',
     name: '200 Freestyle',
+    type: 'individual',
     results: [],
     gender: 'boys'
   }, {
-    id: 5,
+    id: '5',
     name: '200 IM',
+    type: 'individual',
     results: [],
     gender: 'girls'
   }, {
-    id: 6,
+    id: '6',
     name: '200 IM',
+    type: 'individual',
     results: [],
     gender: 'boys'
   }, {
-    id: 7,
+    id: '7',
     name: '50 Freestyle',
+    type: 'individual',
     results: [],
     gender: 'girls'
   }, {
-    id: 8,
+    id: '8',
     name: '50 Freestyle',
+    type: 'individual',
     results: [],
     gender: 'boys'
   }, {
-    id: 9,
+    id: '9',
     name: 'Diving',
+    type: 'diving',
     results: [],
     gender: 'girls'
   }, {
-    id: 10,
+    id: '10',
     name: 'Diving',
+    type: 'diving',
     results: [],
     gender: 'boys'
   }, {
-    id: 11,
+    id: '11',
     name: '100 Butterfly',
+    type: 'individual',
     results: [],
     gender: 'girls'
   }, {
-    id: 12,
+    id: '12',
     name: '100 Butterfly',
+    type: 'individual',
     results: [],
     gender: 'boys'
   }, {
-    id: 13,
+    id: '13',
     name: '100 Freestyle',
+    type: 'individual',
     results: [],
     gender: 'girls'
   }, {
-    id: 14,
+    id: '14',
     name: '100 Freestyle',
+    type: 'individual',
     results: [],
     gender: 'boys'
   }, {
-    id: 15,
+    id: '15',
     name: '500 Freestyle',
+    type: 'individual',
     results: [],
     gender: 'girls'
   }, {
-    id: 16,
+    id: '16',
     name: '500 Freestyle',
+    type: 'individual',
     results: [],
     gender: 'boys'
   }, {
-    id: 17,
+    id: '17',
     name: '200 Freestyle Relay',
+    type: 'relay',
     results: [],
     gender: 'girls'
   }, {
-    id: 18,
+    id: '18',
     name: '200 Freestyle Relay',
+    type: 'relay',
     results: [],
     gender: 'boys'
   }, {
-    id: 19,
+    id: '19',
     name: '100 Backstroke',
+    type: 'individual',
     results: [],
     gender: 'girls'
   }, {
-    id: 20,
+    id: '20',
     name: '100 Backstroke',
+    type: 'individual',
     results: [],
     gender: 'boys'
   }, {
-    id: 21,
+    id: '21',
     name: '100 Breaststroke',
+    type: 'individual',
     results: [],
     gender: 'girls'
   }, {
-    id: 22,
+    id: '22',
     name: '100 Breaststroke',
+    type: 'individual',
     results: [],
     gender: 'boys'
   }, {
-    id: 23,
+    id: '23',
     name: '400 Freestyle Relay',
+    type: 'relay',
     results: [],
     gender: 'girls'
   }, {
-    id: 24,
+    id: '24',
     name: '400 Freestyle Relay',
+    type: 'relay',
     results: [],
     gender: 'boys'
   }];
@@ -1642,7 +1674,7 @@ function SwimMeetScore() {
 
   // State with localStorage initialization
   const CURRENT_VERSION = 4; // Version 4 adds tie support with teamIds array
-  const APP_VERSION = '1.4.0';
+  const APP_VERSION = '1.5.0';
 
   // Check and migrate events if needed
   const initializeEvents = () => {
@@ -1655,8 +1687,12 @@ function SwimMeetScore() {
         return defaultEvents;
       }
 
-      // Validate events structure
-      let validEvents = savedEvents.filter(e => e && e.id && e.name && Array.isArray(e.results));
+      // Validate events structure and add type if missing
+      let validEvents = savedEvents.filter(e => e && e.id && e.name && Array.isArray(e.results)).map(e => ({
+        ...e,
+        id: String(e.id),
+        type: e.type || getEventType(e)
+      }));
 
       // Migrate from version 3 (teamId) to version 4 (teamIds array)
       if (savedVersion < 4) {
@@ -1688,7 +1724,12 @@ function SwimMeetScore() {
   };
   const [teams, setTeams] = useState(() => {
     const loaded = utils.loadFromStorage('teams', defaultTeams);
-    return Array.isArray(loaded) && loaded.length > 0 ? loaded : defaultTeams;
+    if (!Array.isArray(loaded) || loaded.length === 0) return defaultTeams;
+    // Normalize team IDs to strings
+    return loaded.map(t => t ? {
+      ...t,
+      id: String(t.id)
+    } : t);
   });
   const [events, setEvents] = useState(() => initializeEvents());
   const [showSettings, setShowSettings] = useState(false);
@@ -1748,6 +1789,16 @@ function SwimMeetScore() {
   const redoStackRef = useRef([]);
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
+
+  // Refs to always read current state for stable callbacks
+  const teamsRef = useRef(teams);
+  const eventsRef = useRef(events);
+  useEffect(() => {
+    teamsRef.current = teams;
+  }, [teams]);
+  useEffect(() => {
+    eventsRef.current = events;
+  }, [events]);
 
   // Track which template is currently active (for visual indicator)
   const [activeTemplate, setActiveTemplate] = useState(() => utils.loadFromStorage('activeTemplate', 'high_school'));
@@ -1952,8 +2003,8 @@ function SwimMeetScore() {
     try {
       undoStackRef.current.push({
         label: label || 'action',
-        teams: JSON.parse(JSON.stringify(teams)),
-        events: JSON.parse(JSON.stringify(events))
+        teams: JSON.parse(JSON.stringify(teamsRef.current)),
+        events: JSON.parse(JSON.stringify(eventsRef.current))
       });
       if (undoStackRef.current.length > MAX_UNDO_HISTORY) {
         undoStackRef.current.shift();
@@ -1964,13 +2015,14 @@ function SwimMeetScore() {
     } catch (e) {
       console.error('Error saving undo snapshot:', e);
     }
-  }, [teams, events]);
+  }, []); // stable identity - reads from refs
+
   const performUndo = useCallback(() => {
     if (undoStackRef.current.length === 0) return;
     try {
       redoStackRef.current.push({
-        teams: JSON.parse(JSON.stringify(teams)),
-        events: JSON.parse(JSON.stringify(events))
+        teams: JSON.parse(JSON.stringify(teamsRef.current)),
+        events: JSON.parse(JSON.stringify(eventsRef.current))
       });
       const snapshot = undoStackRef.current.pop();
       setTeams(snapshot.teams);
@@ -1985,14 +2037,14 @@ function SwimMeetScore() {
       console.error('Error performing undo:', e);
       setError('Failed to undo. Please try again.');
     }
-  }, [teams, events, recalculateAllScores]);
+  }, [recalculateAllScores]);
   const performRedo = useCallback(() => {
     if (redoStackRef.current.length === 0) return;
     try {
       undoStackRef.current.push({
         label: 'redo',
-        teams: JSON.parse(JSON.stringify(teams)),
-        events: JSON.parse(JSON.stringify(events))
+        teams: JSON.parse(JSON.stringify(teamsRef.current)),
+        events: JSON.parse(JSON.stringify(eventsRef.current))
       });
       const snapshot = redoStackRef.current.pop();
       setTeams(snapshot.teams);
@@ -2005,7 +2057,7 @@ function SwimMeetScore() {
       console.error('Error performing redo:', e);
       setError('Failed to redo. Please try again.');
     }
-  }, [teams, events, recalculateAllScores]);
+  }, [recalculateAllScores]);
   useEffect(() => {
     const handleKeyDown = e => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
@@ -2169,6 +2221,7 @@ function SwimMeetScore() {
       setEvents([...events, {
         id: utils.generateId(),
         name: eventName,
+        type: newEventType,
         results: [],
         gender: newEventGender
       }]);
@@ -2255,6 +2308,7 @@ function SwimMeetScore() {
         teamPlaceLimitEnabled,
         events: events.map(e => e ? {
           name: e.name,
+          type: e.type || getEventType(e),
           gender: e.gender
         } : null).filter(Boolean),
         teams: teams.map(t => t ? {
@@ -2320,6 +2374,7 @@ function SwimMeetScore() {
         const newEvents = template.events.filter(e => e && e.name && e.gender).map((e, _index) => ({
           id: utils.generateId(),
           name: e.name,
+          type: e.type || getEventType(e),
           gender: e.gender,
           results: []
         }));
@@ -2350,13 +2405,13 @@ function SwimMeetScore() {
     try {
       // Validate inputs
       if (!eventId || !place || place < 1) return;
-      if (teamId && !teams.some(t => t && t.id == teamId)) return; // Validate team exists
+      if (teamId && !teams.some(t => t && t.id === String(teamId))) return; // Validate team exists
       saveSnapshot('update result');
 
       // Find the event to check if it's a relay
       const targetEvent = events.find(e => e && e.id === eventId);
       if (!targetEvent) return;
-      const isRelay = targetEvent.name && targetEvent.name.includes('Relay');
+      const isRelay = getEventType(targetEvent) === 'relay';
 
       // Check team place limit for relays before adding
       if (isChecked && teamId && teamPlaceLimitEnabled && isRelay) {
@@ -2447,7 +2502,7 @@ function SwimMeetScore() {
 
       // B Finals reminder: if heat lock is on, event is individual with >10 places,
       // user just scored a place in 1-8, and no places 9-16 have results yet
-      const isDivingEvent = targetEvent.name === 'Diving';
+      const isDivingEvent = getEventType(targetEvent) === 'diving';
       if (isChecked && teamId && heatLockEnabled && !isRelay && !isDivingEvent && numIndividualPlaces > 10 && place >= 1 && place <= 8) {
         const updatedEvent = newEvents.find(e => e.id === eventId);
         if (updatedEvent) {
@@ -2583,8 +2638,8 @@ function SwimMeetScore() {
   }, [teams, scoringMode]);
   const getPlacesArray = event => {
     if (!event || !event.name) return [];
-    const isDiving = event.name === 'Diving';
-    const isRelay = event.name.includes('Relay');
+    const isDiving = getEventType(event) === 'diving';
+    const isRelay = getEventType(event) === 'relay';
     const numPlaces = isDiving ? numDivingPlaces : isRelay ? numRelayPlaces : numIndividualPlaces;
     return Array.from({
       length: numPlaces
@@ -2595,8 +2650,8 @@ function SwimMeetScore() {
   const getConsumedPlaces = event => {
     const consumed = new Set();
     if (!event || !event.results) return consumed;
-    const isDiving = event.name === 'Diving';
-    const isRelay = event.name.includes('Relay');
+    const isDiving = getEventType(event) === 'diving';
+    const isRelay = getEventType(event) === 'relay';
     const numPlaces = isDiving ? numDivingPlaces : isRelay ? numRelayPlaces : numIndividualPlaces;
 
     // Sort results by place
@@ -2614,148 +2669,196 @@ function SwimMeetScore() {
   };
   const highSchoolEvents = [{
     name: '200 Medley Relay',
+    type: 'relay',
     gender: 'girls'
   }, {
     name: '200 Medley Relay',
+    type: 'relay',
     gender: 'boys'
   }, {
     name: '200 Freestyle',
+    type: 'individual',
     gender: 'girls'
   }, {
     name: '200 Freestyle',
+    type: 'individual',
     gender: 'boys'
   }, {
     name: '200 IM',
+    type: 'individual',
     gender: 'girls'
   }, {
     name: '200 IM',
+    type: 'individual',
     gender: 'boys'
   }, {
     name: '50 Freestyle',
+    type: 'individual',
     gender: 'girls'
   }, {
     name: '50 Freestyle',
+    type: 'individual',
     gender: 'boys'
   }, {
     name: 'Diving',
+    type: 'diving',
     gender: 'girls'
   }, {
     name: 'Diving',
+    type: 'diving',
     gender: 'boys'
   }, {
     name: '100 Butterfly',
+    type: 'individual',
     gender: 'girls'
   }, {
     name: '100 Butterfly',
+    type: 'individual',
     gender: 'boys'
   }, {
     name: '100 Freestyle',
+    type: 'individual',
     gender: 'girls'
   }, {
     name: '100 Freestyle',
+    type: 'individual',
     gender: 'boys'
   }, {
     name: '500 Freestyle',
+    type: 'individual',
     gender: 'girls'
   }, {
     name: '500 Freestyle',
+    type: 'individual',
     gender: 'boys'
   }, {
     name: '200 Freestyle Relay',
+    type: 'relay',
     gender: 'girls'
   }, {
     name: '200 Freestyle Relay',
+    type: 'relay',
     gender: 'boys'
   }, {
     name: '100 Backstroke',
+    type: 'individual',
     gender: 'girls'
   }, {
     name: '100 Backstroke',
+    type: 'individual',
     gender: 'boys'
   }, {
     name: '100 Breaststroke',
+    type: 'individual',
     gender: 'girls'
   }, {
     name: '100 Breaststroke',
+    type: 'individual',
     gender: 'boys'
   }, {
     name: '400 Freestyle Relay',
+    type: 'relay',
     gender: 'girls'
   }, {
     name: '400 Freestyle Relay',
+    type: 'relay',
     gender: 'boys'
   }];
   const competitionEvents = [{
     name: '200 Medley Relay',
+    type: 'relay',
     gender: 'girls'
   }, {
     name: '200 Medley Relay',
+    type: 'relay',
     gender: 'boys'
   }, {
     name: '200 Freestyle',
+    type: 'individual',
     gender: 'girls'
   }, {
     name: '200 Freestyle',
+    type: 'individual',
     gender: 'boys'
   }, {
     name: '200 IM',
+    type: 'individual',
     gender: 'girls'
   }, {
     name: '200 IM',
+    type: 'individual',
     gender: 'boys'
   }, {
     name: '50 Freestyle',
+    type: 'individual',
     gender: 'girls'
   }, {
     name: '50 Freestyle',
+    type: 'individual',
     gender: 'boys'
   }, {
     name: 'Diving',
+    type: 'diving',
     gender: 'girls'
   }, {
     name: 'Diving',
+    type: 'diving',
     gender: 'boys'
   }, {
     name: '100 Butterfly',
+    type: 'individual',
     gender: 'girls'
   }, {
     name: '100 Butterfly',
+    type: 'individual',
     gender: 'boys'
   }, {
     name: '100 Freestyle',
+    type: 'individual',
     gender: 'girls'
   }, {
     name: '100 Freestyle',
+    type: 'individual',
     gender: 'boys'
   }, {
     name: '500 Freestyle',
+    type: 'individual',
     gender: 'girls'
   }, {
     name: '500 Freestyle',
+    type: 'individual',
     gender: 'boys'
   }, {
     name: '200 Freestyle Relay',
+    type: 'relay',
     gender: 'girls'
   }, {
     name: '200 Freestyle Relay',
+    type: 'relay',
     gender: 'boys'
   }, {
     name: '100 Backstroke',
+    type: 'individual',
     gender: 'girls'
   }, {
     name: '100 Backstroke',
+    type: 'individual',
     gender: 'boys'
   }, {
     name: '100 Breaststroke',
+    type: 'individual',
     gender: 'girls'
   }, {
     name: '100 Breaststroke',
+    type: 'individual',
     gender: 'boys'
   }, {
     name: '400 Freestyle Relay',
+    type: 'relay',
     gender: 'girls'
   }, {
     name: '400 Freestyle Relay',
+    type: 'relay',
     gender: 'boys'
   }];
   const loadHighSchoolMeet = () => {
@@ -2851,6 +2954,7 @@ function SwimMeetScore() {
     const newEvents = highSchoolEvents.map(e => ({
       id: utils.generateId(),
       name: e.name,
+      type: e.type,
       gender: e.gender,
       results: []
     }));
@@ -2994,6 +3098,7 @@ function SwimMeetScore() {
     const newEvents = competitionEvents.map(e => ({
       id: utils.generateId(),
       name: e.name,
+      type: e.type,
       gender: e.gender,
       results: []
     }));
@@ -3150,6 +3255,7 @@ function SwimMeetScore() {
     const newEvents = competitionEvents.map(e => ({
       id: utils.generateId(),
       name: e.name,
+      type: e.type,
       gender: e.gender,
       results: []
     }));
@@ -3381,8 +3487,8 @@ function SwimMeetScore() {
       body += '================================\n\n';
       filteredEvents.forEach(event => {
         const genderPrefix = scoringMode === 'combined' ? event.gender === 'girls' ? 'Girls ' : 'Boys ' : '';
-        const isDiving = event.name === 'Diving';
-        const isRelay = event.name.includes('Relay');
+        const isDiving = getEventType(event) === 'diving';
+        const isRelay = getEventType(event) === 'relay';
         const evtPointSystem = isDiving ? divingPointSystem : isRelay ? relayPointSystem : individualPointSystem;
         body += genderPrefix + event.name + ':\n';
         if (event.results && event.results.length > 0) {
@@ -3474,8 +3580,8 @@ function SwimMeetScore() {
     csv += '\nEVENT RESULTS\n';
     csv += 'Event,Gender,Place,Team(s),Points\n';
     filteredEvents.forEach(event => {
-      const isDiving = event.name === 'Diving';
-      const isRelay = event.name.includes('Relay');
+      const isDiving = getEventType(event) === 'diving';
+      const isRelay = getEventType(event) === 'relay';
       const evtPointSystem = isDiving ? divingPointSystem : isRelay ? relayPointSystem : individualPointSystem;
       const gender = event.gender === 'girls' ? 'Girls' : 'Boys';
       if (event.results && event.results.length > 0) {
@@ -3560,8 +3666,8 @@ function SwimMeetScore() {
     html += '<h2>Event-by-Event Results</h2>';
     filteredEvents.forEach(event => {
       const genderPrefix = scoringMode === 'combined' ? event.gender === 'girls' ? 'Girls ' : 'Boys ' : '';
-      const isDiving = event.name === 'Diving';
-      const isRelay = event.name.includes('Relay');
+      const isDiving = getEventType(event) === 'diving';
+      const isRelay = getEventType(event) === 'relay';
       const evtPointSystem = isDiving ? divingPointSystem : isRelay ? relayPointSystem : individualPointSystem;
       html += '<h3>' + esc(genderPrefix + event.name) + '</h3>';
       if (event.results && event.results.length > 0) {
@@ -3783,8 +3889,24 @@ function SwimMeetScore() {
             }
           }
           if (!confirm('Loading this file will replace your current meet data. Continue?')) return;
-          setTeams(meetData.teams);
-          setEvents(meetData.events);
+
+          // Normalize team IDs to strings
+          const loadedTeams = meetData.teams.map(t => ({
+            ...t,
+            id: String(t.id)
+          }));
+          // Add type field if missing and normalize event/result IDs
+          const loadedEvents = meetData.events.map(e => ({
+            ...e,
+            id: String(e.id),
+            type: e.type || getEventType(e),
+            results: (e.results || []).map(r => ({
+              ...r,
+              teamIds: (r.teamIds || []).map(String)
+            }))
+          }));
+          setTeams(loadedTeams);
+          setEvents(loadedEvents);
           if (meetData.settings) {
             const s = meetData.settings;
             if (s.scoringMode) setScoringMode(s.scoringMode);
@@ -3847,8 +3969,22 @@ function SwimMeetScore() {
   const loadMeetFromHistory = meetEntry => {
     if (!confirm('Loading this meet will replace your current data. Continue?')) return;
     trackEvent('load_meet_history');
-    setTeams(meetEntry.teams);
-    setEvents(meetEntry.events);
+    // Normalize IDs and add type field if missing
+    const loadedTeams = (meetEntry.teams || []).map(t => ({
+      ...t,
+      id: String(t.id)
+    }));
+    const loadedEvents = (meetEntry.events || []).map(e => ({
+      ...e,
+      id: String(e.id),
+      type: e.type || getEventType(e),
+      results: (e.results || []).map(r => ({
+        ...r,
+        teamIds: (r.teamIds || []).map(String)
+      }))
+    }));
+    setTeams(loadedTeams);
+    setEvents(loadedEvents);
     if (meetEntry.settings) {
       const s = meetEntry.settings;
       if (s.scoringMode) setScoringMode(s.scoringMode);
@@ -3953,8 +4089,8 @@ function SwimMeetScore() {
     event: bulkEntryEvent,
     teams: teams,
     darkMode: darkMode,
-    numPlaces: bulkEntryEvent.name === 'Diving' ? numDivingPlaces : bulkEntryEvent.name.includes('Relay') ? numRelayPlaces : numIndividualPlaces,
-    pointSystem: bulkEntryEvent.name === 'Diving' ? divingPointSystem : bulkEntryEvent.name.includes('Relay') ? relayPointSystem : individualPointSystem,
+    numPlaces: getEventType(bulkEntryEvent) === 'diving' ? numDivingPlaces : getEventType(bulkEntryEvent) === 'relay' ? numRelayPlaces : numIndividualPlaces,
+    pointSystem: getEventType(bulkEntryEvent) === 'diving' ? divingPointSystem : getEventType(bulkEntryEvent) === 'relay' ? relayPointSystem : individualPointSystem,
     existingResults: bulkEntryEvent.results,
     onSave: bulkUpdateEventResults,
     onClose: () => setBulkEntryEvent(null)
@@ -5037,8 +5173,8 @@ function SwimMeetScore() {
   }, "\u26A1 Tap place numbers to assign to each team")), scoringMode === 'combined' ? /*#__PURE__*/React.createElement("div", {
     className: `space-y-2`
   }, events.map((event, index) => {
-    const isDiving = event.name === 'Diving';
-    const isRelay = event.name.includes('Relay');
+    const isDiving = getEventType(event) === 'diving';
+    const isRelay = getEventType(event) === 'relay';
     const pointSystem = isDiving ? divingPointSystem : isRelay ? relayPointSystem : individualPointSystem;
     const numPlaces = isDiving ? numDivingPlaces : isRelay ? numRelayPlaces : numIndividualPlaces;
 
@@ -5147,8 +5283,8 @@ function SwimMeetScore() {
   }, scoringMode === 'girls' ? 'Girls Events' : 'Boys Events'), /*#__PURE__*/React.createElement("div", {
     className: `space-y-2`
   }, events.filter(e => e.gender === scoringMode).map((event, _index) => {
-    const isDiving = event.name === 'Diving';
-    const isRelay = event.name.includes('Relay');
+    const isDiving = getEventType(event) === 'diving';
+    const isRelay = getEventType(event) === 'relay';
     const actualIndex = events.findIndex(e => e.id === event.id);
     const pointSystem = isDiving ? divingPointSystem : isRelay ? relayPointSystem : individualPointSystem;
     const numPlaces = isDiving ? numDivingPlaces : isRelay ? numRelayPlaces : numIndividualPlaces;
@@ -5348,8 +5484,75 @@ function SwimMeetScore() {
     className: "mb-2"
   }, /*#__PURE__*/React.createElement("strong", null, "Terms of Use:"), " This application is provided \"as is\" without warranties. Users are responsible for the accuracy of data entered. Swim Meet Score is not liable for any scoring errors or data loss."), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("strong", null, "Privacy & Data:"), " Your meet data is stored locally in your browser using localStorage and is never transmitted to our servers. We use Google Analytics to collect anonymous usage statistics (pages visited, features used) to improve the app. No personal information is required to use this application. By using SwimMeetScore, you consent to this data collection.")))));
 }
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      hasError: false,
+      error: null
+    };
+  }
+  static getDerivedStateFromError(error) {
+    return {
+      hasError: true,
+      error
+    };
+  }
+  componentDidCatch(error, info) {
+    if (typeof trackEvent === 'function') {
+      trackEvent('react_error', {
+        error: error.message,
+        stack: (info.componentStack || '').slice(0, 200)
+      });
+    }
+  }
+  render() {
+    if (this.state.hasError) {
+      return /*#__PURE__*/React.createElement("div", {
+        style: {
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: '#0a1628',
+          color: '#e2e8f0',
+          fontFamily: 'system-ui, sans-serif',
+          padding: '24px',
+          textAlign: 'center'
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          maxWidth: '400px'
+        }
+      }, /*#__PURE__*/React.createElement("h1", {
+        style: {
+          fontSize: '24px',
+          marginBottom: '12px',
+          color: '#f87171'
+        }
+      }, "Something went wrong"), /*#__PURE__*/React.createElement("p", {
+        style: {
+          marginBottom: '16px',
+          color: '#94a3b8'
+        }
+      }, "An unexpected error occurred. Please reload the page to continue."), /*#__PURE__*/React.createElement("button", {
+        onClick: () => location.reload(),
+        style: {
+          padding: '10px 24px',
+          background: '#06b6d4',
+          color: '#fff',
+          border: 'none',
+          borderRadius: '8px',
+          fontSize: '16px',
+          cursor: 'pointer'
+        }
+      }, "Reload")));
+    }
+    return this.props.children;
+  }
+}
 const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(/*#__PURE__*/React.createElement(SwimMeetScore, null));
+root.render(/*#__PURE__*/React.createElement(ErrorBoundary, null, /*#__PURE__*/React.createElement(SwimMeetScore, null)));
 
 // Hide loading screen after render
 hideLoadingScreen();
