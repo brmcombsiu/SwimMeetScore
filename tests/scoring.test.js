@@ -5,6 +5,7 @@
 const {
   isDivingEvent,
   isRelayEvent,
+  getEventType,
   calculateTiePoints,
   calculateScores,
   calculateConsumedPlaces,
@@ -14,8 +15,12 @@ const {
 
 describe('Event Type Detection', () => {
   describe('isDivingEvent', () => {
-    test('returns true for diving event', () => {
+    test('returns true for diving event by name', () => {
       expect(isDivingEvent({ name: 'Diving' })).toBe(true);
+    });
+
+    test('returns true for diving event by type field', () => {
+      expect(isDivingEvent({ name: 'Diving Exhibition', type: 'diving' })).toBe(true);
     });
 
     test('returns false for non-diving event', () => {
@@ -27,6 +32,11 @@ describe('Event Type Detection', () => {
       expect(isDivingEvent({ name: 'Diving Relay' })).toBe(false);
     });
 
+    test('type field takes precedence over name', () => {
+      expect(isDivingEvent({ name: 'Diving', type: 'individual' })).toBe(false);
+      expect(isDivingEvent({ name: 'Custom Event', type: 'diving' })).toBe(true);
+    });
+
     test('handles null/undefined', () => {
       expect(isDivingEvent(null)).toBe(false);
       expect(isDivingEvent(undefined)).toBe(false);
@@ -35,9 +45,13 @@ describe('Event Type Detection', () => {
   });
 
   describe('isRelayEvent', () => {
-    test('returns true for relay events', () => {
+    test('returns true for relay events by name', () => {
       expect(isRelayEvent({ name: '200 Medley Relay' })).toBe(true);
       expect(isRelayEvent({ name: '400 Freestyle Relay' })).toBe(true);
+    });
+
+    test('returns true for relay events by type field', () => {
+      expect(isRelayEvent({ name: 'Relay Practice', type: 'relay' })).toBe(true);
     });
 
     test('returns false for individual events', () => {
@@ -45,10 +59,40 @@ describe('Event Type Detection', () => {
       expect(isRelayEvent({ name: 'Diving' })).toBe(false);
     });
 
+    test('type field takes precedence over name', () => {
+      expect(isRelayEvent({ name: '200 Medley Relay', type: 'individual' })).toBe(false);
+      expect(isRelayEvent({ name: 'Custom Event', type: 'relay' })).toBe(true);
+    });
+
     test('handles null/undefined', () => {
       expect(isRelayEvent(null)).toBe(false);
       expect(isRelayEvent(undefined)).toBe(false);
       expect(isRelayEvent({})).toBe(false);
+    });
+  });
+
+  describe('getEventType', () => {
+    test('returns type from explicit type field', () => {
+      expect(getEventType({ name: 'Test', type: 'diving' })).toBe('diving');
+      expect(getEventType({ name: 'Test', type: 'relay' })).toBe('relay');
+      expect(getEventType({ name: 'Test', type: 'individual' })).toBe('individual');
+    });
+
+    test('falls back to name detection when no type field', () => {
+      expect(getEventType({ name: 'Diving' })).toBe('diving');
+      expect(getEventType({ name: '200 Medley Relay' })).toBe('relay');
+      expect(getEventType({ name: '100 Freestyle' })).toBe('individual');
+    });
+
+    test('type field takes precedence over name', () => {
+      expect(getEventType({ name: 'Diving', type: 'individual' })).toBe('individual');
+      expect(getEventType({ name: '200 Relay', type: 'diving' })).toBe('diving');
+    });
+
+    test('returns individual for null/undefined/empty', () => {
+      expect(getEventType(null)).toBe('individual');
+      expect(getEventType(undefined)).toBe('individual');
+      expect(getEventType({})).toBe('individual');
     });
   });
 });
