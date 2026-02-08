@@ -116,7 +116,7 @@ console.log('\n--- Build output ---');
 
 const appJsSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
 const jsxVersionMatch = appSource.match(/APP_VERSION\s*=\s*'([^']+)'/);
-const jsVersionMatch = appJsSource.match(/APP_VERSION\s*=\s*'([^']+)'/);
+const jsVersionMatch = appJsSource.match(/APP_VERSION\s*=\s*['"]([^'"]+)['"]/);
 if (jsxVersionMatch && jsVersionMatch) {
   assert(
     jsxVersionMatch[1] === jsVersionMatch[1],
