@@ -684,7 +684,7 @@
             aria-expanded={!isCollapsed}
           >
             <div className="flex items-center gap-2 flex-wrap">
-              <h5 className={`font-semibold text-base ${darkMode ? 'text-white' : 'text-slate-800'}`}>
+              <h4 className={`font-semibold text-base ${darkMode ? 'text-white' : 'text-slate-800'}`}>
                 <span className={event.gender === 'girls' ? (darkMode ? 'text-pink-400' : 'text-pink-600') : (darkMode ? 'text-blue-400' : 'text-blue-600')}>
                   {event.gender === 'girls' ? 'G' : 'B'}
                 </span>
@@ -692,7 +692,7 @@
                 <span className={isDiving ? (darkMode ? 'text-orange-400' : 'text-orange-600') : ''}>
                   {event.name}
                 </span>
-              </h5>
+              </h4>
               {/* Visual indicators for Conference/Sectionals settings */}
               {heatLockEnabled && !isRelay && !isDiving && (
                 <span className={`text-xs px-1.5 py-0.5 rounded-full whitespace-nowrap ${darkMode ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-amber-100 text-amber-700 border border-amber-200'}`}>
@@ -756,6 +756,7 @@
                 <button
                   onClick={(e) => { e.stopPropagation(); onMoveUp(); }}
                   disabled={!canMoveUp}
+                  aria-label="Move event up"
                   className={`p-1 rounded ${!canMoveUp ? 'opacity-30 cursor-not-allowed' : (darkMode ? 'hover:bg-white/10' : 'hover:bg-slate-100')} ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}
                 >
                   <ChevronUp className="w-4 h-4" />
@@ -763,12 +764,14 @@
                 <button
                   onClick={(e) => { e.stopPropagation(); onMoveDown(); }}
                   disabled={!canMoveDown}
+                  aria-label="Move event down"
                   className={`p-1 rounded ${!canMoveDown ? 'opacity-30 cursor-not-allowed' : (darkMode ? 'hover:bg-white/10' : 'hover:bg-slate-100')} ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}
                 >
                   <ChevronDown className="w-4 h-4" />
                 </button>
                 <button
                   onClick={(e) => { e.stopPropagation(); onRemove(); }}
+                  aria-label="Remove event"
                   className={`p-1 rounded ${darkMode ? 'text-red-400 hover:bg-red-500/20' : 'text-red-500 hover:bg-red-50'}`}
                 >
                   <X className="w-4 h-4" />
@@ -1356,7 +1359,7 @@
 
       // State with localStorage initialization
       const CURRENT_VERSION = 4; // Version 4 adds tie support with teamIds array
-      const APP_VERSION = '1.5.0';
+      const APP_VERSION = '1.5.1';
       
       // Check and migrate events if needed
       const initializeEvents = () => {
@@ -3291,7 +3294,7 @@
       }, [showExportMenu]);
 
       return (
-        <div className={`min-h-screen p-4 font-outfit ${darkMode ? 'bg-pool-deep' : 'bg-gradient-to-b from-sky-100 via-cyan-50 to-blue-100'}`} style={darkMode ? {background: 'linear-gradient(180deg, #0c1929 0%, #0f2942 50%, #164e6e 100%)'} : {}}>
+        <main className={`min-h-screen p-4 font-outfit ${darkMode ? 'bg-pool-deep' : 'bg-gradient-to-b from-sky-100 via-cyan-50 to-blue-100'}`} style={darkMode ? {background: 'linear-gradient(180deg, #0c1929 0%, #0f2942 50%, #164e6e 100%)'} : {}}>
           {/* Pool lane pattern overlay for dark mode */}
           {darkMode && (
             <div className="fixed inset-0 pointer-events-none opacity-[0.03]" style={{
@@ -4713,8 +4716,8 @@
                         className={`flex items-center gap-1 px-0.5 py-0.5 rounded-full text-xs font-medium transition cursor-pointer ${darkMode ? 'bg-gray-700 border border-gray-600' : 'bg-gray-200 border border-gray-300'}`}
                         title={teamFirstMode ? "Switch to Place Mode" : "Switch to Team Mode"}
                       >
-                        <span className={`px-2 py-0.5 rounded-full transition-all ${!teamFirstMode ? (darkMode ? 'bg-chlorine text-pool-deep font-semibold' : 'bg-cyan-600 text-white font-semibold') : ''}`}>Place</span>
-                        <span className={`px-2 py-0.5 rounded-full transition-all ${teamFirstMode ? (darkMode ? 'bg-lane-gold text-pool-deep font-semibold' : 'bg-amber-500 text-white font-semibold') : ''}`}>Team</span>
+                        <span className={`px-2 py-0.5 rounded-full transition-all ${!teamFirstMode ? (darkMode ? 'bg-chlorine text-pool-deep font-semibold' : 'bg-cyan-600 text-white font-semibold') : (darkMode ? 'text-gray-300' : 'text-gray-600')}`}>Place</span>
+                        <span className={`px-2 py-0.5 rounded-full transition-all ${teamFirstMode ? (darkMode ? 'bg-lane-gold text-pool-deep font-semibold' : 'bg-amber-500 text-white font-semibold') : (darkMode ? 'text-gray-300' : 'text-gray-600')}`}>Team</span>
                       </button>
                       {events.length > 0 && (
                         <button
@@ -4779,7 +4782,7 @@
                             aria-expanded={!isEventCollapsed}
                           >
                             <div className="flex items-center gap-2 flex-wrap">
-                              <h5 className={`font-semibold text-base ${darkMode ? 'text-white' : 'text-slate-800'}`}>
+                              <h4 className={`font-semibold text-base ${darkMode ? 'text-white' : 'text-slate-800'}`}>
                                 <span className={event.gender === 'girls' ? (darkMode ? 'text-pink-400' : 'text-pink-600') : (darkMode ? 'text-blue-400' : 'text-blue-600')}>
                                   {event.gender === 'girls' ? 'G' : 'B'}
                                 </span>
@@ -4787,7 +4790,7 @@
                                 <span className={isDiving ? (darkMode ? 'text-orange-400' : 'text-orange-600') : ''}>
                                   {event.name}
                                 </span>
-                              </h5>
+                              </h4>
                               {heatLockEnabled && !isRelay && !isDiving && (
                                 <span className={`text-xs px-1.5 py-0.5 rounded-full whitespace-nowrap ${darkMode ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-amber-100 text-amber-700 border border-amber-200'}`}>
                                   🔒 A/B Finals
@@ -4809,6 +4812,7 @@
                                 <button
                                   onClick={(e) => { e.stopPropagation(); moveEventUp(index); }}
                                   disabled={index === 0}
+                                  aria-label="Move event up"
                                   className={`p-1 rounded ${index === 0 ? 'opacity-30 cursor-not-allowed' : (darkMode ? 'hover:bg-white/10' : 'hover:bg-slate-100')} ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}
                                 >
                                   <ChevronUp className="w-4 h-4" />
@@ -4816,12 +4820,14 @@
                                 <button
                                   onClick={(e) => { e.stopPropagation(); moveEventDown(index); }}
                                   disabled={index === events.length - 1}
+                                  aria-label="Move event down"
                                   className={`p-1 rounded ${index === events.length - 1 ? 'opacity-30 cursor-not-allowed' : (darkMode ? 'hover:bg-white/10' : 'hover:bg-slate-100')} ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}
                                 >
                                   <ChevronDown className="w-4 h-4" />
                                 </button>
                                 <button
                                   onClick={(e) => { e.stopPropagation(); removeEvent(event.id); }}
+                                  aria-label="Remove event"
                                   className={`p-1 rounded ${darkMode ? 'text-red-400 hover:bg-red-500/20' : 'text-red-500 hover:bg-red-50'}`}
                                 >
                                   <X className="w-4 h-4" />
@@ -4902,7 +4908,7 @@
                               aria-expanded={!isEventCollapsed}
                             >
                               <div className="flex items-center gap-2 flex-wrap">
-                                <h5 className={`font-semibold text-base ${isDiving ? (darkMode ? 'text-orange-400' : 'text-orange-600') : (darkMode ? 'text-white' : 'text-slate-800')}`}>{event.name}</h5>
+                                <h4 className={`font-semibold text-base ${isDiving ? (darkMode ? 'text-orange-400' : 'text-orange-600') : (darkMode ? 'text-white' : 'text-slate-800')}`}>{event.name}</h4>
                                 {heatLockEnabled && !isRelay && !isDiving && (
                                   <span className={`text-xs px-1.5 py-0.5 rounded-full whitespace-nowrap ${darkMode ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-amber-100 text-amber-700 border border-amber-200'}`}>
                                     🔒 A/B Finals
@@ -4924,6 +4930,7 @@
                                   <button
                                     onClick={(e) => { e.stopPropagation(); moveEventUp(actualIndex); }}
                                     disabled={actualIndex === 0}
+                                    aria-label="Move event up"
                                     className={`p-1 rounded ${actualIndex === 0 ? 'opacity-30 cursor-not-allowed' : (darkMode ? 'hover:bg-white/10' : 'hover:bg-slate-100')} ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}
                                   >
                                     <ChevronUp className="w-4 h-4" />
@@ -4931,12 +4938,14 @@
                                   <button
                                     onClick={(e) => { e.stopPropagation(); moveEventDown(actualIndex); }}
                                     disabled={actualIndex === events.length - 1}
+                                    aria-label="Move event down"
                                     className={`p-1 rounded ${actualIndex === events.length - 1 ? 'opacity-30 cursor-not-allowed' : (darkMode ? 'hover:bg-white/10' : 'hover:bg-slate-100')} ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}
                                   >
                                     <ChevronDown className="w-4 h-4" />
                                   </button>
                                   <button
                                     onClick={(e) => { e.stopPropagation(); removeEvent(event.id); }}
+                                    aria-label="Remove event"
                                     className={`p-1 rounded ${darkMode ? 'text-red-400 hover:bg-red-500/20' : 'text-red-500 hover:bg-red-50'}`}
                                   >
                                     <X className="w-4 h-4" />
@@ -5015,13 +5024,13 @@
                       </select>
                       <button
                         onClick={addEvent}
-                        className={`flex-1 sm:flex-none px-4 py-2 rounded-lg flex items-center justify-center gap-2 text-white ${darkMode ? 'bg-cyan-600 hover:bg-cyan-700' : 'bg-blue-600 hover:bg-blue-700'}`}
+                        className={`flex-1 sm:flex-none px-4 py-2 rounded-lg flex items-center justify-center gap-2 text-white ${darkMode ? 'bg-cyan-700 hover:bg-cyan-800' : 'bg-blue-600 hover:bg-blue-700'}`}
                       >
                         <Plus className="w-4 h-4" /> Add
                       </button>
                     </div>
                   </div>
-                  <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  <p className={`text-xs ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>
                     {newEventType === 'diving' && 'Diving events use their own point system'}
                     {newEventType === 'relay' && '"Relay" will be automatically added to the event name'}
                     {newEventType === 'individual' && 'Individual swimming events'}
@@ -5094,7 +5103,7 @@
               </div>
             </div>
           </footer>
-        </div>
+        </main>
       );
     }
 
