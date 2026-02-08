@@ -1359,7 +1359,7 @@
 
       // State with localStorage initialization
       const CURRENT_VERSION = 4; // Version 4 adds tie support with teamIds array
-      const APP_VERSION = '1.5.1';
+      const APP_VERSION = '1.5.2';
       
       // Check and migrate events if needed
       const initializeEvents = () => {
