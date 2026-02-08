@@ -1,5 +1,5 @@
 // SwimMeetScore Service Worker
-const CACHE_NAME = 'swimmeetscore-v18';
+const CACHE_NAME = 'swimmeetscore-v19';
 
 // Files to cache for offline use
 const CACHE_FILES = [
@@ -12,6 +12,7 @@ const CACHE_FILES = [
   './favicon192x192.png',
   './favicon512x512.png',
   './apple-touch-icon.png',
+  './lib/scoring.js',
   './app.js',
   './app.css'
 ];
