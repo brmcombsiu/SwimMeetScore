@@ -43,6 +43,13 @@
         }
       },
 
+      // Ordinal suffix for place numbers (1st, 2nd, 3rd, 11th, 21st, etc.)
+      ordinal: (n) => {
+        const s = ['th', 'st', 'nd', 'rd'];
+        const v = n % 100;
+        return n + (s[(v - 20) % 10] || s[v] || s[0]);
+      },
+
       // Generate unique IDs (better than Date.now() for collisions)
       generateId: () => {
         return Date.now().toString(36) + Math.random().toString(36).substr(2);
@@ -214,13 +221,6 @@
       <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 2v6h6M16 13H8M16 17H8M10 9H8" />
-      </svg>
-    );
-
-    const Clock = ({ className }) => (
-      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <circle cx="12" cy="12" r="10" strokeWidth={2} />
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6l4 2" />
       </svg>
     );
 
@@ -1447,7 +1447,6 @@
       const [newTemplateName, setNewTemplateName] = useState('');
       const [showSaveTemplate, setShowSaveTemplate] = useState(false);
       const [shareSuccess, setShareSuccess] = useState(null);
-      const [showMeetHistory, setShowMeetHistory] = useState(false);
       const [savedMeets, setSavedMeets] = useState(() => {
         const loaded = utils.loadFromStorage('savedMeets', []);
         return Array.isArray(loaded) ? loaded : [];
@@ -2286,6 +2285,19 @@
               setTeamPlaceLimitEnabled(true);
               // Reset active template to default (High School)
               setActiveTemplate('high_school');
+              // Reset meet history and collapsed sections state
+              setSavedMeets([]);
+              setCollapsedSections({
+                'manage-teams': true,
+                'scoring-templates': true,
+                'special-scoring': true,
+                'scoring-places': true,
+                'data-management': true,
+                'point-systems': true,
+                'appearance': true,
+                'export-share': true,
+                'meet-history': true
+              });
 
               utils.saveToStorage('version', CURRENT_VERSION);
               recalculateAllScores(defaultTeams, defaultEvents);
@@ -2594,6 +2606,7 @@
           .map((e) => ({
             id: utils.generateId(),
             name: e.name,
+            type: e.type,
             gender: e.gender,
             results: []
           }));
@@ -2757,7 +2770,7 @@
         sortedTeams.forEach((team, index) => {
           const score = scoringMode === 'girls' ? team.girlsScore : scoringMode === 'boys' ? team.boysScore : team.score;
           const place = index + 1;
-          const placeStr = place === 1 ? '1st' : place === 2 ? '2nd' : place === 3 ? '3rd' : place + 'th';
+          const placeStr = utils.ordinal(place);
           body += placeStr + ' Place: ' + team.name + ' - ' + score + ' points\n';
         });
         
@@ -2793,7 +2806,7 @@
 
               sortedResults.forEach((result) => {
                 const placeNum = result.place;
-                const placeStr = placeNum === 1 ? '1st' : placeNum === 2 ? '2nd' : placeNum === 3 ? '3rd' : placeNum + 'th';
+                const placeStr = utils.ordinal(placeNum);
                 const numTied = result.teamIds.length;
                 let points;
                 if (numTied > 1) {
@@ -3186,18 +3199,19 @@
               setEvents(loadedEvents);
               if (meetData.settings) {
                 const s = meetData.settings;
-                if (s.scoringMode) setScoringMode(s.scoringMode);
-                if (s.numIndividualPlaces) setNumIndividualPlaces(s.numIndividualPlaces);
-                if (s.numRelayPlaces) setNumRelayPlaces(s.numRelayPlaces);
-                if (s.numDivingPlaces) setNumDivingPlaces(s.numDivingPlaces);
-                if (s.individualPointSystem) setIndividualPointSystem(s.individualPointSystem);
-                if (s.relayPointSystem) setRelayPointSystem(s.relayPointSystem);
-                if (s.divingPointSystem) setDivingPointSystem(s.divingPointSystem);
+                if (s.scoringMode !== undefined) setScoringMode(s.scoringMode);
+                if (s.numIndividualPlaces !== undefined) setNumIndividualPlaces(s.numIndividualPlaces);
+                if (s.numRelayPlaces !== undefined) setNumRelayPlaces(s.numRelayPlaces);
+                if (s.numDivingPlaces !== undefined) setNumDivingPlaces(s.numDivingPlaces);
+                if (s.individualPointSystem !== undefined) setIndividualPointSystem(s.individualPointSystem);
+                if (s.relayPointSystem !== undefined) setRelayPointSystem(s.relayPointSystem);
+                if (s.divingPointSystem !== undefined) setDivingPointSystem(s.divingPointSystem);
                 if (s.heatLockEnabled !== undefined) setHeatLockEnabled(s.heatLockEnabled);
                 if (s.aRelayOnly !== undefined) setARelayOnly(s.aRelayOnly);
                 if (s.teamPlaceLimitEnabled !== undefined) setTeamPlaceLimitEnabled(s.teamPlaceLimitEnabled);
-                if (s.activeTemplate) setActiveTemplate(s.activeTemplate);
+                if (s.activeTemplate !== undefined) setActiveTemplate(s.activeTemplate);
               }
+              recalculateAllScores(loadedTeams, loadedEvents);
               setShareSuccess('Meet loaded successfully!');
               setTimeout(() => setShareSuccess(null), 3000);
             } catch (err) {
@@ -3258,19 +3272,19 @@
         setEvents(loadedEvents);
         if (meetEntry.settings) {
           const s = meetEntry.settings;
-          if (s.scoringMode) setScoringMode(s.scoringMode);
-          if (s.numIndividualPlaces) setNumIndividualPlaces(s.numIndividualPlaces);
-          if (s.numRelayPlaces) setNumRelayPlaces(s.numRelayPlaces);
-          if (s.numDivingPlaces) setNumDivingPlaces(s.numDivingPlaces);
-          if (s.individualPointSystem) setIndividualPointSystem(s.individualPointSystem);
-          if (s.relayPointSystem) setRelayPointSystem(s.relayPointSystem);
-          if (s.divingPointSystem) setDivingPointSystem(s.divingPointSystem);
+          if (s.scoringMode !== undefined) setScoringMode(s.scoringMode);
+          if (s.numIndividualPlaces !== undefined) setNumIndividualPlaces(s.numIndividualPlaces);
+          if (s.numRelayPlaces !== undefined) setNumRelayPlaces(s.numRelayPlaces);
+          if (s.numDivingPlaces !== undefined) setNumDivingPlaces(s.numDivingPlaces);
+          if (s.individualPointSystem !== undefined) setIndividualPointSystem(s.individualPointSystem);
+          if (s.relayPointSystem !== undefined) setRelayPointSystem(s.relayPointSystem);
+          if (s.divingPointSystem !== undefined) setDivingPointSystem(s.divingPointSystem);
           if (s.heatLockEnabled !== undefined) setHeatLockEnabled(s.heatLockEnabled);
           if (s.aRelayOnly !== undefined) setARelayOnly(s.aRelayOnly);
           if (s.teamPlaceLimitEnabled !== undefined) setTeamPlaceLimitEnabled(s.teamPlaceLimitEnabled);
-          if (s.activeTemplate) setActiveTemplate(s.activeTemplate);
+          if (s.activeTemplate !== undefined) setActiveTemplate(s.activeTemplate);
         }
-        setShowMeetHistory(false);
+        recalculateAllScores(loadedTeams, loadedEvents);
       };
 
       // Delete a meet from history
@@ -3920,7 +3934,7 @@
                     </span>
                     <button
                       onClick={() => {
-                        const allSections = ['manage-teams', 'scoring-templates', 'special-scoring', 'scoring-places', 'data-management', 'point-systems', 'appearance'];
+                        const allSections = ['manage-teams', 'scoring-templates', 'special-scoring', 'scoring-places', 'data-management', 'point-systems', 'appearance', 'export-share', 'meet-history'];
                         const anyCollapsed = allSections.some(s => collapsedSections[s]);
                         const newState = {};
                         allSections.forEach(s => { newState[s] = !anyCollapsed; });
