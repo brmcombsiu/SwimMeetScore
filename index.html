@@ -323,10 +323,13 @@
   
   <!-- Preconnect to CDNs for faster loading -->
   <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
-  <link rel="stylesheet" href="./app.css">
+  <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+
+  <!-- app.css loaded non-blocking: critical CSS is inlined below for the loading screen -->
+  <link rel="preload" href="./app.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="./app.css"></noscript>
   
   <!-- Custom Font: Outfit - loaded non-blocking for offline support -->
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
@@ -503,9 +506,13 @@
     }
   </style>
   
-  <!-- Load React from CDN (service worker serves from cache when offline) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js" integrity="sha384-tMH8h3BGESGckSAVGZ82T9n90ztNXxvdwvdM6UoR56cYcf+0iGXBliJ29D+wZ/x8" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js" integrity="sha384-bm7MnzvK++ykSwVJ2tynSE5TRdN+xL418osEVF2DE/L/gfWHj91J2Sphe582B1Bh" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <!-- Load React from CDN (deferred to avoid render-blocking; service worker serves from cache when offline) -->
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js" integrity="sha384-tMH8h3BGESGckSAVGZ82T9n90ztNXxvdwvdM6UoR56cYcf+0iGXBliJ29D+wZ/x8" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js" integrity="sha384-bm7MnzvK++ykSwVJ2tynSE5TRdN+xL418osEVF2DE/L/gfWHj91J2Sphe582B1Bh" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+  <!-- App scripts (deferred to avoid render-blocking; order preserved by defer) -->
+  <script defer src="./lib/scoring.js"></script>
+  <script defer src="./app.js"></script>
   <style>
     body { 
       margin: 0; 
@@ -624,8 +631,6 @@
   
   <noscript>This app requires JavaScript to run. Please enable JavaScript in your browser settings.</noscript>
   <div id="root"></div>
-  <script src="./lib/scoring.js"></script>
-  <script src="./app.js"></script>
 
   <!-- Service Worker Registration for Offline Support -->
   <script>
