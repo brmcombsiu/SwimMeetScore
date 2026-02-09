@@ -1359,7 +1359,7 @@
 
       // State with localStorage initialization
       const CURRENT_VERSION = 4; // Version 4 adds tie support with teamIds array
-      const APP_VERSION = '1.5.3';
+      const APP_VERSION = '1.5.4';
       
       // Check and migrate events if needed
       const initializeEvents = () => {
@@ -1475,6 +1475,9 @@
       useEffect(() => { teamsRef.current = teams; }, [teams]);
       useEffect(() => { eventsRef.current = events; }, [events]);
 
+      // Settings ref for undo/redo snapshots (saveSnapshot has [] deps, needs ref)
+      const settingsRef = useRef({});
+
       // Track which template is currently active (for visual indicator)
       const [activeTemplate, setActiveTemplate] = useState(() => utils.loadFromStorage('activeTemplate', 'high_school'));
 
@@ -1543,6 +1546,17 @@
         return loaded && typeof loaded === 'object' ? loaded : defaultDivingPoints;
       });
 
+      // Sync settings ref for undo/redo snapshots (must be after all settings state declarations)
+      useEffect(() => {
+        settingsRef.current = {
+          individualPointSystem, relayPointSystem, divingPointSystem,
+          numIndividualPlaces, numRelayPlaces, numDivingPlaces,
+          heatLockEnabled, aRelayOnly, teamPlaceLimitEnabled
+        };
+      }, [individualPointSystem, relayPointSystem, divingPointSystem,
+          numIndividualPlaces, numRelayPlaces, numDivingPlaces,
+          heatLockEnabled, aRelayOnly, teamPlaceLimitEnabled]);
+
       // Debounced save functions to reduce localStorage writes
       const debouncedSaveTeamsRef = useRef(null);
       const debouncedSaveEventsRef = useRef(null);
@@ -1573,6 +1587,16 @@
           debouncedSaveEventsRef.current(events);
         }
       }, [events]);
+
+      // Flush pending debounced saves before page unload to prevent data loss
+      useEffect(() => {
+        const handleBeforeUnload = () => {
+          if (teamsRef.current) utils.saveToStorage('teams', teamsRef.current);
+          if (eventsRef.current) utils.saveToStorage('events', eventsRef.current);
+        };
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+      }, []);
 
       useEffect(() => {
         utils.saveToStorage('darkMode', darkMode);
@@ -1698,7 +1722,8 @@
           undoStackRef.current.push({
             label: label || 'action',
             teams: JSON.parse(JSON.stringify(teamsRef.current)),
-            events: JSON.parse(JSON.stringify(eventsRef.current))
+            events: JSON.parse(JSON.stringify(eventsRef.current)),
+            settings: JSON.parse(JSON.stringify(settingsRef.current))
           });
           if (undoStackRef.current.length > MAX_UNDO_HISTORY) {
             undoStackRef.current.shift();
@@ -1716,12 +1741,25 @@
         try {
           redoStackRef.current.push({
             teams: JSON.parse(JSON.stringify(teamsRef.current)),
-            events: JSON.parse(JSON.stringify(eventsRef.current))
+            events: JSON.parse(JSON.stringify(eventsRef.current)),
+            settings: JSON.parse(JSON.stringify(settingsRef.current))
           });
           const snapshot = undoStackRef.current.pop();
           setTeams(snapshot.teams);
           setEvents(snapshot.events);
-          recalculateAllScores(snapshot.teams, snapshot.events);
+          // Restore scoring settings if present in snapshot
+          if (snapshot.settings) {
+            const s = snapshot.settings;
+            setIndividualPointSystem(s.individualPointSystem);
+            setRelayPointSystem(s.relayPointSystem);
+            setDivingPointSystem(s.divingPointSystem);
+            setNumIndividualPlaces(s.numIndividualPlaces);
+            setNumRelayPlaces(s.numRelayPlaces);
+            setNumDivingPlaces(s.numDivingPlaces);
+            setHeatLockEnabled(s.heatLockEnabled);
+            setARelayOnly(s.aRelayOnly);
+            setTeamPlaceLimitEnabled(s.teamPlaceLimitEnabled);
+          }
           setCanUndo(undoStackRef.current.length > 0);
           setCanRedo(true);
           trackEvent('undo', { label: snapshot.label });
@@ -1729,7 +1767,7 @@
           console.error('Error performing undo:', e);
           setError('Failed to undo. Please try again.');
         }
-      }, [recalculateAllScores]);
+      }, []); // stable identity - reads from refs, settings restored via setState
 
       const performRedo = useCallback(() => {
         if (redoStackRef.current.length === 0) return;
@@ -1737,12 +1775,25 @@
           undoStackRef.current.push({
             label: 'redo',
             teams: JSON.parse(JSON.stringify(teamsRef.current)),
-            events: JSON.parse(JSON.stringify(eventsRef.current))
+            events: JSON.parse(JSON.stringify(eventsRef.current)),
+            settings: JSON.parse(JSON.stringify(settingsRef.current))
           });
           const snapshot = redoStackRef.current.pop();
           setTeams(snapshot.teams);
           setEvents(snapshot.events);
-          recalculateAllScores(snapshot.teams, snapshot.events);
+          // Restore scoring settings if present in snapshot
+          if (snapshot.settings) {
+            const s = snapshot.settings;
+            setIndividualPointSystem(s.individualPointSystem);
+            setRelayPointSystem(s.relayPointSystem);
+            setDivingPointSystem(s.divingPointSystem);
+            setNumIndividualPlaces(s.numIndividualPlaces);
+            setNumRelayPlaces(s.numRelayPlaces);
+            setNumDivingPlaces(s.numDivingPlaces);
+            setHeatLockEnabled(s.heatLockEnabled);
+            setARelayOnly(s.aRelayOnly);
+            setTeamPlaceLimitEnabled(s.teamPlaceLimitEnabled);
+          }
           setCanUndo(true);
           setCanRedo(redoStackRef.current.length > 0);
           trackEvent('redo');
@@ -1750,7 +1801,7 @@
           console.error('Error performing redo:', e);
           setError('Failed to redo. Please try again.');
         }
-      }, [recalculateAllScores]);
+      }, []); // stable identity - reads from refs, settings restored via setState
 
       useEffect(() => {
         const handleKeyDown = (e) => {
@@ -2022,8 +2073,9 @@
           setError('Invalid template.');
           return;
         }
-        
+
         try {
+          saveSnapshot('load custom template');
           setNumIndividualPlaces(utils.validateNumber(template.numIndividualPlaces, 1, 20, 5));
           setNumRelayPlaces(utils.validateNumber(template.numRelayPlaces, 1, 20, 3));
           setNumDivingPlaces(utils.validateNumber(template.numDivingPlaces, 1, 20, 3));
@@ -2075,9 +2127,6 @@
               }));
             setEvents(newEvents);
             setCollapsedEvents(collapseAllButFirst(newEvents));
-            recalculateAllScores(newTeams, newEvents);
-          } else {
-            recalculateAllScores(newTeams, events);
           }
           // Set active template to custom template id
           setActiveTemplate('custom_' + template.id);
@@ -2300,7 +2349,6 @@
               });
 
               utils.saveToStorage('version', CURRENT_VERSION);
-              recalculateAllScores(defaultTeams, defaultEvents);
               setShowConfirmDialog(null);
             } catch (e) {
               console.error('Error clearing all data:', e);
@@ -2312,10 +2360,13 @@
         });
       };
 
+      // Auto-recalculate scores when scoring settings change (point systems, places, team place limit).
+      // recalculateAllScores is a useCallback that depends on these settings, so its identity
+      // changes when any setting changes, triggering this effect with the correct new values.
       useEffect(() => {
         recalculateAllScores(teams, events);
-
-      }, [scoringMode]);
+        // Intentionally depends only on recalculateAllScores (its identity changes when settings change)
+      }, [recalculateAllScores]);
 
       const sortedTeams = useMemo(() => {
         if (!Array.isArray(teams) || teams.length === 0) return [];
@@ -2420,6 +2471,7 @@
       ];
 
       const loadHighSchoolMeet = () => {
+        saveSnapshot('load high school template');
         setNumIndividualPlaces(5);
         setNumRelayPlaces(3);
         setNumDivingPlaces(3);
@@ -2452,7 +2504,6 @@
         }));
         setEvents(newEvents);
         setCollapsedEvents(collapseAllButFirst(newEvents));
-        recalculateAllScores(dualMeetTeams, newEvents);
         setActiveTemplate('high_school');
         // Track event
         trackEvent('load_template', { template_name: 'high_school_meet' });
@@ -2461,6 +2512,7 @@
 
       // Conference Meet - 16 places individual, 8 places relay (A-relay only), heat lock enabled
       const loadConferenceMeet = () => {
+        saveSnapshot('load conference template');
         setNumIndividualPlaces(16);
         setNumRelayPlaces(8);
         setNumDivingPlaces(16);
@@ -2499,13 +2551,13 @@
         }));
         setEvents(newEvents);
         setCollapsedEvents(collapseAllButFirst(newEvents));
-        recalculateAllScores(conferenceTeams, newEvents);
         setActiveTemplate('conference');
         trackEvent('load_template', { template_name: 'conference_meet' });
       };
 
       // Sectionals - 16 places individual, 16 places relay (A-relay only, double points), heat lock enabled
       const loadSectionalsMeet = () => {
+        saveSnapshot('load sectionals template');
         setNumIndividualPlaces(16);
         setNumDivingPlaces(16);
         setIndividualPointSystem({
@@ -2548,7 +2600,6 @@
         }));
         setEvents(newEvents);
         setCollapsedEvents(collapseAllButFirst(newEvents));
-        recalculateAllScores(sectionalsTeams, newEvents);
         setActiveTemplate('sectionals');
         trackEvent('load_template', { template_name: 'sectionals_meet' });
       };
@@ -2568,6 +2619,7 @@
       const loadUSASwimmingMeet = (lanes) => {
         const scoring = usaSwimmingScoring[lanes];
         if (!scoring) return;
+        saveSnapshot('load USA Swimming template');
 
         const numPlaces = lanes;
         setNumIndividualPlaces(numPlaces);
@@ -2612,7 +2664,6 @@
           }));
         setEvents(newEvents);
         setCollapsedEvents(collapseAllButFirst(newEvents));
-        recalculateAllScores(usaTeams, newEvents);
         setActiveTemplate(`usa_swimming_${lanes}`);
         trackEvent('load_template', { template_name: `usa_swimming_${lanes}_lane` });
       };
@@ -3211,7 +3262,6 @@
                 if (s.teamPlaceLimitEnabled !== undefined) setTeamPlaceLimitEnabled(s.teamPlaceLimitEnabled);
                 if (s.activeTemplate !== undefined) setActiveTemplate(s.activeTemplate);
               }
-              recalculateAllScores(loadedTeams, loadedEvents);
               setShareSuccess('Meet loaded successfully!');
               setTimeout(() => setShareSuccess(null), 3000);
             } catch (err) {
@@ -3284,7 +3334,6 @@
           if (s.teamPlaceLimitEnabled !== undefined) setTeamPlaceLimitEnabled(s.teamPlaceLimitEnabled);
           if (s.activeTemplate !== undefined) setActiveTemplate(s.activeTemplate);
         }
-        recalculateAllScores(loadedTeams, loadedEvents);
       };
 
       // Delete a meet from history
