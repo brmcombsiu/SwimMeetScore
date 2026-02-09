@@ -2365,7 +2365,7 @@
       // changes when any setting changes, triggering this effect with the correct new values.
       useEffect(() => {
         recalculateAllScores(teams, events);
-        // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally triggers only on settings changes
+        // Intentionally depends only on recalculateAllScores (its identity changes when settings change)
       }, [recalculateAllScores]);
 
       const sortedTeams = useMemo(() => {
