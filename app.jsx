@@ -1475,17 +1475,8 @@
       useEffect(() => { teamsRef.current = teams; }, [teams]);
       useEffect(() => { eventsRef.current = events; }, [events]);
 
-      // Settings refs for undo/redo snapshots (saveSnapshot has [] deps, needs refs)
+      // Settings ref for undo/redo snapshots (saveSnapshot has [] deps, needs ref)
       const settingsRef = useRef({});
-      useEffect(() => {
-        settingsRef.current = {
-          individualPointSystem, relayPointSystem, divingPointSystem,
-          numIndividualPlaces, numRelayPlaces, numDivingPlaces,
-          heatLockEnabled, aRelayOnly, teamPlaceLimitEnabled
-        };
-      }, [individualPointSystem, relayPointSystem, divingPointSystem,
-          numIndividualPlaces, numRelayPlaces, numDivingPlaces,
-          heatLockEnabled, aRelayOnly, teamPlaceLimitEnabled]);
 
       // Track which template is currently active (for visual indicator)
       const [activeTemplate, setActiveTemplate] = useState(() => utils.loadFromStorage('activeTemplate', 'high_school'));
@@ -1554,6 +1545,17 @@
         const loaded = utils.loadFromStorage('divingPointSystem', defaultDivingPoints);
         return loaded && typeof loaded === 'object' ? loaded : defaultDivingPoints;
       });
+
+      // Sync settings ref for undo/redo snapshots (must be after all settings state declarations)
+      useEffect(() => {
+        settingsRef.current = {
+          individualPointSystem, relayPointSystem, divingPointSystem,
+          numIndividualPlaces, numRelayPlaces, numDivingPlaces,
+          heatLockEnabled, aRelayOnly, teamPlaceLimitEnabled
+        };
+      }, [individualPointSystem, relayPointSystem, divingPointSystem,
+          numIndividualPlaces, numRelayPlaces, numDivingPlaces,
+          heatLockEnabled, aRelayOnly, teamPlaceLimitEnabled]);
 
       // Debounced save functions to reduce localStorage writes
       const debouncedSaveTeamsRef = useRef(null);
