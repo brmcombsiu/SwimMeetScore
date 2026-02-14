@@ -1359,7 +1359,7 @@
 
       // State with localStorage initialization
       const CURRENT_VERSION = 4; // Version 4 adds tie support with teamIds array
-      const APP_VERSION = '1.5.4';
+      const APP_VERSION = '1.5.5';
       
       // Check and migrate events if needed
       const initializeEvents = () => {
@@ -2853,7 +2853,9 @@
 
             if (event.results && event.results.length > 0) {
               // Sort results by place
-              const sortedResults = [...event.results].sort((a, b) => a.place - b.place);
+              const sortedResults = [...event.results]
+                .filter(r => r && r.place && Array.isArray(r.teamIds) && r.teamIds.length > 0)
+                .sort((a, b) => a.place - b.place);
 
               sortedResults.forEach((result) => {
                 const placeNum = result.place;
@@ -2943,7 +2945,9 @@
           const gender = event.gender === 'girls' ? 'Girls' : 'Boys';
 
           if (event.results && event.results.length > 0) {
-            [...event.results].sort((a, b) => a.place - b.place).forEach((result) => {
+            [...event.results]
+              .filter(r => r && r.place && Array.isArray(r.teamIds) && r.teamIds.length > 0)
+              .sort((a, b) => a.place - b.place).forEach((result) => {
               const numTied = result.teamIds.length;
               let points;
               if (numTied > 1) {
@@ -3026,7 +3030,9 @@
 
           if (event.results && event.results.length > 0) {
             html += '<table><tr><th>Place</th><th>Team</th><th>Points</th></tr>';
-            [...event.results].sort((a, b) => a.place - b.place).forEach((result) => {
+            [...event.results]
+              .filter(r => r && r.place && Array.isArray(r.teamIds) && r.teamIds.length > 0)
+              .sort((a, b) => a.place - b.place).forEach((result) => {
               const numTied = result.teamIds.length;
               let points;
               if (numTied > 1) {
@@ -4000,7 +4006,7 @@
                   <CollapsibleSection
                     id="scoring-templates"
                     title="Scoring Templates"
-                    description={activeTemplate ? `Using: ${{high_school:'HS Dual Meet',conference:'Conference',sectionals:'Sectionals/State'}[activeTemplate] || (activeTemplate.startsWith('usa_swimming_') ? 'USA Swimming ' + activeTemplate.split('_')[2] + '-Lane' : activeTemplate.startsWith('custom_') ? (savedTemplates.find(t => 'custom_' + t.id === activeTemplate) || {}).name || 'Custom' : activeTemplate.replace(/_/g, ' '))}` : "Quick presets for common meets"}
+                    description={activeTemplate ? `Using: ${{high_school:'HS Dual Meet',conference:'Conference',sectionals:'Sectionals/State'}[activeTemplate] || (typeof activeTemplate === 'string' && activeTemplate.startsWith('usa_swimming_') ? 'USA Swimming ' + activeTemplate.split('_')[2] + '-Lane' : typeof activeTemplate === 'string' && activeTemplate.startsWith('custom_') ? (savedTemplates.find(t => 'custom_' + t.id === activeTemplate) || {}).name || 'Custom' : String(activeTemplate).replace(/_/g, ' '))}` : "Quick presets for common meets"}
                     isCollapsed={collapsedSections['scoring-templates']}
                     onToggle={toggleSection}
                     darkMode={darkMode}
