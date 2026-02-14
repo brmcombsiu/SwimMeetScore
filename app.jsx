@@ -1,4 +1,20 @@
     /* global getEventType */
+    // Guard against missing dependencies (CDN blocked by ad blockers, firewalls, or network failure)
+    if (typeof React === 'undefined' || typeof ReactDOM === 'undefined' || typeof getEventType === 'undefined') {
+      const rootEl = document.getElementById('root');
+      if (rootEl) {
+        rootEl.innerHTML = '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0a1628;color:#e2e8f0;font-family:system-ui,sans-serif;padding:24px;text-align:center">' +
+          '<div style="max-width:400px">' +
+          '<h1 style="font-size:24px;margin-bottom:12px;color:#f87171">Failed to Load</h1>' +
+          '<p style="margin-bottom:16px;color:#94a3b8">Required scripts could not be loaded. This may be caused by an ad blocker, firewall, or network issue.</p>' +
+          '<button onclick="location.reload()" style="padding:10px 24px;background:#06b6d4;color:#fff;border:none;border-radius:8px;font-size:16px;cursor:pointer">Reload</button>' +
+          '</div></div>';
+      }
+      const ls = document.getElementById('loading-screen');
+      if (ls) ls.remove();
+      throw new Error('Required scripts not loaded: ' + (typeof React === 'undefined' ? 'React ' : '') + (typeof ReactDOM === 'undefined' ? 'ReactDOM ' : '') + (typeof getEventType === 'undefined' ? 'scoring.js' : ''));
+    }
+
     // Hide loading screen once React renders
     const hideLoadingScreen = () => {
       const loadingScreen = document.getElementById('loading-screen');
@@ -52,7 +68,7 @@
 
       // Generate unique IDs (better than Date.now() for collisions)
       generateId: () => {
-        return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        return Date.now().toString(36) + Math.random().toString(36).substring(2);
       },
 
       // Input validation
@@ -1298,14 +1314,18 @@
         if (!deferredPrompt) {
           return;
         }
-        // Track install attempt
-        trackEvent('pwa_install_prompt');
-        // Show the install prompt
-        deferredPrompt.prompt();
-        // Wait for the user to respond to the prompt
-        const { outcome } = await deferredPrompt.userChoice;
-        // Track the outcome
-        trackEvent('pwa_install_outcome', { outcome: outcome });
+        try {
+          // Track install attempt
+          trackEvent('pwa_install_prompt');
+          // Show the install prompt
+          deferredPrompt.prompt();
+          // Wait for the user to respond to the prompt
+          const { outcome } = await deferredPrompt.userChoice;
+          // Track the outcome
+          trackEvent('pwa_install_outcome', { outcome: outcome });
+        } catch (err) {
+          console.error('Install prompt error:', err);
+        }
         // Clear the deferred prompt variable
         setDeferredPrompt(null);
       };
@@ -1359,7 +1379,7 @@
 
       // State with localStorage initialization
       const CURRENT_VERSION = 4; // Version 4 adds tie support with teamIds array
-      const APP_VERSION = '1.5.5';
+      const APP_VERSION = '1.5.6';
       
       // Check and migrate events if needed
       const initializeEvents = () => {
@@ -3289,8 +3309,8 @@
           savedAt: new Date().toISOString(),
           label: teamNames || 'Unnamed Meet',
           summary: topTeam ? topTeam.name + ' leads with ' + topTeam.score + ' pts' : 'No scores',
-          teams: JSON.parse(JSON.stringify(teams)),
-          events: JSON.parse(JSON.stringify(events)),
+          teams: structuredClone(teams),
+          events: structuredClone(events),
           settings: {
             scoringMode,
             numIndividualPlaces,
@@ -5212,6 +5232,6 @@
 
     const root = ReactDOM.createRoot(document.getElementById('root'));
     root.render(<ErrorBoundary><SwimMeetScore /></ErrorBoundary>);
-    
-    // Hide loading screen after render
-    hideLoadingScreen();
+
+    // Hide loading screen after React commits to the DOM
+    requestAnimationFrame(() => hideLoadingScreen());
